@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Development frontend
+  # Development frontend only
   frontend-dev:
     build:
       context: .
@@ -14,85 +14,8 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8000/api/v1
-    networks:
-      - civicstream-network
-    depends_on:
-      - backend
+      - VITE_PROXY_TARGET=http://host.docker.internal:8000
+    network_mode: host
 
-  # Production frontend
-  frontend-prod:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    ports:
-      - "80:80"
-    environment:
-      - NODE_ENV=production
-    networks:
-      - civicstream-network
-    depends_on:
-      - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Backend service (reference to main backend)
-  backend:
-    image: civicstream-backend:latest
-    ports:
-      - "8000:8000"
-    environment:
-      - MONGODB_URL=mongodb://admin:civicstream123@mongodb:27017/civicstream?authSource=admin
-    networks:
-      - civicstream-network
-    depends_on:
-      - mongodb
-      - redis
-
-  # Database services
-  mongodb:
-    image: mongo:7.0
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: civicstream123
-      MONGO_INITDB_DATABASE: civicstream
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - civicstream-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - civicstream-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-volumes:
-  mongodb_data:
-  redis_data:
-
-networks:
-  civicstream-network:
-    driver: bridge
+volumes: {}
+networks: {}

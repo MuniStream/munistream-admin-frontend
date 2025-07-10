@@ -90,6 +90,100 @@ export const workflowService = {
   }> {
     const response = await api.get('/performance/stats');
     return response.data;
+  },
+
+  // NEW INSTANCE TRACKING METHODS
+
+  // Get detailed progress for a specific instance
+  async getInstanceProgress(instanceId: string): Promise<{
+    instance_id: string;
+    workflow_id: string;
+    progress_percentage: number;
+    total_steps: number;
+    completed_steps: number;
+    failed_steps: number;
+    pending_steps: number;
+    current_step: string | null;
+    status: string;
+    total_duration_seconds: number;
+    started_at: string;
+    updated_at: string;
+    completed_at: string | null;
+    current_bottleneck: any;
+    pending_approvals_count: number;
+    estimated_completion: string | null;
+  }> {
+    const response = await api.get(`/instances/${instanceId}/progress`);
+    return response.data;
+  },
+
+  // Get all active instances
+  async getActiveInstances(): Promise<{
+    active_instances: Array<{
+      instance_id: string;
+      workflow_id: string;
+      workflow_name: string;
+      user_id: string;
+      status: string;
+      current_step: string | null;
+      progress_percentage: number;
+      started_at: string;
+      updated_at: string;
+      pending_approvals: number;
+    }>;
+    total_active: number;
+  }> {
+    const response = await api.get('/instances/active');
+    return response.data;
+  },
+
+  // Get bottleneck analysis across all workflows
+  async getSystemBottlenecks(): Promise<{
+    bottlenecks: Array<{
+      step_id: string;
+      total_executions: number;
+      avg_duration: number;
+      failure_rate: number;
+      failed_executions: number;
+    }>;
+    stuck_instances: Array<{
+      instance_id: string;
+      workflow_name: string;
+      current_step: string;
+      stuck_duration: number;
+      user_id: string;
+    }>;
+    analysis_period_days: number;
+    total_executions_analyzed: number;
+  }> {
+    const response = await api.get('/instances/analytics/bottlenecks');
+    return response.data;
+  },
+
+  // Get instance execution history
+  async getInstanceHistory(instanceId: string): Promise<{
+    instance_id: string;
+    workflow_id: string;
+    history: Array<{
+      step_id: string;
+      execution_id: string;
+      status: string;
+      started_at: string | null;
+      completed_at: string | null;
+      duration_seconds: number | null;
+      inputs: Record<string, any>;
+      outputs: Record<string, any>;
+      error_message: string | null;
+      retry_count: number;
+    }>;
+    current_step: string | null;
+    overall_status: string;
+    completed_steps: string[];
+    failed_steps: string[];
+    pending_approvals: string[];
+  }> {
+    const response = await api.get(`/instances/${instanceId}/history`);
+    return response.data;
   }
 };
 
