@@ -1,6 +1,6 @@
-# CivicStream Frontend - Admin Dashboard
+# MuniStream Frontend - Admin Dashboard
 
-A comprehensive React-based administrative dashboard for managing CivicStream workflows, citizens, and documents.
+A comprehensive React-based administrative dashboard for managing MuniStream workflows, citizens, and documents.
 
 ## Features
 
@@ -35,14 +35,14 @@ A comprehensive React-based administrative dashboard for managing CivicStream wo
 ### Prerequisites
 - **Docker & Docker Compose** (recommended)
 - OR Node.js 18+ and npm (for local development)
-- CivicStream backend running
+- MuniStream backend running
 
 ### 🐳 Docker Setup (Recommended)
 
 ```bash
 # Clone the repository
-git clone https://github.com/paw-ml/civicstream-admin-frontend.git
-cd civicstream-admin-frontend
+git clone https://github.com/MuniStream/munistream-admin-frontend.git
+cd munistream-admin-frontend
 
 # Copy environment variables
 cp .env.example .env

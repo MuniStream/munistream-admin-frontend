@@ -33,9 +33,9 @@ export interface TokenResponse {
 }
 
 class AuthService {
-  private readonly ACCESS_TOKEN_KEY = 'civicstream_access_token';
-  private readonly REFRESH_TOKEN_KEY = 'civicstream_refresh_token';
-  private readonly USER_KEY = 'civicstream_user';
+  private readonly ACCESS_TOKEN_KEY = 'munistream_access_token';
+  private readonly REFRESH_TOKEN_KEY = 'munistream_refresh_token';
+  private readonly USER_KEY = 'munistream_user';
 
   async login(username: string, password: string, rememberMe: boolean = false): Promise<LoginResponse> {
     try {

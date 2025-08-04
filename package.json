@@ -1,9 +1,9 @@
 {
-  "name": "civicstream-admin-frontend",
+  "name": "munistream-admin-frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "CivicStream Administrative Dashboard",
+  "description": "MuniStream Administrative Dashboard",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -11,9 +11,9 @@
     "preview": "vite preview",
     "docker:dev": "docker-compose up frontend-dev",
     "docker:prod": "docker-compose up frontend-prod",
-    "docker:build": "docker build -t civicstream-admin-frontend .",
-    "docker:build-dev": "docker build --target development -t civicstream-admin-frontend:dev .",
-    "docker:build-prod": "docker build --target production -t civicstream-admin-frontend:prod ."
+    "docker:build": "docker build -t munistream-admin-frontend .",
+    "docker:build-dev": "docker build --target development -t munistream-admin-frontend:dev .",
+    "docker:build-prod": "docker build --target production -t munistream-admin-frontend:prod ."
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
