@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  # Development frontend only
+  # Development frontend
   frontend-dev:
     build:
       context: .
@@ -14,8 +12,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_PROXY_TARGET=http://host.docker.internal:8000
-    network_mode: host
+      - VITE_API_URL=http://localhost:8000/api/v1
 
 volumes: {}
 networks: {}

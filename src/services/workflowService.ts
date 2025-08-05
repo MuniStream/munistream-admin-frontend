@@ -184,6 +184,88 @@ export const workflowService = {
   }> {
     const response = await api.get(`/instances/${instanceId}/history`);
     return response.data;
+  },
+
+  // CITIZEN VALIDATION METHODS
+
+  // Get citizen instances awaiting validation
+  async getCitizenValidations(params?: {
+    status?: string;
+    limit?: number;
+  }): Promise<Array<{
+    instance_id: string;
+    workflow_id: string;
+    workflow_name: string;
+    citizen_id: string;
+    status: string;
+    current_step: {
+      step_id: string;
+      name: string;
+      description: string;
+      requires_citizen_input: boolean;
+    } | null;
+    citizen_data: Record<string, any>;
+    uploaded_files: Record<string, any>;
+    created_at: string;
+    updated_at: string;
+    context: Record<string, any>;
+  }>> {
+    const response = await api.get('/instances/citizen-validations', { params });
+    return response.data;
+  },
+
+  // Validate or reject citizen submitted data
+  async validateCitizenData(instanceId: string, decision: 'approve' | 'reject', comments?: string): Promise<{
+    success: boolean;
+    message: string;
+    instance_id: string;
+    decision: string;
+    next_status: string;
+    validated_by: string;
+    validation_timestamp: string;
+  }> {
+    const response = await api.post(`/instances/${instanceId}/validate-citizen-data`, {
+      decision,
+      comments: comments || ''
+    });
+    return response.data;
+  },
+
+  // Get detailed citizen data for an instance
+  async getCitizenData(instanceId: string): Promise<{
+    instance_id: string;
+    workflow_id: string;
+    workflow_name: string;
+    citizen_id: string;
+    status: string;
+    current_step: string | null;
+    created_at: string;
+    updated_at: string;
+    completed_at: string | null;
+    citizen_data: Record<string, Record<string, any>>;
+    uploaded_files: Record<string, Record<string, any>>;
+    data_submissions: Array<{
+      step_id: string;
+      submitted_at: string;
+    }>;
+    step_executions: Array<{
+      step_id: string;
+      status: string;
+      started_at: string | null;
+      completed_at: string | null;
+      duration_seconds: number | null;
+      inputs: Record<string, any>;
+      outputs: Record<string, any>;
+    }>;
+    validation_history: Array<{
+      decision: string;
+      comments: string;
+      validated_by: string;
+      timestamp: string;
+    }>;
+  }> {
+    const response = await api.get(`/instances/${instanceId}/citizen-data`);
+    return response.data;
   }
 };
 

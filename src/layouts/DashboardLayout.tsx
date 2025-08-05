@@ -32,6 +32,7 @@ import {
   Logout as LogoutIcon,
   Settings as SettingsIcon,
   Person as PersonIcon,
+  CheckCircle as ValidationIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,6 +42,7 @@ const menuItems = [
   { text: 'Dashboard', path: '/dashboard', icon: <DashboardIcon />, permission: 'view_analytics' },
   { text: 'Workflows', path: '/workflows', icon: <WorkflowIcon />, permission: 'view_workflows' },
   { text: 'Citizen Tracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
+  { text: 'Citizen Validation', path: '/citizen-validation', icon: <ValidationIcon />, permission: 'manage_instances' },
   { text: 'Admin Inbox', path: '/inbox', icon: <InboxIcon />, badge: 12, roles: ['admin', 'manager', 'approver'] },
   { text: 'Documents', path: '/documents', icon: <DocumentIcon />, permission: 'view_documents' },
   { text: 'Analytics', path: '/analytics', icon: <AnalyticsIcon />, permission: 'view_analytics' },
@@ -74,7 +76,7 @@ function DashboardLayout() {
     <div>
       <Toolbar>
         <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
-          🏛️ CivicStream
+          🏛️ MuniStream
         </Typography>
       </Toolbar>
       <Divider />
@@ -134,7 +136,7 @@ function DashboardLayout() {
           </IconButton>
           
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            CivicStream Admin Dashboard
+            MuniStream Admin Dashboard
           </Typography>
 
           <IconButton color="inherit" sx={{ mr: 1 }}>

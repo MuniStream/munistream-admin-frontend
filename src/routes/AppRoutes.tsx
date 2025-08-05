@@ -8,6 +8,7 @@ import InstanceDetail from '@/pages/InstanceDetail';
 import AdminInbox from '@/pages/AdminInbox';
 import DocumentManagement from '@/pages/DocumentManagement';
 import PerformanceAnalytics from '@/pages/PerformanceAnalytics';
+import CitizenValidation from '@/pages/CitizenValidation';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -96,6 +97,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredPermission="view_analytics">
               <PerformanceAnalytics />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="citizen-validation"
+          element={
+            <ProtectedRoute requiredPermission="manage_instances">
+              <CitizenValidation />
             </ProtectedRoute>
           }
         />
