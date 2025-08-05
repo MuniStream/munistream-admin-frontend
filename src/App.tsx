@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
 import { AuthProvider } from './contexts/AuthContext';
+import { I18nProvider } from './contexts/I18nContext';
 
 const theme = createTheme({
   palette: {
@@ -37,7 +38,9 @@ function App() {
         <CssBaseline />
         <BrowserRouter>
           <AuthProvider>
-            <AppRoutes />
+            <I18nProvider>
+              <AppRoutes />
+            </I18nProvider>
           </AuthProvider>
         </BrowserRouter>
         <ReactQueryDevtools initialIsOpen={false} />
