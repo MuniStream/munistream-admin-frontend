@@ -28,7 +28,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Collapse
+  Collapse,
+  Tabs,
+  Tab,
+  Badge
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -38,7 +41,9 @@ import {
   Check as CheckIcon,
   Clear as ClearIcon,
   FilterList as FilterIcon,
-  ExpandMore as ExpandMoreIcon
+  ExpandMore as ExpandMoreIcon,
+  Assignment as AssignmentIcon,
+  PersonAdd as AssignUserIcon
 } from '@mui/icons-material';
 import { workflowService } from '../services/workflowService';
 import type { WorkflowInstance } from '../types/workflow';
@@ -54,6 +59,14 @@ interface CitizenInstance {
   updated_at: string;
   completed_at?: string;
   step_results?: Record<string, any>;
+  // Assignment fields
+  assigned_user_id?: string;
+  assigned_team_id?: string;
+  assignment_status?: string;
+  assignment_type?: string;
+  assigned_at?: string;
+  assigned_by?: string;
+  assignment_notes?: string;
 }
 
 interface InstanceProgress {
@@ -92,6 +105,18 @@ const statusColors: Record<string, 'default' | 'primary' | 'secondary' | 'error'
   'paused': 'secondary'
 };
 
+const statusLabels: Record<string, string> = {
+  'pending': 'Pendiente',
+  'running': 'En Proceso',
+  'awaiting_input': 'Esperando Datos',
+  'pending_validation': 'Pendiente Validación',
+  'completed': 'Completado',
+  'failed': 'Fallido',
+  'cancelled': 'Cancelado',
+  'paused': 'En Pausa',
+  'in_progress': 'En Progreso'
+};
+
 const getStatusLabel = (status: string, t: any) => {
   const labels: Record<string, string> = {
     'pending': t('statusPending'),
@@ -124,6 +149,12 @@ export const CitizenTracking: React.FC = () => {
   const [dateToFilter, setDateToFilter] = useState('');
   const [availableWorkflows, setAvailableWorkflows] = useState<any[]>([]);
   const [loadingWorkflows, setLoadingWorkflows] = useState(false);
+  
+  // Tab state
+  const [tabValue, setTabValue] = useState(0);
+  const [assignedInstances, setAssignedInstances] = useState<CitizenInstance[]>([]);
+  const [assignedTotal, setAssignedTotal] = useState(0);
+  const [loadingAssigned, setLoadingAssigned] = useState(false);
 
   const loadInstances = async () => {
     try {
@@ -184,14 +215,62 @@ export const CitizenTracking: React.FC = () => {
     }
   };
 
+  const loadAssignedInstances = async () => {
+    try {
+      setLoadingAssigned(true);
+      
+      const params: Record<string, any> = {
+        page,
+        page_size: pageSize
+      };
+
+      // Apply same filters for consistency
+      if (searchTerm.trim()) {
+        params.instance_id = searchTerm.trim();
+      }
+      if (statusFilter) {
+        params.assignment_status = statusFilter;
+      }
+      if (workflowFilter) {
+        params.workflow_id = workflowFilter;
+      }
+
+      const response = await fetch('/api/v1/instances/my-assignments?' + new URLSearchParams(params), {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch assigned instances');
+      }
+
+      const data = await response.json();
+      setAssignedInstances(data.instances || []);
+      setAssignedTotal(data.total || 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error loading assigned instances');
+    } finally {
+      setLoadingAssigned(false);
+    }
+  };
+
   useEffect(() => {
-    loadInstances();
+    if (tabValue === 0) {
+      loadInstances();
+    } else if (tabValue === 1) {
+      loadAssignedInstances();
+    }
     loadWorkflows();
-  }, [page, pageSize]);
+  }, [page, pageSize, tabValue]);
 
   const handleSearch = () => {
     setPage(1);
-    loadInstances();
+    if (tabValue === 0) {
+      loadInstances();
+    } else if (tabValue === 1) {
+      loadAssignedInstances();
+    }
   };
 
   const handleClearFilters = () => {
@@ -229,6 +308,29 @@ export const CitizenTracking: React.FC = () => {
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
         Monitorea todas las solicitudes y trámites ciudadanos en tiempo real
       </Typography>
+
+      {/* Tabs */}
+      <Paper sx={{ mb: 2 }}>
+        <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
+          <Tab 
+            label={
+              <Badge badgeContent={total} color="primary">
+                {t('citizenRequests')}
+              </Badge>
+            } 
+          />
+          <Tab 
+            label={
+              <Badge badgeContent={assignedTotal} color="secondary">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AssignmentIcon />
+                  {t('my_assignments')}
+                </Box>
+              </Badge>
+            } 
+          />
+        </Tabs>
+      </Paper>
 
       {/* Search and Filters */}
       <Card sx={{ mb: 3 }}>
@@ -409,7 +511,7 @@ export const CitizenTracking: React.FC = () => {
             </Button>
           </Box>
 
-          {loading && <LinearProgress sx={{ mb: 2 }} />}
+          {(loading || (tabValue === 1 && loadingAssigned)) && <LinearProgress sx={{ mb: 2 }} />}
 
           <TableContainer component={Paper} variant="outlined">
             <Table>
@@ -419,6 +521,8 @@ export const CitizenTracking: React.FC = () => {
                   <TableCell>{t('user')}</TableCell>
                   <TableCell>{t('workflow')}</TableCell>
                   <TableCell>{t('status')}</TableCell>
+                  {tabValue === 1 && <TableCell>{t('assignment_status')}</TableCell>}
+                  {tabValue === 1 && <TableCell>{t('assigned_to')}</TableCell>}
                   <TableCell>Progreso</TableCell>
                   <TableCell>{t('created')}</TableCell>
                   <TableCell>{t('updated')}</TableCell>
@@ -426,7 +530,7 @@ export const CitizenTracking: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {instances.map((instance) => (
+                {(tabValue === 0 ? instances : assignedInstances).map((instance) => (
                   <TableRow key={instance.instance_id} hover>
                     <TableCell>
                       <Typography variant="body2" fontFamily="monospace">
@@ -453,6 +557,38 @@ export const CitizenTracking: React.FC = () => {
                         size="small"
                       />
                     </TableCell>
+                    {tabValue === 1 && (
+                      <TableCell>
+                        <Chip
+                          label={instance.assignment_status || 'unassigned'}
+                          color={
+                            instance.assignment_status === 'completed' ? 'success' :
+                            instance.assignment_status === 'in_progress' ? 'warning' :
+                            instance.assignment_status === 'assigned' ? 'info' : 'default'
+                          }
+                          size="small"
+                        />
+                      </TableCell>
+                    )}
+                    {tabValue === 1 && (
+                      <TableCell>
+                        {instance.assigned_user_id ? (
+                          <Chip 
+                            icon={<AssignUserIcon />} 
+                            label={`User: ${instance.assigned_user_id.slice(0, 8)}...`} 
+                            size="small" 
+                          />
+                        ) : instance.assigned_team_id ? (
+                          <Chip 
+                            icon={<AssignmentIcon />} 
+                            label={`Team: ${instance.assigned_team_id}`} 
+                            size="small" 
+                          />
+                        ) : (
+                          <Typography variant="body2" color="textSecondary">-</Typography>
+                        )}
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <LinearProgress
@@ -506,7 +642,7 @@ export const CitizenTracking: React.FC = () => {
           {/* Pagination */}
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
             <Pagination
-              count={Math.ceil(total / pageSize)}
+              count={Math.ceil((tabValue === 0 ? total : assignedTotal) / pageSize)}
               page={page}
               onChange={(_, newPage) => setPage(newPage)}
               color="primary"
@@ -525,7 +661,7 @@ export const CitizenTracking: React.FC = () => {
         <DialogTitle>
           {t('viewDetails')}
           {selectedInstance && (
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography component="span" variant="subtitle2" color="text.secondary" sx={{ ml: 2 }}>
               {selectedInstance.instance_id}
             </Typography>
           )}
@@ -567,7 +703,8 @@ export const CitizenTracking: React.FC = () => {
                 />
                 
                 <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
-                  {selectedInstance.step_progress.slice(0, 10).map((step, index) => (
+                  {selectedInstance.step_progress && selectedInstance.step_progress.length > 0 ? (
+                    selectedInstance.step_progress.slice(0, 10).map((step, index) => (
                     <Box key={step.step_id} sx={{ mb: 1, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Chip
@@ -586,7 +723,12 @@ export const CitizenTracking: React.FC = () => {
                         <Chip size="small" label="Requiere Info Ciudadano" color="warning" sx={{ mt: 0.5 }} />
                       )}
                     </Box>
-                  ))}
+                  ))
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No hay información de progreso disponible
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             </Box>

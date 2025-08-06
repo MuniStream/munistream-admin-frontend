@@ -9,6 +9,11 @@ import AdminInbox from '@/pages/AdminInbox';
 import DocumentManagement from '@/pages/DocumentManagement';
 import PerformanceAnalytics from '@/pages/PerformanceAnalytics';
 import CitizenValidation from '@/pages/CitizenValidation';
+import CategoryManagementPage from '@/pages/CategoryManagementPage';
+import UserManagementPage from '@/pages/UserManagementPage';
+import WorkflowManagementPage from '@/pages/WorkflowManagementPage';
+import TeamManagementPage from '@/pages/TeamManagementPage';
+import InstanceAssignmentPage from '@/pages/InstanceAssignmentPage';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -75,6 +80,15 @@ function AppRoutes() {
         />
         
         <Route
+          path="instance-assignments"
+          element={
+            <ProtectedRoute requiredPermission="view_instances">
+              <InstanceAssignmentPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
           path="inbox"
           element={
             <ProtectedRoute requiredRoles={['admin', 'manager', 'approver']}>
@@ -106,6 +120,42 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredPermission="manage_instances">
               <CitizenValidation />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="categories"
+          element={
+            <ProtectedRoute requiredPermission="manage_workflows">
+              <CategoryManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="users"
+          element={
+            <ProtectedRoute requiredRoles={['admin']}>
+              <UserManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="workflow-management"
+          element={
+            <ProtectedRoute requiredPermission="manage_workflows">
+              <WorkflowManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="teams"
+          element={
+            <ProtectedRoute requiredPermission="manage_users">
+              <TeamManagementPage />
             </ProtectedRoute>
           }
         />

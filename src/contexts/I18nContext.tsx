@@ -28,6 +28,38 @@ interface Translations {
   documents: string;
   analytics: string;
   categories: string;
+  instanceAssignments: string;
+  
+  // Instance Assignments
+  instance_assignments: string;
+  my_assignments: string;
+  team_assignments: string;
+  assignment_status: string;
+  assigned_to: string;
+  assigned_at: string;
+  unassigned: string;
+  assigned: string;
+  in_progress: string;
+  completed: string;
+  escalated: string;
+  on_hold: string;
+  assign_to_user: string;
+  assign_to_team: string;
+  start_work: string;
+  complete: string;
+  complete_assignment: string;
+  unassign: string;
+  assignment_notes: string;
+  completion_notes: string;
+  completion_notes_help: string;
+  select_user: string;
+  select_team: string;
+  assign: string;
+  more_actions: string;
+  instance_id: string;
+  citizen: string;
+  team: string;
+  members: string;
   
   // Citizen Tracking
   searchInstanceId: string;
@@ -163,6 +195,38 @@ const esTranslations: Translations = {
   categoryColor: 'Color',
   categoryIcon: 'Icono',
   assignedWorkflows: 'Workflows Asignados',
+  instanceAssignments: 'Asignaciones de Instancias',
+  
+  // Instance Assignments
+  instance_assignments: 'Asignaciones de Instancias',
+  my_assignments: 'Mis Asignaciones',
+  team_assignments: 'Asignaciones de Equipo',
+  assignment_status: 'Estado de Asignación',
+  assigned_to: 'Asignado a',
+  assigned_at: 'Asignado en',
+  unassigned: 'Sin Asignar',
+  assigned: 'Asignado',
+  in_progress: 'En Progreso',
+  completed: 'Completado',
+  escalated: 'Escalado',
+  on_hold: 'En Espera',
+  assign_to_user: 'Asignar a Usuario',
+  assign_to_team: 'Asignar a Equipo',
+  start_work: 'Iniciar Trabajo',
+  complete: 'Completar',
+  complete_assignment: 'Completar Asignación',
+  unassign: 'Desasignar',
+  assignment_notes: 'Notas de Asignación',
+  completion_notes: 'Notas de Finalización',
+  completion_notes_help: 'Añade notas sobre el trabajo realizado o resolución del caso',
+  select_user: 'Seleccionar Usuario',
+  select_team: 'Seleccionar Equipo',
+  assign: 'Asignar',
+  more_actions: 'Más Acciones',
+  instance_id: 'ID de Instancia',
+  citizen: 'Ciudadano',
+  team: 'Equipo',
+  members: 'miembros',
 };
 
 // English translations
@@ -190,6 +254,38 @@ const enTranslations: Translations = {
   documents: 'Documents',
   analytics: 'Analytics',
   categories: 'Categories',
+  instanceAssignments: 'Instance Assignments',
+  
+  // Instance Assignments
+  instance_assignments: 'Instance Assignments',
+  my_assignments: 'My Assignments',
+  team_assignments: 'Team Assignments',
+  assignment_status: 'Assignment Status',
+  assigned_to: 'Assigned to',
+  assigned_at: 'Assigned at',
+  unassigned: 'Unassigned',
+  assigned: 'Assigned',
+  in_progress: 'In Progress',
+  completed: 'Completed',
+  escalated: 'Escalated',
+  on_hold: 'On Hold',
+  assign_to_user: 'Assign to User',
+  assign_to_team: 'Assign to Team',
+  start_work: 'Start Work',
+  complete: 'Complete',
+  complete_assignment: 'Complete Assignment',
+  unassign: 'Unassign',
+  assignment_notes: 'Assignment Notes',
+  completion_notes: 'Completion Notes',
+  completion_notes_help: 'Add notes about the work performed or case resolution',
+  select_user: 'Select User',
+  select_team: 'Select Team',
+  assign: 'Assign',
+  more_actions: 'More Actions',
+  instance_id: 'Instance ID',
+  citizen: 'Citizen',
+  team: 'Team',
+  members: 'members',
   
   // Citizen Tracking
   searchInstanceId: 'Search by Instance ID',
