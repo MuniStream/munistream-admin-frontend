@@ -6,10 +6,18 @@ import type {
   BottleneckAnalysis 
 } from '@/types/workflow';
 
+// Re-export types for convenience
+export type { 
+  Workflow, 
+  WorkflowInstance, 
+  PerformanceMetrics, 
+  BottleneckAnalysis 
+} from '@/types/workflow';
+
 export const workflowService = {
   // Get all available workflows
   async getWorkflows(): Promise<{ workflows: Workflow[] }> {
-    const response = await api.get('/performance/workflows');
+    const response = await api.get('/workflows');
     return response.data;
   },
 
@@ -23,9 +31,10 @@ export const workflowService = {
   async getWorkflowInstances(params?: {
     workflow_id?: string;
     status?: string;
-    citizen_id?: string;
-    limit?: number;
-    offset?: number;
+    user_id?: string;
+    instance_id?: string;
+    page?: number;
+    page_size?: number;
   }): Promise<{ instances: WorkflowInstance[]; total: number }> {
     const response = await api.get('/instances', { params });
     return response.data;
@@ -90,6 +99,35 @@ export const workflowService = {
   }> {
     const response = await api.get('/performance/stats');
     return response.data;
+  },
+
+  // WORKFLOW CRUD OPERATIONS
+
+  // Create new workflow
+  async createWorkflow(data: {
+    workflow_id: string;
+    name: string;
+    description?: string;
+    version: string;
+  }): Promise<any> {
+    const response = await api.post('/workflows', data);
+    return response.data;
+  },
+
+  // Update existing workflow
+  async updateWorkflow(workflowId: string, data: {
+    name?: string;
+    description?: string;
+    status?: 'draft' | 'active' | 'deprecated';
+    metadata?: Record<string, any>;
+  }): Promise<any> {
+    const response = await api.put(`/workflows/${workflowId}`, data);
+    return response.data;
+  },
+
+  // Delete workflow
+  async deleteWorkflow(workflowId: string): Promise<void> {
+    await api.delete(`/workflows/${workflowId}`);
   },
 
   // NEW INSTANCE TRACKING METHODS
