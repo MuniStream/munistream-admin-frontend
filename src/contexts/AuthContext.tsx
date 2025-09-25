@@ -1,12 +1,30 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import authService, { User, LoginResponse } from '@/services/authService';
-import api from '@/services/api';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import keycloakService from '@/services/keycloak';
+
+// User interface matching existing system
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  full_name: string;
+  role: 'admin' | 'manager' | 'reviewer' | 'approver' | 'viewer';
+  status: 'active' | 'inactive' | 'suspended' | 'pending';
+  permissions: string[];
+  department?: string;
+  phone?: string;
+  avatar_url?: string;
+  email_notifications: boolean;
+  two_factor_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+  last_login?: string;
+}
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string, rememberMe?: boolean) => Promise<LoginResponse>;
+  login: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
   hasPermission: (permission: string) => boolean;
@@ -31,102 +49,183 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const initRef = useRef(false);
 
-  // Initialize auth on mount
+  // Map roles to permissions
+  const getRolePermissions = (role: string): string[] => {
+    switch (role) {
+      case 'admin':
+        return [
+          'view_analytics',
+          'view_workflows',
+          'view_instances',
+          'view_documents',
+          'manage_instances',
+          'manage_workflows',
+          'manage_users',
+          'manage_settings',
+          'approve_workflows',
+          'review_documents',
+          'create_workflows',
+          'delete_workflows'
+        ];
+      case 'manager':
+        return [
+          'view_analytics',
+          'view_workflows',
+          'view_instances',
+          'view_documents',
+          'manage_instances',
+          'manage_workflows',
+          'approve_workflows',
+          'review_documents'
+        ];
+      case 'approver':
+        return [
+          'view_workflows',
+          'view_instances',
+          'view_documents',
+          'approve_workflows'
+        ];
+      case 'reviewer':
+        return [
+          'view_workflows',
+          'view_instances',
+          'view_documents',
+          'review_documents'
+        ];
+      case 'viewer':
+      default:
+        return [
+          'view_workflows',
+          'view_instances',
+          'view_documents'
+        ];
+    }
+  };
+
+  // Initialize Keycloak and set user
   useEffect(() => {
+    // Prevent double initialization in React StrictMode
+    if (initRef.current) return;
+    initRef.current = true;
+
     const initAuth = async () => {
       try {
-        authService.initializeAuth();
-        
-        // If we have a token, try to get current user
-        if (authService.isAuthenticated()) {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
+        const authenticated = await keycloakService.init();
+
+        if (authenticated) {
+          const userInfo = keycloakService.getUserInfo();
+
+          if (userInfo && userInfo.id) {
+            // Map Keycloak roles to our User role
+            const roles = userInfo.roles || [];
+            let primaryRole: User['role'] = 'viewer';
+
+            // Determine primary role (highest privilege)
+            if (roles.includes('admin')) {
+              primaryRole = 'admin';
+            } else if (roles.includes('manager')) {
+              primaryRole = 'manager';
+            } else if (roles.includes('approver')) {
+              primaryRole = 'approver';
+            } else if (roles.includes('reviewer')) {
+              primaryRole = 'reviewer';
+            }
+
+            // Get permissions based on role
+            const permissions = getRolePermissions(primaryRole);
+
+            // Create user object
+            const mappedUser: User = {
+              id: userInfo.id,
+              email: userInfo.email || '',
+              username: userInfo.username || userInfo.email || '',
+              full_name: userInfo.name || userInfo.username || '',
+              role: primaryRole,
+              status: 'active',
+              permissions,
+              department: '',
+              phone: '',
+              avatar_url: '',
+              email_notifications: true,
+              two_factor_enabled: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              last_login: new Date().toISOString(),
+            };
+
+            setUser(mappedUser);
+          }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        // Token might be expired, clear auth
-        authService.clearAuth();
       } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+  }, []); // Empty dependency array - run once
 
-  // Set up axios interceptor for token refresh
-  useEffect(() => {
-    const interceptor = api.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-
-          try {
-            await authService.refreshToken();
-            // Retry original request with new token
-            originalRequest.headers['Authorization'] = `Bearer ${authService.getAccessToken()}`;
-            return api(originalRequest);
-          } catch (refreshError) {
-            // Refresh failed, redirect to login
-            setUser(null);
-            window.location.href = '/login';
-            return Promise.reject(refreshError);
-          }
-        }
-
-        return Promise.reject(error);
-      }
-    );
-
-    return () => {
-      api.interceptors.response.eject(interceptor);
-    };
-  }, []);
-
-  const login = async (username: string, password: string, rememberMe: boolean = false): Promise<LoginResponse> => {
-    const response = await authService.login(username, password, rememberMe);
-    setUser(response.user);
-    return response;
+  // Login function
+  const login = async (): Promise<void> => {
+    await keycloakService.login();
+    // This will redirect to Keycloak, so the promise won't resolve
   };
 
-  const logout = async () => {
-    await authService.logout();
+  // Logout function
+  const logout = async (): Promise<void> => {
     setUser(null);
-    window.location.href = '/login';
+    await keycloakService.logout();
+    // This will redirect to Keycloak logout
   };
 
-  const updateUser = (updatedUser: User) => {
+  // Update user function
+  const updateUser = (updatedUser: User): void => {
     setUser(updatedUser);
-    authService.setUser(updatedUser);
   };
 
+  // Check if user has a specific permission
   const hasPermission = (permission: string): boolean => {
-    return user?.permissions.includes(permission) || false;
+    return user?.permissions?.includes(permission) || false;
   };
 
+  // Check if user has a specific role
   const hasRole = (role: string): boolean => {
-    return user?.role === role;
+    if (!user) return false;
+    return user.role === role || keycloakService.hasRole(role);
   };
 
+  // Check if user has any of the specified roles
   const hasAnyRole = (roles: string[]): boolean => {
-    return roles.includes(user?.role || '');
+    if (!user) return false;
+    return roles.some(role => hasRole(role));
   };
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    isAuthenticated: !!user,
-    login,
-    logout,
-    updateUser,
-    hasPermission,
-    hasRole,
-    hasAnyRole,
-  };
+  // Compute isAuthenticated
+  const isAuthenticated = React.useMemo(
+    () => keycloakService.isAuthenticated() && !!user,
+    [user]
+  );
+
+  // Create context value
+  const value = React.useMemo(
+    () => ({
+      user,
+      loading,
+      isAuthenticated,
+      login,
+      logout,
+      updateUser,
+      hasPermission,
+      hasRole,
+      hasAnyRole,
+    }),
+    [user, loading, isAuthenticated]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export default AuthContext;
