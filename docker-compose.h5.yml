@@ -1,0 +1,89 @@
+# H5 Multi-tenant Docker Compose for MuniStream Admin Frontend
+# This file defines 3 containers for each client with proper port mapping
+
+services:
+  # Core Client - Base ports (4000)
+  admin-panel-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: admin-panel-core
+    ports:
+      - "4000:3000"
+    environment:
+      - NODE_ENV=production
+      - CLIENT_NAME=core
+      - VITE_API_URL=http://localhost:8000/api/v1
+      - VITE_KEYCLOAK_URL=http://localhost:9000
+      - VITE_KEYCLOAK_REALM=core
+      - VITE_KEYCLOAK_CLIENT_ID=munistream-admin-frontend
+      - VITE_APP_TITLE=MuniStream Admin - Core
+      - VITE_THEME_PRIMARY_COLOR=#1976d2
+      - DATABASE_URL=${DATABASE_URL_CORE}
+    networks:
+      - munistream-network
+    restart: unless-stopped
+    labels:
+      - "com.munistream.client=core"
+      - "com.munistream.service=admin-frontend"
+      - "com.munistream.port=4000"
+
+  # Conapesca Client - +1 port increment (4001)
+  admin-panel-conapesca:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: admin-panel-conapesca
+    ports:
+      - "4001:3000"
+    environment:
+      - NODE_ENV=production
+      - CLIENT_NAME=conapesca
+      - VITE_API_URL=http://localhost:8001/api/v1
+      - VITE_KEYCLOAK_URL=http://localhost:9001
+      - VITE_KEYCLOAK_REALM=conapesca
+      - VITE_KEYCLOAK_CLIENT_ID=munistream-admin-frontend
+      - VITE_APP_TITLE=MuniStream Admin - Conapesca
+      - VITE_THEME_PRIMARY_COLOR=#2e7d32
+      - DATABASE_URL=${DATABASE_URL_CONAPESCA}
+    networks:
+      - munistream-network
+    restart: unless-stopped
+    labels:
+      - "com.munistream.client=conapesca"
+      - "com.munistream.service=admin-frontend"
+      - "com.munistream.port=4001"
+
+  # Tesoreriacdmx Client - +2 port increment (4002)
+  admin-panel-teso:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: admin-panel-teso
+    ports:
+      - "4002:3000"
+    environment:
+      - NODE_ENV=production
+      - CLIENT_NAME=tesoreriacdmx
+      - VITE_APP_TITLE=MuniStream Admin - Tesorería CDMX
+      - VITE_THEME_PRIMARY_COLOR=#d32f2f
+      - VITE_API_URL=http://localhost:8002/api/v1
+      - VITE_KEYCLOAK_URL=http://localhost:9002
+      - VITE_KEYCLOAK_REALM=tesoreriacdmx
+      - VITE_KEYCLOAK_CLIENT_ID=munistream-admin-frontend
+      - DATABASE_URL=${DATABASE_URL_TESO}
+    networks:
+      - munistream-network
+    restart: unless-stopped
+    labels:
+      - "com.munistream.client=tesoreriacdmx"
+      - "com.munistream.service=admin-frontend"
+      - "com.munistream.port=4002"
+
+networks:
+  munistream-network:
+    driver: bridge
+    name: munistream-network
