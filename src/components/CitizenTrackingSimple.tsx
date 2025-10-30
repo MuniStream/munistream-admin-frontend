@@ -23,8 +23,7 @@ import {
   LinearProgress,
   Pagination,
   Collapse,
-  IconButton,
-  Box
+  IconButton
 } from '@mui/material';
 import {
   Search as SearchIcon,

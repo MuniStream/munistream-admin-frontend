@@ -1,10 +1,20 @@
-import api from './api';
-import type { 
-  Workflow, 
-  WorkflowInstance, 
-  PerformanceMetrics, 
-  BottleneckAnalysis 
+import type {
+  Workflow,
+  WorkflowInstance,
+  PerformanceMetrics,
+  BottleneckAnalysis
 } from '@/types/workflow';
+
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_BASE_URL}`;
+
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = sessionStorage.getItem('kc_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
 
 // Re-export types for convenience
 export type { 
@@ -17,14 +27,30 @@ export type {
 export const workflowService = {
   // Get all available workflows
   async getWorkflows(): Promise<{ workflows: Workflow[] }> {
-    const response = await api.get('/workflows');
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/workflows?workflow_type=process`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflows');
+    }
+
+    return await response.json();
   },
 
   // Get workflow details with steps
   async getWorkflowDetails(workflowId: string): Promise<any> {
-    const response = await api.get(`/workflows/${workflowId}`);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/workflows/${workflowId}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflow details');
+    }
+
+    return await response.json();
   },
 
   // Get workflow instances (citizen progress tracking)
@@ -36,44 +62,112 @@ export const workflowService = {
     page?: number;
     page_size?: number;
   }): Promise<{ instances: WorkflowInstance[]; total: number }> {
-    const response = await api.get('/instances', { params });
-    return response.data;
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await fetch(`${API_BASE_URL}/instances?${searchParams}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflow instances');
+    }
+
+    return await response.json();
   },
 
   // Get specific workflow instance
   async getWorkflowInstance(instanceId: string): Promise<WorkflowInstance> {
-    const response = await api.get(`/instances/${instanceId}`);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflow instance');
+    }
+
+    return await response.json();
   },
 
   // Get performance metrics for a workflow
   async getWorkflowMetrics(workflowId: string): Promise<PerformanceMetrics[]> {
-    const response = await api.get(`/performance/workflows/${workflowId}/metrics`);
-    return response.data.metrics;
+    const response = await fetch(`${API_BASE_URL}/performance/workflows/${workflowId}/metrics`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflow metrics');
+    }
+
+    const data = await response.json();
+    return data.metrics;
   },
 
   // Get bottleneck analysis
   async getBottleneckAnalysis(workflowId: string): Promise<BottleneckAnalysis> {
-    const response = await api.get(`/performance/workflows/${workflowId}/bottlenecks`);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/performance/workflows/${workflowId}/bottlenecks`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch bottleneck analysis');
+    }
+
+    return await response.json();
   },
 
   // Get step metrics
   async getStepMetrics(stepId: string): Promise<PerformanceMetrics> {
-    const response = await api.get(`/performance/steps/${stepId}/metrics`);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/performance/steps/${stepId}/metrics`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch step metrics');
+    }
+
+    return await response.json();
   },
 
   // Execute a specific step manually (for testing)
   async executeStep(stepId: string, inputs: Record<string, any>): Promise<any> {
-    const response = await api.post(`/performance/steps/${stepId}/execute`, { inputs });
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/performance/steps/${stepId}/execute`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ inputs }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to execute step');
+    }
+
+    return await response.json();
   },
 
   // Start a new workflow instance
   async startWorkflow(workflowId: string, context: Record<string, any>): Promise<WorkflowInstance> {
-    const response = await api.post(`/workflows/${workflowId}/start`, context);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/workflows/${workflowId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(context),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to start workflow');
+    }
+
+    return await response.json();
   },
 
   // Get workflow execution history
@@ -83,8 +177,26 @@ export const workflowService = {
     end_date?: string;
     limit?: number;
   }): Promise<any[]> {
-    const response = await api.get('/performance/history', { params });
-    return response.data.history;
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await fetch(`${API_BASE_URL}/performance/history?${searchParams}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflow history');
+    }
+
+    const data = await response.json();
+    return data.history;
   },
 
   // Get real-time workflow stats
@@ -97,8 +209,16 @@ export const workflowService = {
     by_workflow: Record<string, number>;
     by_status: Record<string, number>;
   }> {
-    const response = await api.get('/performance/stats');
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/performance/stats`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflow stats');
+    }
+
+    return await response.json();
   },
 
   // WORKFLOW CRUD OPERATIONS
@@ -110,8 +230,17 @@ export const workflowService = {
     description?: string;
     version: string;
   }): Promise<any> {
-    const response = await api.post('/workflows', data);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/workflows`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create workflow');
+    }
+
+    return await response.json();
   },
 
   // Update existing workflow
@@ -121,13 +250,29 @@ export const workflowService = {
     status?: 'draft' | 'active' | 'deprecated';
     metadata?: Record<string, any>;
   }): Promise<any> {
-    const response = await api.put(`/workflows/${workflowId}`, data);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/workflows/${workflowId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update workflow');
+    }
+
+    return await response.json();
   },
 
   // Delete workflow
   async deleteWorkflow(workflowId: string): Promise<void> {
-    await api.delete(`/workflows/${workflowId}`);
+    const response = await fetch(`${API_BASE_URL}/workflows/${workflowId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete workflow');
+    }
   },
 
   // NEW INSTANCE TRACKING METHODS
@@ -151,8 +296,16 @@ export const workflowService = {
     pending_approvals_count: number;
     estimated_completion: string | null;
   }> {
-    const response = await api.get(`/instances/${instanceId}/progress`);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/progress`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch instance progress');
+    }
+
+    return await response.json();
   },
 
   // Get all active instances
@@ -171,8 +324,16 @@ export const workflowService = {
     }>;
     total_active: number;
   }> {
-    const response = await api.get('/instances/active');
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/instances/active`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch active instances');
+    }
+
+    return await response.json();
   },
 
   // Get bottleneck analysis across all workflows
@@ -194,8 +355,16 @@ export const workflowService = {
     analysis_period_days: number;
     total_executions_analyzed: number;
   }> {
-    const response = await api.get('/instances/analytics/bottlenecks');
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/instances/analytics/bottlenecks`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch system bottlenecks');
+    }
+
+    return await response.json();
   },
 
   // Get instance execution history
@@ -220,8 +389,16 @@ export const workflowService = {
     failed_steps: string[];
     pending_approvals: string[];
   }> {
-    const response = await api.get(`/instances/${instanceId}/history`);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/history`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch instance history');
+    }
+
+    return await response.json();
   },
 
   // CITIZEN VALIDATION METHODS
@@ -248,8 +425,25 @@ export const workflowService = {
     updated_at: string;
     context: Record<string, any>;
   }>> {
-    const response = await api.get('/instances/citizen-validations', { params });
-    return response.data;
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await fetch(`${API_BASE_URL}/instances/citizen-validations?${searchParams}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch citizen validations');
+    }
+
+    return await response.json();
   },
 
   // Validate or reject citizen submitted data
@@ -262,11 +456,20 @@ export const workflowService = {
     validated_by: string;
     validation_timestamp: string;
   }> {
-    const response = await api.post(`/instances/${instanceId}/validate-citizen-data`, {
-      decision,
-      comments: comments || ''
+    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/validate-citizen-data`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        decision,
+        comments: comments || ''
+      }),
     });
-    return response.data;
+
+    if (!response.ok) {
+      throw new Error('Failed to validate citizen data');
+    }
+
+    return await response.json();
   },
 
   // Get detailed citizen data for an instance
@@ -302,8 +505,16 @@ export const workflowService = {
       timestamp: string;
     }>;
   }> {
-    const response = await api.get(`/instances/${instanceId}/citizen-data`);
-    return response.data;
+    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/citizen-data`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch citizen data');
+    }
+
+    return await response.json();
   }
 };
 
