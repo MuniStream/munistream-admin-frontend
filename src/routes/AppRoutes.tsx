@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardLayout from '@/layouts/DashboardLayout';
-import Dashboard from '@/pages/Dashboard';
+import DashboardEnhanced from '@/pages/DashboardEnhanced';
 import WorkflowsDashboard from '@/pages/WorkflowsDashboard';
 import WorkflowDetail from '@/pages/WorkflowDetail';
 import InstanceTracking from '@/pages/InstanceTracking';
@@ -38,7 +38,7 @@ function AppRoutes() {
           path="dashboard"
           element={
             <ProtectedRoute requiredPermission="view_analytics">
-              <Dashboard />
+              <DashboardEnhanced />
             </ProtectedRoute>
           }
         />

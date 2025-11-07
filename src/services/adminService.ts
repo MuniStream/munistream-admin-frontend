@@ -123,6 +123,69 @@ export const adminService = {
       params: { admin_id }
     });
     return response.data;
+  },
+
+  // Get Comprehensive Dashboard Data
+  async getDashboardData(): Promise<{
+    system_metrics: {
+      total_active_citizens: number;
+      total_workflow_instances: number;
+      instances_created_today: number;
+      instances_completed_today: number;
+      instances_created_this_week: number;
+      instances_completed_this_week: number;
+    };
+    pending_items: {
+      pending_approvals: number;
+      pending_documents: number;
+      pending_signatures: number;
+      manual_reviews: number;
+      total_pending: number;
+      pending_by_priority: Record<string, number>;
+    };
+    workflow_metrics: Array<{
+      workflow_id: string;
+      workflow_name: string;
+      total_instances: number;
+      active_instances: number;
+      completed_instances: number;
+      failed_instances: number;
+      average_processing_time_hours: number;
+      success_rate: number;
+      pending_approvals: number;
+    }>;
+    performance_metrics: {
+      average_processing_time_hours: number;
+      median_processing_time_hours: number;
+      success_rate: number;
+      failure_rate: number;
+      abandonment_rate: number;
+      bottleneck_steps: Array<any>;
+    };
+    recent_activity: Array<{
+      timestamp: string;
+      value: number;
+      label?: string;
+    }>;
+    top_workflows: Array<{
+      workflow_id: string;
+      name: string;
+      instances: number;
+      success_rate: number;
+    }>;
+    staff_workload: Record<string, number>;
+    system_health: {
+      status: string;
+      database: string;
+      pending_items_backlog: boolean;
+      high_priority_items: number;
+      average_response_time_ms: number;
+      last_check: string;
+    };
+    last_updated: string;
+  }> {
+    const response = await api.get('/admin/dashboard');
+    return response.data;
   }
 };
 
