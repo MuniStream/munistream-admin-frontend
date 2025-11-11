@@ -8,6 +8,7 @@ import InstanceDetail from '@/pages/InstanceDetail';
 import CitizenValidation from '@/pages/CitizenValidation';
 import WorkflowManagementPage from '@/pages/WorkflowManagementPage';
 import InstanceAssignmentPage from '@/pages/InstanceAssignmentPage';
+import { AdminWorkflowExecution } from '@/pages/AdminWorkflowExecution';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -81,7 +82,16 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        
+
+        <Route
+          path="admin-workflow/:instanceId"
+          element={
+            <ProtectedRoute requiredPermission="view_instances">
+              <AdminWorkflowExecution />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="citizen-validation"
           element={

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -100,6 +101,7 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 const InstanceAssignment: React.FC = () => {
     const { t } = useI18n();
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     // State
     const [instances, setInstances] = useState<WorkflowInstance[]>([]);
@@ -231,15 +233,8 @@ const InstanceAssignment: React.FC = () => {
     };
 
     const handleStartWorkflow = async (instance: WorkflowInstance) => {
-        try {
-            await AssignmentService.startWorkflow(instance.instance_id, {
-                notes: 'Started from assignment interface'
-            });
-            await fetchData();
-            setError(null);
-        } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || 'Failed to start workflow');
-        }
+        // Navigate to the admin workflow execution page
+        navigate(`/admin-workflow/${instance.instance_id}`);
     };
 
     const handleQuickStart = async (instance: WorkflowInstance) => {
@@ -605,7 +600,7 @@ const InstanceAssignment: React.FC = () => {
                                             // Show for admin workflows that are ready to start
                                             (instance.assignment_status === 'pending_review' && instance.status !== 'running')
                                         ) && (
-                                            <Tooltip title="Start Assigned Workflow">
+                                            <Tooltip title="Execute Admin Workflow">
                                                 <IconButton
                                                     size="small"
                                                     color="success"
