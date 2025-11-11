@@ -37,26 +37,19 @@ import {
 import {
     Assignment as AssignmentIcon,
     PlayArrow as StartIcon,
-    CheckCircle as CompleteIcon,
-    Cancel as RejectIcon,
-    Edit as ModificationIcon,
     PersonAdd as AssignUserIcon,
     GroupAdd as AssignTeamIcon,
     MoreVert as MoreIcon,
     Refresh as RefreshIcon,
-    FilterList as FilterIcon,
     PersonRemove as UnassignIcon,
     Add as AddIcon,
-    Remove as RemoveIcon,
     Visibility as ViewIcon,
-    FactCheck as ValidateIcon,
-    ThumbUp as ApproveFieldIcon,
-    ThumbDown as RejectFieldIcon,
-    Pending as PendingIcon
 } from '@mui/icons-material';
 
 import { useI18n } from '../contexts/I18nContext';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
+import AssignmentService from '../services/assignmentService';
 
 // Types
 interface WorkflowInstance {
@@ -106,7 +99,8 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 
 const InstanceAssignment: React.FC = () => {
     const { t } = useI18n();
-    
+    const { user } = useAuth();
+
     // State
     const [instances, setInstances] = useState<WorkflowInstance[]>([]);
     const [users, setUsers] = useState<User[]>([]);
@@ -118,34 +112,21 @@ const InstanceAssignment: React.FC = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [tabValue, setTabValue] = useState(0);
     const [selectedInstance, setSelectedInstance] = useState<WorkflowInstance | null>(null);
-    
+
     // Filters
     const [statusFilter, setStatusFilter] = useState<string>('');
     const [workflowFilter, setWorkflowFilter] = useState<string>('');
     const [teamFilter, setTeamFilter] = useState<string>('');
-    
+
     // Dialogs
     const [assignUserDialog, setAssignUserDialog] = useState(false);
     const [assignTeamDialog, setAssignTeamDialog] = useState(false);
-    const [approveDialog, setApproveDialog] = useState(false);
-    const [rejectDialog, setRejectDialog] = useState(false);
-    const [modificationDialog, setModificationDialog] = useState(false);
     const [viewDetailsDialog, setViewDetailsDialog] = useState(false);
     const [instanceDetails, setInstanceDetails] = useState<any>(null);
-    const [validationDialog, setValidationDialog] = useState(false);
-    const [fieldValidations, setFieldValidations] = useState<Record<string, {
-        status: 'pending' | 'approved' | 'rejected';
-        comments: string;
-    }>>({});
     const [selectedUserId, setSelectedUserId] = useState<string>('');
     const [selectedTeamId, setSelectedTeamId] = useState<string>('');
     const [assignmentNotes, setAssignmentNotes] = useState('');
-    const [approvalComments, setApprovalComments] = useState('');
-    const [rejectionReason, setRejectionReason] = useState('');
-    const [rejectionComments, setRejectionComments] = useState('');
-    const [modificationRequests, setModificationRequests] = useState<string[]>(['']);
-    const [modificationComments, setModificationComments] = useState('');
-    
+
     // Menu
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [menuInstance, setMenuInstance] = useState<WorkflowInstance | null>(null);
@@ -159,22 +140,52 @@ const InstanceAssignment: React.FC = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams({
-                page: (page + 1).toString(),
-                page_size: rowsPerPage.toString(),
-            });
+            let response;
 
-            if (statusFilter) params.append('assignment_status', statusFilter);
-            if (workflowFilter) params.append('workflow_id', workflowFilter);
-            if (teamFilter) params.append('team_id', teamFilter);
+            if (tabValue === 0) {
+                // Pending tab: Get unassigned instances
+                response = await AssignmentService.listAssignments({
+                    skip: page * rowsPerPage,
+                    limit: rowsPerPage,
+                    status: statusFilter || undefined,
+                    // Don't set user_id or team_id to get unassigned instances
+                });
+            } else {
+                // Assigned to me tab: Get instances assigned to current user
+                response = await AssignmentService.listAssignments({
+                    skip: page * rowsPerPage,
+                    limit: rowsPerPage,
+                    status: statusFilter || undefined,
+                    user_id: user?.sub, // Filter by current user
+                });
+            }
 
-            const response = await api.get(`/instances/my-assignments?${params}`);
+            // Convert to expected format
+            setInstances(response.assignments.map((assignment: any) => ({
+                instance_id: assignment.instance_id,
+                workflow_id: assignment.workflow_id,
+                user_id: assignment.citizen_email || 'unknown',
+                status: assignment.status,
+                current_step: assignment.current_step,
+                assigned_user_id: assignment.assigned_to_user,
+                assigned_team_id: assignment.assigned_to_team,
+                assignment_status: assignment.status,
+                assignment_type: 'MANUAL',
+                assigned_at: assignment.assigned_at,
+                assigned_by: assignment.assigned_by,
+                assignment_notes: '',
+                created_at: assignment.created_at,
+                updated_at: assignment.updated_at,
+                completed_at: null
+            })));
+            console.log('🔍 MAPPED INSTANCES LENGTH:', response.assignments.length);
+            console.log('🔍 FIRST MAPPED INSTANCE:', response.assignments.length > 0 ? response.assignments.map(a => ({id: a.instance_id, status: a.status, team: a.assigned_to_team}))[0] : 'NONE');
+            setTotalCount(response.total);
 
-            setInstances(response.data.instances);
-            setTotalCount(response.data.total);
             setError(null);
         } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || 'Failed to fetch data');
+            console.error('Failed to fetch assignments:', err);
+            setError(err.response?.data?.detail || err.message || 'Failed to fetch assignments');
         } finally {
             setLoading(false);
         }
@@ -182,8 +193,14 @@ const InstanceAssignment: React.FC = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await api.get('/auth/users-for-assignment');
-            setUsers(response.data);
+            const users = await AssignmentService.listAssignableUsers();
+            const formattedUsers = users.map(user => ({
+                id: user.user_id,
+                full_name: user.user_name,
+                email: user.user_email,
+                role: user.role
+            }));
+            setUsers(formattedUsers);
         } catch (err) {
             console.error('Failed to fetch users:', err);
         }
@@ -191,128 +208,47 @@ const InstanceAssignment: React.FC = () => {
 
     const fetchTeams = async () => {
         try {
-            const response = await api.get('/teams/');
-            setTeams(response.data.teams || response.data);
+            const teams = await AssignmentService.listAvailableTeams();
+            const formattedTeams = teams.map(team => ({
+                team_id: team.team_id,
+                name: team.team_name,
+                members: Array(team.member_count).fill(null)
+            }));
+            setTeams(formattedTeams);
         } catch (err) {
             console.error('Failed to fetch teams:', err);
         }
     };
 
-    const fetchInstanceDetails = async (instanceId: string, openValidation: boolean = false) => {
+    const fetchInstanceDetails = async (instanceId: string) => {
         try {
             const response = await api.get(`/instances/${instanceId}`);
             setInstanceDetails(response.data);
-            
-            if (openValidation) {
-                // Initialize field validations for all citizen data fields
-                const initialValidations: Record<string, {status: 'pending' | 'approved' | 'rejected'; comments: string}> = {};
-                
-                if (response.data.context) {
-                    Object.entries(response.data.context).forEach(([key, value]) => {
-                        if (key.includes('citizen_data') && typeof value === 'object') {
-                            Object.keys(value as any).forEach(fieldKey => {
-                                const validationKey = `${key}.${fieldKey}`;
-                                initialValidations[validationKey] = {
-                                    status: 'pending',
-                                    comments: ''
-                                };
-                            });
-                        }
-                    });
-                }
-                
-                setFieldValidations(initialValidations);
-                setSelectedInstance(instanceDetails => {
-                    // Find the instance in the current instances list
-                    const instance = instances.find(i => i.instance_id === instanceId);
-                    return instance || null;
-                });
-                setValidationDialog(true);
-            } else {
-                setViewDetailsDialog(true);
-            }
+            setViewDetailsDialog(true);
         } catch (err: any) {
             setError(err.response?.data?.detail || err.message || 'Failed to fetch instance details');
         }
     };
 
-    const handleStartReview = async (instance: WorkflowInstance) => {
+    const handleStartWorkflow = async (instance: WorkflowInstance) => {
         try {
-            await api.post(`/instances/${instance.instance_id}/start-review`, {});
-
+            await AssignmentService.startWorkflow(instance.instance_id, {
+                notes: 'Started from assignment interface'
+            });
             await fetchData();
             setError(null);
         } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || 'Failed to start review');
+            setError(err.response?.data?.detail || err.message || 'Failed to start workflow');
         }
     };
 
-    const handleApproveByReviewer = async () => {
-        if (!selectedInstance) return;
-
+    const handleQuickStart = async (instance: WorkflowInstance) => {
         try {
-            await api.post(`/instances/${selectedInstance.instance_id}/approve-by-reviewer`, {
-                comments: approvalComments
-            });
-
+            await AssignmentService.quickStartAssignment(instance.instance_id, 'Quick assignment and start');
             await fetchData();
-            setApproveDialog(false);
-            resetDialogs();
             setError(null);
         } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || 'Failed to approve instance');
-        }
-    };
-
-    const handleRejectByReviewer = async () => {
-        if (!selectedInstance || !rejectionReason) return;
-
-        try {
-            await api.post(`/instances/${selectedInstance.instance_id}/reject-by-reviewer`, {
-                reason: rejectionReason,
-                comments: rejectionComments
-            });
-
-            await fetchData();
-            setRejectDialog(false);
-            resetDialogs();
-            setError(null);
-        } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || 'Failed to reject instance');
-        }
-    };
-
-    const handleRequestModifications = async () => {
-        if (!selectedInstance) return;
-
-        // Filter out empty modification requests
-        const validModifications = modificationRequests.filter(req => req.trim() !== '');
-        
-        if (validModifications.length === 0) {
-            setError('At least one modification request is required');
-            return;
-        }
-
-        try {
-            // Convert string array to modification objects expected by backend
-            const modifications = validModifications.map((request, index) => ({
-                id: `mod_${index + 1}`,
-                description: request,
-                field: null, // Can be enhanced later to specify which field needs modification
-                priority: 'normal'
-            }));
-
-            await api.post(`/instances/${selectedInstance.instance_id}/request-modifications`, {
-                modifications: modifications,
-                comments: modificationComments
-            });
-
-            await fetchData();
-            setModificationDialog(false);
-            resetDialogs();
-            setError(null);
-        } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || 'Failed to request modifications');
+            setError(err.response?.data?.detail || err.message || 'Failed to quick start workflow');
         }
     };
 
@@ -320,11 +256,11 @@ const InstanceAssignment: React.FC = () => {
         if (!selectedInstance || !selectedUserId) return;
 
         try {
-            await api.post(`/instances/${selectedInstance.instance_id}/assign-to-user`, {
-                user_id: selectedUserId,
-                notes: assignmentNotes
-            });
-
+            await AssignmentService.assignToUser(
+                selectedInstance.instance_id,
+                selectedUserId,
+                assignmentNotes
+            );
             await fetchData();
             setAssignUserDialog(false);
             setSelectedUserId('');
@@ -340,11 +276,11 @@ const InstanceAssignment: React.FC = () => {
         if (!selectedInstance || !selectedTeamId) return;
 
         try {
-            await api.post(`/instances/${selectedInstance.instance_id}/assign-to-team`, {
-                team_id: selectedTeamId,
-                notes: assignmentNotes
-            });
-
+            await AssignmentService.assignToTeam(
+                selectedInstance.instance_id,
+                selectedTeamId,
+                assignmentNotes
+            );
             await fetchData();
             setAssignTeamDialog(false);
             setSelectedTeamId('');
@@ -361,7 +297,6 @@ const InstanceAssignment: React.FC = () => {
             await api.post(`/instances/${instance.instance_id}/unassign`, {
                 reason: 'manual_unassignment'
             });
-
             await fetchData();
             handleCloseMenu();
             setError(null);
@@ -378,86 +313,6 @@ const InstanceAssignment: React.FC = () => {
     const handleCloseMenu = () => {
         setAnchorEl(null);
         setMenuInstance(null);
-    };
-
-    const updateFieldValidation = (fieldKey: string, status: 'pending' | 'approved' | 'rejected', comments: string = '') => {
-        setFieldValidations(prev => ({
-            ...prev,
-            [fieldKey]: { status, comments }
-        }));
-    };
-
-    const handleSubmitValidation = async () => {
-        if (!selectedInstance) return;
-
-        try {
-            // Calculate validation summary
-            const validations = Object.values(fieldValidations);
-            const approvedCount = validations.filter(v => v.status === 'approved').length;
-            const rejectedCount = validations.filter(v => v.status === 'rejected').length;
-            const pendingCount = validations.filter(v => v.status === 'pending').length;
-
-            // Determine overall validation result
-            let overallStatus = 'pending';
-            let overallComments = '';
-
-            if (pendingCount === 0) {
-                if (rejectedCount > 0) {
-                    overallStatus = 'rejected';
-                    overallComments = `${rejectedCount} field(s) rejected, ${approvedCount} field(s) approved`;
-                } else {
-                    overallStatus = 'approved';
-                    overallComments = `All ${approvedCount} field(s) approved`;
-                }
-            }
-
-            // Send validation results to backend
-            await api.post(`/instances/${selectedInstance.instance_id}/validate-data`, {
-                field_validations: fieldValidations,
-                overall_status: overallStatus,
-                validation_summary: overallComments
-            });
-
-            await fetchData();
-            setValidationDialog(false);
-            setFieldValidations({});
-            setSelectedInstance(null);
-            setInstanceDetails(null);
-            setError(null);
-        } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || 'Failed to submit validation');
-        }
-    };
-
-    // Helper functions for modification requests
-    const addModificationRequest = () => {
-        setModificationRequests([...modificationRequests, '']);
-    };
-
-    const updateModificationRequest = (index: number, value: string) => {
-        const updated = [...modificationRequests];
-        updated[index] = value;
-        setModificationRequests(updated);
-    };
-
-    const removeModificationRequest = (index: number) => {
-        if (modificationRequests.length > 1) {
-            const updated = modificationRequests.filter((_, i) => i !== index);
-            setModificationRequests(updated);
-        }
-    };
-
-    // Dialog reset functions
-    const resetDialogs = () => {
-        setSelectedInstance(null);
-        setApprovalComments('');
-        setRejectionReason('');
-        setRejectionComments('');
-        setModificationRequests(['']);
-        setModificationComments('');
-        setAssignmentNotes('');
-        setSelectedUserId('');
-        setSelectedTeamId('');
     };
 
     const getStatusColor = (status: string): "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning" => {
@@ -485,8 +340,27 @@ const InstanceAssignment: React.FC = () => {
             case 'cancelled': return 'default';
             case 'awaiting_input': return 'warning';
             case 'pending_validation': return 'secondary';
+            case 'waiting_for_start': return 'info';
+            case 'pending_assignment': return 'warning';
+            // Assignment status colors
+            case 'pending_review': return 'info';
+            case 'under_review': return 'warning';
+            case 'approved_by_reviewer': return 'primary';
+            case 'rejected': return 'error';
+            case 'modification_requested': return 'secondary';
+            case 'pending_signature': return 'warning';
+            case 'escalated': return 'error';
             default: return 'default';
         }
+    };
+
+    const getCombinedStatus = (instance: any) => {
+        // If instance has assignment status, it's more relevant to show that
+        if (instance.assignment_status && instance.assignment_status !== 'unassigned') {
+            return instance.assignment_status;
+        }
+        // Otherwise show the instance status
+        return instance.status;
     };
 
     const formatDate = (dateString: string | null) => {
@@ -494,28 +368,41 @@ const InstanceAssignment: React.FC = () => {
         return new Date(dateString).toLocaleString();
     };
 
-    // Filter instances by assignment status for tabs
-    const myAssignedInstances = instances.filter(i => 
-        (i.assignment_status === 'pending_review' || i.assignment_status === 'under_review') &&
-        i.assigned_user_id
-    );
-    
-    const teamAssignedInstances = instances.filter(i => 
-        (i.assignment_status === 'pending_review' || i.assignment_status === 'under_review') &&
-        i.assigned_team_id && !i.assigned_user_id
-    );
-    
-    const completedInstances = instances.filter(i => 
-        i.assignment_status === 'completed'
-    );
+    // Filter instances for the two-tab system
+    console.log('🔍 INSTANCES AT RENDER:', instances.length);
+    const pendingInstances = instances; // Show all instances since backend filters to ADMIN only
+    console.log('🔍 PENDING INSTANCES:', pendingInstances.length);
+
+    const assignedToMeInstances = instances.filter(i => {
+        const isAssignedToMe = i.assigned_user_id === user?.sub;
+        const isAssignedToMyTeam = i.assigned_team_id && user?.teams?.includes(i.assigned_team_id);
+        return isAssignedToMe || isAssignedToMyTeam;
+    }).sort((a, b) => {
+        const statusOrder: Record<string, number> = {
+            'waiting_for_start': 0,
+            'pending_start': 1,
+            'waiting': 2,
+            'running': 3,
+            'in_progress': 4,
+            'under_review': 5,
+            'pending_review': 6,
+            'completed': 7,
+            'failed': 8,
+            'cancelled': 9
+        };
+        return (statusOrder[a.status] || 10) - (statusOrder[b.status] || 10);
+    });
 
     const getCurrentInstances = () => {
-        switch (tabValue) {
-            case 0: return myAssignedInstances;
-            case 1: return teamAssignedInstances;
-            case 2: return completedInstances;
-            default: return instances;
-        }
+        const result = (() => {
+            switch (tabValue) {
+                case 0: return pendingInstances;
+                case 1: return assignedToMeInstances;
+                default: return pendingInstances;
+            }
+        })();
+        console.log('🔍 getCurrentInstances() TAB:', tabValue, 'RETURNING:', result.length, 'ITEMS');
+        return result;
     };
 
     return (
@@ -532,56 +419,38 @@ const InstanceAssignment: React.FC = () => {
 
             {/* Summary Cards */}
             <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={12} sm={6}>
                     <Card>
                         <CardContent>
                             <Typography color="textSecondary" gutterBottom>
-                                {t('my_assignments')}
+                                Pending Workflows
                             </Typography>
                             <Typography variant="h5">
-                                <Badge badgeContent={myAssignedInstances.length} color="primary">
+                                <Badge badgeContent={pendingInstances.length} color="warning">
+                                    <StartIcon />
+                                </Badge>
+                                <span style={{ marginLeft: 16 }}>{pendingInstances.length}</span>
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary">
+                                Unassigned or unstarted workflows
+                            </Typography>
+                        </CardContent>
+                    </Card>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <Card>
+                        <CardContent>
+                            <Typography color="textSecondary" gutterBottom>
+                                Assigned to Me
+                            </Typography>
+                            <Typography variant="h5">
+                                <Badge badgeContent={assignedToMeInstances.length} color="primary">
                                     <AssignmentIcon />
                                 </Badge>
-                                <span style={{ marginLeft: 16 }}>{myAssignedInstances.length}</span>
+                                <span style={{ marginLeft: 16 }}>{assignedToMeInstances.length}</span>
                             </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card>
-                        <CardContent>
-                            <Typography color="textSecondary" gutterBottom>
-                                {t('team_assignments')}
-                            </Typography>
-                            <Typography variant="h5">
-                                <Badge badgeContent={teamAssignedInstances.length} color="secondary">
-                                    <AssignTeamIcon />
-                                </Badge>
-                                <span style={{ marginLeft: 16 }}>{teamAssignedInstances.length}</span>
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card>
-                        <CardContent>
-                            <Typography color="textSecondary" gutterBottom>
-                                {t('in_progress')}
-                            </Typography>
-                            <Typography variant="h5">
-                                {instances.filter(i => i.assignment_status === 'under_review').length}
-                            </Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card>
-                        <CardContent>
-                            <Typography color="textSecondary" gutterBottom>
-                                {t('completed')}
-                            </Typography>
-                            <Typography variant="h5">
-                                {completedInstances.length}
+                            <Typography variant="body2" color="textSecondary">
+                                Workflows assigned to me or my team
                             </Typography>
                         </CardContent>
                     </Card>
@@ -654,26 +523,19 @@ const InstanceAssignment: React.FC = () => {
             {/* Tabs */}
             <Paper sx={{ mb: 2 }}>
                 <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
-                    <Tab 
+                    <Tab
                         label={
-                            <Badge badgeContent={myAssignedInstances.length} color="primary">
-                                {t('my_assignments')}
+                            <Badge badgeContent={pendingInstances.length} color="warning">
+                                Pending
                             </Badge>
-                        } 
+                        }
                     />
-                    <Tab 
+                    <Tab
                         label={
-                            <Badge badgeContent={teamAssignedInstances.length} color="secondary">
-                                {t('team_assignments')}
+                            <Badge badgeContent={assignedToMeInstances.length} color="primary">
+                                Assigned to Me
                             </Badge>
-                        } 
-                    />
-                    <Tab 
-                        label={
-                            <Badge badgeContent={completedInstances.length} color="success">
-                                {t('completed')}
-                            </Badge>
-                        } 
+                        }
                     />
                 </Tabs>
             </Paper>
@@ -687,7 +549,6 @@ const InstanceAssignment: React.FC = () => {
                             <TableCell>{t('workflow')}</TableCell>
                             <TableCell>{t('citizen')}</TableCell>
                             <TableCell>{t('status')}</TableCell>
-                            <TableCell>{t('assignment_status')}</TableCell>
                             <TableCell>{t('assigned_to')}</TableCell>
                             <TableCell>{t('assigned_at')}</TableCell>
                             <TableCell>{t('actions')}</TableCell>
@@ -704,16 +565,9 @@ const InstanceAssignment: React.FC = () => {
                                 <TableCell>{instance.workflow_id}</TableCell>
                                 <TableCell>{instance.user_id}</TableCell>
                                 <TableCell>
-                                    <Chip 
-                                        label={instance.status} 
-                                        color={getInstanceStatusColor(instance.status)}
-                                        size="small"
-                                    />
-                                </TableCell>
-                                <TableCell>
-                                    <Chip 
-                                        label={instance.assignment_status || 'unassigned'} 
-                                        color={getStatusColor(instance.assignment_status || 'unassigned')}
+                                    <Chip
+                                        label={getCombinedStatus(instance)}
+                                        color={getInstanceStatusColor(getCombinedStatus(instance))}
                                         size="small"
                                     />
                                 </TableCell>
@@ -742,65 +596,35 @@ const InstanceAssignment: React.FC = () => {
                                                 <ViewIcon />
                                             </IconButton>
                                         </Tooltip>
-                                        <Tooltip title="Validate Data Fields">
-                                            <IconButton
-                                                size="small"
-                                                color="secondary"
-                                                onClick={() => fetchInstanceDetails(instance.instance_id, true)}
-                                            >
-                                                <ValidateIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                        {instance.assignment_status === 'pending_review' && (
-                                            <Tooltip title="Start Review">
+                                        {(
+                                            // Current conditions
+                                            (instance.status === 'waiting_for_start' || instance.assignment_status === 'waiting_for_start') ||
+                                            // Additional admin workflow conditions
+                                            (instance.status === 'pending_assignment' && instance.assigned_user_id) ||
+                                            (instance.assignment_status === 'assigned' && instance.status !== 'running') ||
+                                            // Show for admin workflows that are ready to start
+                                            (instance.assignment_status === 'pending_review' && instance.status !== 'running')
+                                        ) && (
+                                            <Tooltip title="Start Assigned Workflow">
                                                 <IconButton
                                                     size="small"
-                                                    color="primary"
-                                                    onClick={() => handleStartReview(instance)}
+                                                    color="success"
+                                                    onClick={() => handleStartWorkflow(instance)}
                                                 >
                                                     <StartIcon />
                                                 </IconButton>
                                             </Tooltip>
                                         )}
-                                        {instance.assignment_status === 'under_review' && (
-                                            <>
-                                                <Tooltip title="Approve by Reviewer">
-                                                    <IconButton
-                                                        size="small"
-                                                        color="success"
-                                                        onClick={() => {
-                                                            setSelectedInstance(instance);
-                                                            setApproveDialog(true);
-                                                        }}
-                                                    >
-                                                        <CompleteIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title="Reject Instance">
-                                                    <IconButton
-                                                        size="small"
-                                                        color="error"
-                                                        onClick={() => {
-                                                            setSelectedInstance(instance);
-                                                            setRejectDialog(true);
-                                                        }}
-                                                    >
-                                                        <RejectIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                <Tooltip title="Request Modifications">
-                                                    <IconButton
-                                                        size="small"
-                                                        color="warning"
-                                                        onClick={() => {
-                                                            setSelectedInstance(instance);
-                                                            setModificationDialog(true);
-                                                        }}
-                                                    >
-                                                        <ModificationIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </>
+                                        {!instance.assigned_user_id && !instance.assigned_team_id && (
+                                            <Tooltip title="Quick Start (Assign to Me & Start)">
+                                                <IconButton
+                                                    size="small"
+                                                    color="warning"
+                                                    onClick={() => handleQuickStart(instance)}
+                                                >
+                                                    <AddIcon />
+                                                </IconButton>
+                                            </Tooltip>
                                         )}
                                         <Tooltip title={t('more_actions')}>
                                             <IconButton
@@ -929,330 +753,14 @@ const InstanceAssignment: React.FC = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Approve Instance Dialog */}
-            <Dialog open={approveDialog} onClose={() => { setApproveDialog(false); resetDialogs(); }} maxWidth="md" fullWidth>
-                <DialogTitle>Approve Instance</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Review Comments"
-                        multiline
-                        rows={4}
-                        value={approvalComments}
-                        onChange={(e) => setApprovalComments(e.target.value)}
-                        helperText="Add any comments about your approval decision"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => { setApproveDialog(false); resetDialogs(); }}>Cancel</Button>
-                    <Button onClick={handleApproveByReviewer} variant="contained" color="success">
-                        Approve & Forward for Signature
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Reject Instance Dialog */}
-            <Dialog open={rejectDialog} onClose={() => { setRejectDialog(false); resetDialogs(); }} maxWidth="md" fullWidth>
-                <DialogTitle>Reject Instance</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Rejection Reason *"
-                        value={rejectionReason}
-                        onChange={(e) => setRejectionReason(e.target.value)}
-                        helperText="Please provide a clear reason for rejection"
-                        required
-                    />
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Additional Comments"
-                        multiline
-                        rows={3}
-                        value={rejectionComments}
-                        onChange={(e) => setRejectionComments(e.target.value)}
-                        helperText="Optional: Add detailed explanation for the citizen"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => { setRejectDialog(false); resetDialogs(); }}>Cancel</Button>
-                    <Button 
-                        onClick={handleRejectByReviewer} 
-                        variant="contained" 
-                        color="error"
-                        disabled={!rejectionReason.trim()}
-                    >
-                        Reject Instance
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Request Modifications Dialog */}
-            <Dialog open={modificationDialog} onClose={() => { setModificationDialog(false); resetDialogs(); }} maxWidth="md" fullWidth>
-                <DialogTitle>Request Modifications from Citizen</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                        Specify what changes the citizen needs to make to their submission:
-                    </Typography>
-                    
-                    {modificationRequests.map((request, index) => (
-                        <Box key={index} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
-                            <TextField
-                                fullWidth
-                                label={`Modification Request ${index + 1}`}
-                                multiline
-                                rows={2}
-                                value={request}
-                                onChange={(e) => updateModificationRequest(index, e.target.value)}
-                                placeholder="Describe what needs to be changed..."
-                            />
-                            {modificationRequests.length > 1 && (
-                                <IconButton 
-                                    color="error" 
-                                    onClick={() => removeModificationRequest(index)}
-                                    sx={{ mt: 1 }}
-                                >
-                                    <RemoveIcon />
-                                </IconButton>
-                            )}
-                        </Box>
-                    ))}
-                    
-                    <Button
-                        startIcon={<AddIcon />}
-                        onClick={addModificationRequest}
-                        sx={{ mb: 2 }}
-                    >
-                        Add Another Request
-                    </Button>
-                    
-                    <TextField
-                        fullWidth
-                        margin="normal"
-                        label="Additional Comments for Citizen"
-                        multiline
-                        rows={3}
-                        value={modificationComments}
-                        onChange={(e) => setModificationComments(e.target.value)}
-                        helperText="Optional: Provide general guidance or context"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => { setModificationDialog(false); resetDialogs(); }}>Cancel</Button>
-                    <Button 
-                        onClick={handleRequestModifications} 
-                        variant="contained" 
-                        color="warning"
-                        disabled={modificationRequests.every(req => !req.trim())}
-                    >
-                        Send Modification Requests
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Field Validation Dialog */}
-            <Dialog 
-                open={validationDialog} 
-                onClose={() => { 
-                    setValidationDialog(false); 
-                    setFieldValidations({});
-                    setSelectedInstance(null);
-                    setInstanceDetails(null);
-                }} 
-                maxWidth="lg" 
-                fullWidth
-            >
-                <DialogTitle>
-                    Validate Data Fields: {instanceDetails?.instance_id?.substring(0, 8)}...
-                </DialogTitle>
-                <DialogContent>
-                    {instanceDetails && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-                                Please review each field submitted by the citizen and mark it as approved or rejected. 
-                                Add comments to explain your decision, especially for rejections.
-                            </Typography>
-
-                            {/* Progress Summary */}
-                            <Card sx={{ mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
-                                <CardContent>
-                                    <Typography variant="h6" gutterBottom>Validation Progress</Typography>
-                                    <Box sx={{ display: 'flex', gap: 3 }}>
-                                        <Box sx={{ textAlign: 'center' }}>
-                                            <Typography variant="h4">
-                                                {Object.values(fieldValidations).filter(v => v.status === 'approved').length}
-                                            </Typography>
-                                            <Typography variant="body2">Approved</Typography>
-                                        </Box>
-                                        <Box sx={{ textAlign: 'center' }}>
-                                            <Typography variant="h4">
-                                                {Object.values(fieldValidations).filter(v => v.status === 'rejected').length}
-                                            </Typography>
-                                            <Typography variant="body2">Rejected</Typography>
-                                        </Box>
-                                        <Box sx={{ textAlign: 'center' }}>
-                                            <Typography variant="h4">
-                                                {Object.values(fieldValidations).filter(v => v.status === 'pending').length}
-                                            </Typography>
-                                            <Typography variant="body2">Pending</Typography>
-                                        </Box>
-                                    </Box>
-                                </CardContent>
-                            </Card>
-
-                            {/* Field Validation Cards */}
-                            {instanceDetails.context && Object.entries(instanceDetails.context).map(([contextKey, contextValue]) => {
-                                if (contextKey.includes('citizen_data') && typeof contextValue === 'object') {
-                                    return (
-                                        <Card key={contextKey} sx={{ mb: 3 }}>
-                                            <CardContent>
-                                                <Typography variant="h6" color="primary" gutterBottom>
-                                                    {contextKey.replace('_citizen_data', '').replace('_', ' ').toUpperCase()}
-                                                </Typography>
-                                                
-                                                {Object.entries(contextValue as any).map(([fieldKey, fieldValue]) => {
-                                                    const validationKey = `${contextKey}.${fieldKey}`;
-                                                    const validation = fieldValidations[validationKey] || { status: 'pending', comments: '' };
-                                                    
-                                                    return (
-                                                        <Paper 
-                                                            key={fieldKey} 
-                                                            sx={{ 
-                                                                p: 2, 
-                                                                mb: 2, 
-                                                                border: validation.status === 'approved' ? '2px solid #4caf50' :
-                                                                        validation.status === 'rejected' ? '2px solid #f44336' :
-                                                                        '2px solid #e0e0e0'
-                                                            }}
-                                                        >
-                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                                                                <Box sx={{ flex: 1 }}>
-                                                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                                                        {fieldKey.replace('_', ' ').toUpperCase()}
-                                                                    </Typography>
-                                                                    <Typography 
-                                                                        variant="body1" 
-                                                                        sx={{ 
-                                                                            p: 1, 
-                                                                            bgcolor: 'grey.100', 
-                                                                            borderRadius: 1,
-                                                                            fontFamily: 'monospace'
-                                                                        }}
-                                                                    >
-                                                                        {String(fieldValue)}
-                                                                    </Typography>
-                                                                </Box>
-                                                                
-                                                                <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
-                                                                    <Tooltip title="Approve Field">
-                                                                        <IconButton
-                                                                            color={validation.status === 'approved' ? 'success' : 'default'}
-                                                                            onClick={() => updateFieldValidation(validationKey, 'approved')}
-                                                                        >
-                                                                            <ApproveFieldIcon />
-                                                                        </IconButton>
-                                                                    </Tooltip>
-                                                                    <Tooltip title="Reject Field">
-                                                                        <IconButton
-                                                                            color={validation.status === 'rejected' ? 'error' : 'default'}
-                                                                            onClick={() => updateFieldValidation(validationKey, 'rejected')}
-                                                                        >
-                                                                            <RejectFieldIcon />
-                                                                        </IconButton>
-                                                                    </Tooltip>
-                                                                    <Tooltip title="Mark as Pending">
-                                                                        <IconButton
-                                                                            color={validation.status === 'pending' ? 'warning' : 'default'}
-                                                                            onClick={() => updateFieldValidation(validationKey, 'pending')}
-                                                                        >
-                                                                            <PendingIcon />
-                                                                        </IconButton>
-                                                                    </Tooltip>
-                                                                </Box>
-                                                            </Box>
-                                                            
-                                                            {/* Status Indicator */}
-                                                            <Box sx={{ mb: 2 }}>
-                                                                <Chip 
-                                                                    label={validation.status.toUpperCase()}
-                                                                    color={
-                                                                        validation.status === 'approved' ? 'success' :
-                                                                        validation.status === 'rejected' ? 'error' : 'warning'
-                                                                    }
-                                                                    size="small"
-                                                                    icon={
-                                                                        validation.status === 'approved' ? <ApproveFieldIcon /> :
-                                                                        validation.status === 'rejected' ? <RejectFieldIcon /> : <PendingIcon />
-                                                                    }
-                                                                />
-                                                            </Box>
-                                                            
-                                                            {/* Comments Field */}
-                                                            <TextField
-                                                                fullWidth
-                                                                label="Validation Comments"
-                                                                multiline
-                                                                rows={2}
-                                                                value={validation.comments}
-                                                                onChange={(e) => updateFieldValidation(validationKey, validation.status, e.target.value)}
-                                                                placeholder={
-                                                                    validation.status === 'rejected' ? 'Required: Explain why this field is rejected' :
-                                                                    validation.status === 'approved' ? 'Optional: Add approval notes' :
-                                                                    'Add validation comments...'
-                                                                }
-                                                                error={validation.status === 'rejected' && !validation.comments.trim()}
-                                                                helperText={
-                                                                    validation.status === 'rejected' && !validation.comments.trim() ? 
-                                                                    'Comments are required for rejected fields' : ''
-                                                                }
-                                                                variant="outlined"
-                                                                size="small"
-                                                            />
-                                                        </Paper>
-                                                    );
-                                                })}
-                                            </CardContent>
-                                        </Card>
-                                    );
-                                }
-                                return null;
-                            })}
-                        </Box>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => { 
-                        setValidationDialog(false); 
-                        setFieldValidations({});
-                        setSelectedInstance(null);
-                        setInstanceDetails(null);
-                    }}>
-                        Cancel
-                    </Button>
-                    <Button 
-                        onClick={handleSubmitValidation}
-                        variant="contained"
-                        color="primary"
-                        disabled={
-                            Object.values(fieldValidations).some(v => v.status === 'rejected' && !v.comments.trim()) ||
-                            Object.values(fieldValidations).every(v => v.status === 'pending')
-                        }
-                    >
-                        Submit Validation
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
             {/* View Instance Details Dialog */}
-            <Dialog 
-                open={viewDetailsDialog} 
-                onClose={() => { 
-                    setViewDetailsDialog(false); 
-                    setInstanceDetails(null); 
-                }} 
-                maxWidth="lg" 
+            <Dialog
+                open={viewDetailsDialog}
+                onClose={() => {
+                    setViewDetailsDialog(false);
+                    setInstanceDetails(null);
+                }}
+                maxWidth="lg"
                 fullWidth
             >
                 <DialogTitle>
@@ -1261,7 +769,6 @@ const InstanceAssignment: React.FC = () => {
                 <DialogContent>
                     {instanceDetails && (
                         <Box sx={{ mt: 2 }}>
-                            {/* Basic Instance Info */}
                             <Card sx={{ mb: 3 }}>
                                 <CardContent>
                                     <Typography variant="h6" gutterBottom>Basic Information</Typography>
@@ -1278,8 +785,8 @@ const InstanceAssignment: React.FC = () => {
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
                                             <Typography variant="body2" color="textSecondary">Status:</Typography>
-                                            <Chip 
-                                                label={instanceDetails.status} 
+                                            <Chip
+                                                label={instanceDetails.status}
                                                 color={getInstanceStatusColor(instanceDetails.status)}
                                                 size="small"
                                             />
@@ -1294,15 +801,14 @@ const InstanceAssignment: React.FC = () => {
                                 </CardContent>
                             </Card>
 
-                            {/* Assignment Info */}
                             <Card sx={{ mb: 3 }}>
                                 <CardContent>
                                     <Typography variant="h6" gutterBottom>Assignment Information</Typography>
                                     <Grid container spacing={2}>
                                         <Grid item xs={12} sm={6}>
                                             <Typography variant="body2" color="textSecondary">Assignment Status:</Typography>
-                                            <Chip 
-                                                label={instanceDetails.assignment_status || 'unassigned'} 
+                                            <Chip
+                                                label={instanceDetails.assignment_status || 'unassigned'}
                                                 color={getStatusColor(instanceDetails.assignment_status || 'unassigned')}
                                                 size="small"
                                             />
@@ -1329,71 +835,14 @@ const InstanceAssignment: React.FC = () => {
                                 </CardContent>
                             </Card>
 
-                            {/* Submitted Data */}
-                            {instanceDetails.context && (
-                                <Card sx={{ mb: 3 }}>
-                                    <CardContent>
-                                        <Typography variant="h6" gutterBottom>Submitted Data</Typography>
-                                        {Object.entries(instanceDetails.context).map(([key, value]) => {
-                                            // Filter out system/internal fields and show only citizen data
-                                            if (key.includes('citizen_data') && typeof value === 'object') {
-                                                return (
-                                                    <Box key={key} sx={{ mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                                                        <Typography variant="subtitle2" color="primary" gutterBottom>
-                                                            {key.replace('_citizen_data', '').replace('_', ' ').toUpperCase()}
-                                                        </Typography>
-                                                        <Grid container spacing={2}>
-                                                            {Object.entries(value as any).map(([fieldKey, fieldValue]) => (
-                                                                <Grid item xs={12} sm={6} key={fieldKey}>
-                                                                    <Typography variant="body2" color="textSecondary">
-                                                                        {fieldKey.replace('_', ' ')}:
-                                                                    </Typography>
-                                                                    <Typography variant="body1">
-                                                                        {String(fieldValue)}
-                                                                    </Typography>
-                                                                </Grid>
-                                                            ))}
-                                                        </Grid>
-                                                    </Box>
-                                                );
-                                            }
-                                            return null;
-                                        })}
-                                        
-                                        {/* Show files if any */}
-                                        {Object.entries(instanceDetails.context).some(([key]) => key.includes('uploaded_files')) && (
-                                            <Box sx={{ mt: 2 }}>
-                                                <Typography variant="subtitle2" color="primary" gutterBottom>
-                                                    Uploaded Files
-                                                </Typography>
-                                                {Object.entries(instanceDetails.context).map(([key, value]) => {
-                                                    if (key.includes('uploaded_files') && typeof value === 'object') {
-                                                        return Object.entries(value as any).map(([fileName, fileInfo]: [string, any]) => (
-                                                            <Chip 
-                                                                key={fileName}
-                                                                label={`${fileInfo.filename || fileName} (${fileInfo.size || 'N/A'} bytes)`}
-                                                                variant="outlined"
-                                                                sx={{ m: 0.5 }}
-                                                            />
-                                                        ));
-                                                    }
-                                                    return null;
-                                                })}
-                                            </Box>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            {/* Raw Context Data (for debugging) */}
                             <Card>
                                 <CardContent>
                                     <Typography variant="h6" gutterBottom>Raw Context Data</Typography>
-                                    <Box sx={{ 
-                                        bgcolor: 'grey.100', 
-                                        p: 2, 
-                                        borderRadius: 1, 
-                                        maxHeight: 300, 
+                                    <Box sx={{
+                                        bgcolor: 'grey.100',
+                                        p: 2,
+                                        borderRadius: 1,
+                                        maxHeight: 300,
                                         overflow: 'auto',
                                         fontFamily: 'monospace',
                                         fontSize: '0.875rem'
@@ -1406,9 +855,9 @@ const InstanceAssignment: React.FC = () => {
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => { 
-                        setViewDetailsDialog(false); 
-                        setInstanceDetails(null); 
+                    <Button onClick={() => {
+                        setViewDetailsDialog(false);
+                        setInstanceDetails(null);
                     }}>
                         Close
                     </Button>

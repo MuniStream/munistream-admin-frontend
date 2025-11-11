@@ -27,7 +27,7 @@ export type {
 export const workflowService = {
   // Get all available workflows
   async getWorkflows(): Promise<{ workflows: Workflow[] }> {
-    const response = await fetch(`${API_BASE_URL}/workflows?workflow_type=process`, {
+    const response = await fetch(`${API_BASE_URL}/workflows/`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });

@@ -26,7 +26,6 @@ import {
   Select,
   MenuItem,
   Tooltip,
-  Autocomplete,
   List,
   ListItem,
   ListItemText,
@@ -46,8 +45,6 @@ import {
 } from '@mui/icons-material';
 import { useI18n } from '../contexts/I18nContext';
 import { workflowService } from '../services/workflowService';
-import { categoryService, Category } from '../services/categoryService';
-import { userService, User } from '../services/userService';
 
 interface ExtendedWorkflow {
   workflow_id: string;
@@ -57,8 +54,6 @@ interface ExtendedWorkflow {
   status: 'draft' | 'active' | 'deprecated';
   steps: WorkflowStep[]; // Always required, never undefined
   start_step_id: string;
-  category_id?: string;
-  category_name?: string;
   assigned_users: string[]; // Always an array
   approvers: string[]; // Always an array
   created_at: string;
@@ -79,7 +74,6 @@ interface WorkflowFormData {
   description: string;
   version: string;
   status: 'draft' | 'active' | 'deprecated';
-  category_id: string;
   assigned_users: string[];
   approvers: string[];
 }
@@ -87,8 +81,6 @@ interface WorkflowFormData {
 const WorkflowManagement: React.FC = () => {
   const { t } = useI18n();
   const [workflows, setWorkflows] = useState<ExtendedWorkflow[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -100,7 +92,6 @@ const WorkflowManagement: React.FC = () => {
     description: '',
     version: '1.0.0',
     status: 'draft',
-    category_id: '',
     assigned_users: [],
     approvers: []
   });
@@ -116,7 +107,6 @@ const WorkflowManagement: React.FC = () => {
         return {
           ...workflow,
           steps: workflow.steps || [], // Ensure steps is always an array
-          category_name: categories.find(cat => cat.id === workflow.category_id)?.name,
           assigned_users: workflow.assigned_users || [],
           approvers: workflow.approvers || []
         };
@@ -129,23 +119,7 @@ const WorkflowManagement: React.FC = () => {
     }
   };
 
-  const loadCategories = async () => {
-    try {
-      const response = await categoryService.getCategories();
-      setCategories(response.categories);
-    } catch (err) {
-      console.error('Error loading categories:', err);
-    }
-  };
 
-  const loadUsers = async () => {
-    try {
-      const users = await userService.getUsers();
-      setUsers(users);
-    } catch (err) {
-      console.error('Error loading users:', err);
-    }
-  };
 
   const handleCreateWorkflow = () => {
     setEditingWorkflow(null);
@@ -154,8 +128,7 @@ const WorkflowManagement: React.FC = () => {
       description: '',
       version: '1.0.0',
       status: 'draft',
-      category_id: '',
-      assigned_users: [],
+        assigned_users: [],
       approvers: []
     });
     setDialogOpen(true);
@@ -168,7 +141,6 @@ const WorkflowManagement: React.FC = () => {
       description: workflow.description,
       version: workflow.version,
       status: workflow.status,
-      category_id: workflow.category_id || '',
       assigned_users: workflow.assigned_users || [],
       approvers: workflow.approvers || []
     });
@@ -189,16 +161,11 @@ const WorkflowManagement: React.FC = () => {
           description: formData.description,
           status: formData.status,
           metadata: {
-            category_id: formData.category_id || null,
             assigned_users: formData.assigned_users,
             approvers: formData.approvers
           }
         });
         
-        // Update category assignment if changed
-        if (formData.category_id && formData.category_id !== editingWorkflow.category_id) {
-          await categoryService.assignWorkflowToCategory(formData.category_id, editingWorkflow.workflow_id);
-        }
       } else {
         // Create new workflow
         const workflowId = `${formData.name.toLowerCase().replace(/\s+/g, '_')}_v${formData.version}`;
@@ -209,10 +176,6 @@ const WorkflowManagement: React.FC = () => {
           version: formData.version
         });
         
-        // Assign category if selected
-        if (formData.category_id) {
-          await categoryService.assignWorkflowToCategory(formData.category_id, workflowId);
-        }
       }
       
       await loadWorkflows();
@@ -238,15 +201,6 @@ const WorkflowManagement: React.FC = () => {
     }
   };
 
-  const handleAssignCategory = async (workflowId: string, categoryId: string) => {
-    try {
-      await categoryService.assignWorkflowToCategory(categoryId, workflowId);
-      await loadWorkflows();
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error assigning category');
-    }
-  };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, any> = {
@@ -278,7 +232,6 @@ const WorkflowManagement: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([loadCategories(), loadUsers()]);
       await loadWorkflows();
     };
     loadData();
@@ -493,59 +446,26 @@ const WorkflowManagement: React.FC = () => {
                 </Select>
               </FormControl>
             </Box>
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Categoría</InputLabel>
-              <Select
-                value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                label="Categoría"
-              >
-                <MenuItem value="">Sin categoría</MenuItem>
-                {categories.map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Autocomplete
-              multiple
-              options={users}
-              getOptionLabel={(user) => `${user.full_name} (${user.role})`}
-              value={users.filter(user => formData.assigned_users.includes(user.id))}
-              onChange={(_, newUsers) => 
-                setFormData({ 
-                  ...formData, 
-                  assigned_users: newUsers.map(user => user.id) 
-                })
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Usuarios Asignados"
-                  placeholder="Seleccionar usuarios..."
-                />
-              )}
+            <TextField
+              fullWidth
+              label="Usuarios Asignados"
+              value={formData.assigned_users.join(', ')}
+              onChange={(e) => setFormData({
+                ...formData,
+                assigned_users: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+              })}
               sx={{ mb: 2 }}
+              placeholder="user1, user2, user3..."
             />
-            <Autocomplete
-              multiple
-              options={users.filter(user => ['admin', 'manager', 'approver'].includes(user.role))}
-              getOptionLabel={(user) => `${user.full_name} (${user.role})`}
-              value={users.filter(user => formData.approvers.includes(user.id))}
-              onChange={(_, newUsers) => 
-                setFormData({ 
-                  ...formData, 
-                  approvers: newUsers.map(user => user.id) 
-                })
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Aprobadores"
-                  placeholder="Seleccionar aprobadores..."
-                />
-              )}
+            <TextField
+              fullWidth
+              label="Aprobadores"
+              value={formData.approvers.join(', ')}
+              onChange={(e) => setFormData({
+                ...formData,
+                approvers: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+              })}
+              placeholder="approver1, approver2..."
             />
           </Box>
         </DialogContent>

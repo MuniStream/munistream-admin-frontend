@@ -33,10 +33,7 @@ import {
   Settings as SettingsIcon,
   Person as PersonIcon,
   CheckCircle as ValidationIcon,
-  Category as CategoryIcon,
-  People as PeopleIcon,
   Build as BuildIcon,
-  Group as GroupIcon,
   Assignment as AssignmentIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,13 +46,7 @@ const menuItems = [
   { text: 'Workflow Management', path: '/workflow-management', icon: <BuildIcon />, permission: 'manage_workflows' },
   { text: 'Citizen Tracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
   { text: 'Instance Assignments', path: '/instance-assignments', icon: <AssignmentIcon />, permission: 'view_instances' },
-  { text: 'Citizen Validation', path: '/citizen-validation', icon: <ValidationIcon />, permission: 'verify_documents' }, // Changed to verify_documents for reviewers
-  { text: 'Categories', path: '/categories', icon: <CategoryIcon />, permission: 'manage_workflows' },
-  { text: 'Users', path: '/users', icon: <PeopleIcon />, roles: ['admin'] },
-  { text: 'Teams', path: '/teams', icon: <GroupIcon />, permission: 'manage_users' },
-  { text: 'Admin Inbox', path: '/inbox', icon: <InboxIcon />, badge: 12, roles: ['admin', 'manager', 'approver', 'reviewer'] }, // Added reviewer
-  { text: 'Documents', path: '/documents', icon: <DocumentIcon />, permission: 'view_documents' },
-  { text: 'Analytics', path: '/analytics', icon: <AnalyticsIcon />, permission: 'view_analytics' },
+  { text: 'Citizen Validation', path: '/citizen-validation', icon: <ValidationIcon />, permission: 'verify_documents' },
 ];
 
 function DashboardLayout() {
