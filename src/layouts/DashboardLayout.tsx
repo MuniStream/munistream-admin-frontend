@@ -35,6 +35,8 @@ import {
   CheckCircle as ValidationIcon,
   Build as BuildIcon,
   Assignment as AssignmentIcon,
+  Security as SecurityIcon,
+  AdminPanelSettings as AdminPanelSettingsIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -47,6 +49,8 @@ const menuItems = [
   { text: 'Citizen Tracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
   { text: 'Instance Assignments', path: '/instance-assignments', icon: <AssignmentIcon />, permission: 'view_instances' },
   { text: 'Citizen Validation', path: '/citizen-validation', icon: <ValidationIcon />, permission: 'verify_documents' },
+  { text: 'divider' }, // Visual separator for admin section
+  { text: 'Keycloak Stats', path: '/admin/keycloak', icon: <SecurityIcon />, permission: 'admin_system' },
 ];
 
 function DashboardLayout() {
@@ -82,16 +86,21 @@ function DashboardLayout() {
       </Toolbar>
       <Divider />
       <List>
-        {menuItems.map((item) => {
+        {menuItems.map((item, index) => {
+          // Handle divider
+          if (item.text === 'divider') {
+            return <Divider key={`divider-${index}`} sx={{ my: 1 }} />;
+          }
+
           // Check permissions and roles
           const hasRequiredPermission = !item.permission || hasPermission(item.permission);
           const hasRequiredRole = !item.roles || hasAnyRole(item.roles);
-          
+
           // Only show item if user has permission/role
           if (!hasRequiredPermission || !hasRequiredRole) {
             return null;
           }
-          
+
           return (
             <ListItem key={item.text} disablePadding>
               <ListItemButton
@@ -152,10 +161,10 @@ function DashboardLayout() {
                 <Typography variant="body2" sx={{ display: { xs: 'none', md: 'block' } }}>
                   {user.full_name}
                 </Typography>
-                <Chip 
-                  label={user.role} 
-                  size="small" 
-                  color="primary" 
+                <Chip
+                  label={user.role}
+                  size="small"
+                  color="primary"
                   variant="outlined"
                   sx={{ display: { xs: 'none', md: 'flex' } }}
                 />
@@ -251,8 +260,8 @@ function DashboardLayout() {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          maxWidth: '100%',
           mt: 8,
         }}
       >
