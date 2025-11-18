@@ -36,6 +36,7 @@ import {
   PriorityHigh as PriorityHighIcon
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
+import InboxSection from '@/components/dashboard/InboxSection';
 import {
   LineChart,
   Line,
@@ -168,6 +169,9 @@ function DashboardEnhanced() {
           </Typography>
         )}
       </Box>
+
+      {/* Inbox Section - Most prominent part */}
+      <InboxSection />
 
       <Grid container spacing={3}>
         {/* Key Metrics Cards */}
