@@ -1,0 +1,607 @@
+import React, { useState, useEffect } from 'react'
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Alert,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  SelectChangeEvent,
+  OutlinedInput,
+  Checkbox,
+  ListItemText,
+  Autocomplete,
+  CircularProgress,
+  TablePagination,
+  InputAdornment,
+  Tooltip,
+  Badge
+} from '@mui/material'
+import {
+  Add as AddIcon,
+  MoreVert as MoreVertIcon,
+  Group as GroupIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  PersonAdd as PersonAddIcon,
+  Sync as SyncIcon,
+  ManageAccounts as ManageAccountsIcon,
+  Search as SearchIcon,
+  Refresh as RefreshIcon
+} from '@mui/icons-material'
+import { useAuth } from '../../contexts/AuthContext'
+import { useTranslation } from 'react-i18next'
+import teamService, { Team, TeamCreate } from '../../services/teamService'
+import userService, { User } from '../../services/userService'
+
+const TeamAdministration: React.FC = () => {
+  const { user } = useAuth()
+  const { t } = useTranslation()
+
+  // State management
+  const [teams, setTeams] = useState<Team[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  // Pagination state
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('')
+  const [departmentFilter, setDepartmentFilter] = useState('')
+
+  // Dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [memberDialogOpen, setMemberDialogOpen] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
+
+  // Menu state
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [menuTeamId, setMenuTeamId] = useState<string | null>(null)
+
+  // Create team form state
+  const [teamForm, setTeamForm] = useState<TeamCreate>({
+    team_id: '',
+    name: '',
+    description: '',
+    department: '',
+    max_concurrent_tasks: 10,
+    specializations: []
+  })
+
+  // Member management state
+  const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [memberRole, setMemberRole] = useState('member')
+
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin'
+
+  // Fetch teams with pagination and filtering
+  const fetchTeams = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const params = {
+        skip: page * rowsPerPage,
+        limit: rowsPerPage,
+        ...(searchTerm && { search: searchTerm }),
+        ...(departmentFilter && { department: departmentFilter })
+      }
+
+      const response = await teamService.listTeams(params)
+      setTeams(response.teams)
+      setTotalCount(response.pagination.total)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch teams')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch available users for team assignment
+  const fetchAvailableUsers = async (excludeTeamId?: string) => {
+    try {
+      const users = await userService.getAvailableUsers(excludeTeamId)
+      setAvailableUsers(users)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch users')
+    }
+  }
+
+  // Load teams on component mount and when filters change
+  useEffect(() => {
+    fetchTeams()
+  }, [page, rowsPerPage, searchTerm, departmentFilter])
+
+  // Handlers
+  const handleCreateTeam = async () => {
+    try {
+      setError(null)
+      await teamService.createTeam(teamForm)
+      setSuccess('Team created successfully!')
+      setCreateDialogOpen(false)
+      setTeamForm({
+        team_id: '',
+        name: '',
+        description: '',
+        department: '',
+        max_concurrent_tasks: 10,
+        specializations: []
+      })
+      await fetchTeams()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create team')
+    }
+  }
+
+  const handleAddMember = async () => {
+    if (!selectedTeam || !selectedUser) return
+
+    try {
+      setError(null)
+      await teamService.addMember(selectedTeam.team_id, selectedUser.id, memberRole)
+      setSuccess('Member added successfully!')
+      setMemberDialogOpen(false)
+      setSelectedUser(null)
+      setMemberRole('member')
+      await fetchTeams()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add member')
+    }
+  }
+
+  const handleRemoveMember = async (teamId: string, userId: string) => {
+    try {
+      setError(null)
+      await teamService.removeMember(teamId, userId)
+      setSuccess('Member removed successfully!')
+      await fetchTeams()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove member')
+    }
+  }
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, teamId: string) => {
+    setAnchorEl(event.currentTarget)
+    setMenuTeamId(teamId)
+  }
+
+  const handleMenuClose = () => {
+    setAnchorEl(null)
+    setMenuTeamId(null)
+  }
+
+  const handleManageMembers = (team: Team) => {
+    setSelectedTeam(team)
+    setMemberDialogOpen(true)
+    fetchAvailableUsers(team.team_id)
+    handleMenuClose()
+  }
+
+  // Get role color for chips
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'manager': return 'error'
+      case 'reviewer': return 'warning'
+      case 'approver': return 'info'
+      default: return 'default'
+    }
+  }
+
+  return (
+    <Box p={3}>
+      <Paper sx={{ p: 3 }}>
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" component="h1" display="flex" alignItems="center" gap={1}>
+            <GroupIcon />
+            Gestión de Equipos
+          </Typography>
+
+          {isAdmin && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateDialogOpen(true)}
+            >
+              Crear Equipo
+            </Button>
+          )}
+        </Box>
+
+        {/* Filters */}
+        <Box display="flex" gap={2} mb={3}>
+          <TextField
+            size="small"
+            placeholder="Buscar equipos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ minWidth: 200 }}
+          />
+
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Departamento</InputLabel>
+            <Select
+              value={departmentFilter}
+              label="Departamento"
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="IT">IT</MenuItem>
+              <MenuItem value="HR">RRHH</MenuItem>
+              <MenuItem value="Finance">Finanzas</MenuItem>
+              <MenuItem value="Operations">Operaciones</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Tooltip title="Actualizar lista">
+            <IconButton onClick={fetchTeams} disabled={loading}>
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {/* Error/Success Messages */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+            {success}
+          </Alert>
+        )}
+
+        {/* Teams Table */}
+        {loading && teams.length === 0 ? (
+          <Box display="flex" justifyContent="center" py={4}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Equipo</TableCell>
+                    <TableCell align="center">Departamento</TableCell>
+                    <TableCell align="center">Miembros</TableCell>
+                    <TableCell align="center">Managers</TableCell>
+                    <TableCell align="center">Estado</TableCell>
+                    <TableCell align="center">Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {teams.map((team) => (
+                    <TableRow key={team.team_id}>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            {team.name}
+                          </Typography>
+                          {team.description && (
+                            <Typography variant="body2" color="text.secondary">
+                              {team.description}
+                            </Typography>
+                          )}
+                          <Typography variant="caption" color="text.secondary">
+                            ID: {team.team_id}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell align="center">
+                        {team.department ? (
+                          <Chip label={team.department} size="small" />
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">-</Typography>
+                        )}
+                      </TableCell>
+
+                      <TableCell align="center">
+                        <Badge badgeContent={team.member_count} color="primary">
+                          <GroupIcon />
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell align="center">
+                        <Badge badgeContent={team.manager_count} color="error">
+                          <ManageAccountsIcon />
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell align="center">
+                        <Chip
+                          label={team.is_active ? 'Activo' : 'Inactivo'}
+                          color={team.is_active ? 'success' : 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+
+                      <TableCell align="center">
+                        <IconButton
+                          onClick={(e) => handleMenuOpen(e, team.team_id)}
+                          size="small"
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Pagination */}
+            <TablePagination
+              component="div"
+              count={totalCount}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[5, 10, 25, 50]}
+              labelRowsPerPage="Filas por página:"
+              labelDisplayedRows={({ from, to, count }) =>
+                `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+              }
+            />
+          </>
+        )}
+
+        {/* Action Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem
+            onClick={() => {
+              const team = teams.find(t => t.team_id === menuTeamId)
+              if (team) handleManageMembers(team)
+            }}
+          >
+            <PersonAddIcon sx={{ mr: 1 }} />
+            Gestionar Miembros
+          </MenuItem>
+          {isAdmin && (
+            <>
+              <MenuItem onClick={handleMenuClose}>
+                <EditIcon sx={{ mr: 1 }} />
+                Editar Equipo
+              </MenuItem>
+              <MenuItem onClick={handleMenuClose}>
+                <DeleteIcon sx={{ mr: 1 }} />
+                Eliminar Equipo
+              </MenuItem>
+            </>
+          )}
+        </Menu>
+
+        {/* Create Team Dialog */}
+        <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>Crear Nuevo Equipo</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="ID del Equipo"
+                  value={teamForm.team_id}
+                  onChange={(e) => setTeamForm({ ...teamForm, team_id: e.target.value })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Nombre del Equipo"
+                  value={teamForm.name}
+                  onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Descripción"
+                  value={teamForm.description}
+                  onChange={(e) => setTeamForm({ ...teamForm, description: e.target.value })}
+                  multiline
+                  rows={3}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Departamento</InputLabel>
+                  <Select
+                    value={teamForm.department}
+                    label="Departamento"
+                    onChange={(e) => setTeamForm({ ...teamForm, department: e.target.value })}
+                  >
+                    <MenuItem value="IT">IT</MenuItem>
+                    <MenuItem value="HR">RRHH</MenuItem>
+                    <MenuItem value="Finance">Finanzas</MenuItem>
+                    <MenuItem value="Operations">Operaciones</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Tareas Concurrentes Máx."
+                  value={teamForm.max_concurrent_tasks}
+                  onChange={(e) => setTeamForm({ ...teamForm, max_concurrent_tasks: parseInt(e.target.value) })}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCreateDialogOpen(false)}>Cancelar</Button>
+            <Button
+              onClick={handleCreateTeam}
+              variant="contained"
+              disabled={!teamForm.team_id || !teamForm.name}
+            >
+              Crear
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Member Management Dialog */}
+        <Dialog open={memberDialogOpen} onClose={() => setMemberDialogOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>
+            Gestionar Miembros - {selectedTeam?.name}
+          </DialogTitle>
+          <DialogContent>
+            {/* Current Members */}
+            <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+              Miembros Actuales ({selectedTeam?.member_count || 0})
+            </Typography>
+
+            {selectedTeam?.members && selectedTeam.members.length > 0 ? (
+              <TableContainer component={Paper} sx={{ mb: 3 }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Usuario</TableCell>
+                      <TableCell>Rol</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell align="center">Acciones</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {selectedTeam.members.map((member) => (
+                      <TableRow key={member.user_id}>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {member.email || member.user_id}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={member.role}
+                            color={getRoleColor(member.role)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={member.is_active ? 'Activo' : 'Inactivo'}
+                            color={member.is_active ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveMember(selectedTeam.team_id, member.user_id)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Este equipo no tiene miembros asignados.
+              </Alert>
+            )}
+
+            {/* Add New Member */}
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Agregar Nuevo Miembro
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={8}>
+                <Autocomplete
+                  options={availableUsers}
+                  getOptionLabel={(user) => `${user.full_name} (${user.email})`}
+                  value={selectedUser}
+                  onChange={(event, newValue) => setSelectedUser(newValue)}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Seleccionar Usuario" fullWidth />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Rol</InputLabel>
+                  <Select
+                    value={memberRole}
+                    label="Rol"
+                    onChange={(e) => setMemberRole(e.target.value)}
+                  >
+                    <MenuItem value="member">Miembro</MenuItem>
+                    <MenuItem value="reviewer">Revisor</MenuItem>
+                    <MenuItem value="approver">Aprobador</MenuItem>
+                    {isAdmin && <MenuItem value="manager">Manager</MenuItem>}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setMemberDialogOpen(false)}>Cerrar</Button>
+            <Button
+              onClick={handleAddMember}
+              variant="contained"
+              disabled={!selectedUser}
+            >
+              Agregar Miembro
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Paper>
+    </Box>
+  )
+}
+
+export default TeamAdministration

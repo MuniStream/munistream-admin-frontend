@@ -67,7 +67,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'approve_workflows',
           'review_documents',
           'create_workflows',
-          'delete_workflows'
+          'delete_workflows',
+          'admin_system'
         ];
       case 'manager':
         return [
@@ -188,7 +189,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Check if user has a specific permission
   const hasPermission = (permission: string): boolean => {
-    return user?.permissions?.includes(permission) || false;
+    const result = user?.permissions?.includes(permission) || false;
+    console.log('hasPermission Debug:', {
+      permission,
+      result,
+      userPermissions: user?.permissions,
+      userExists: !!user
+    });
+    return result;
   };
 
   // Check if user has a specific role

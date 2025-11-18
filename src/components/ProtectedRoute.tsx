@@ -43,6 +43,13 @@ function ProtectedRoute({
   }
 
   // Check permission
+  console.log('ProtectedRoute Debug:', {
+    requiredPermission,
+    hasPermissionResult: hasPermission(requiredPermission),
+    isAuthenticated,
+    loading
+  });
+
   if (requiredPermission && !hasPermission(requiredPermission)) {
     return (
       <Box
@@ -56,7 +63,13 @@ function ProtectedRoute({
           Access Denied
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          You don't have permission to access this page.
+          Admin privileges required.
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+          Debug: Required permission '{requiredPermission}' not found.<br/>
+          hasPermission result: {String(hasPermission(requiredPermission))}<br/>
+          User authenticated: {String(isAuthenticated)}<br/>
+          Loading: {String(loading)}
         </Typography>
       </Box>
     );

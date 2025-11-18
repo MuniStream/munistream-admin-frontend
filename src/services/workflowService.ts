@@ -515,6 +515,83 @@ export const workflowService = {
     }
 
     return await response.json();
+  },
+
+  // ASSIGNMENT / INBOX METHODS
+
+  // Get instances assigned to current user
+  async getAssignedInstances(params?: {
+    status?: string;
+    search?: string;
+    limit?: number;
+    skip?: number;
+  }): Promise<{
+    assignments: Array<{
+      instance_id: string;
+      workflow_id: string;
+      workflow_type: string;
+      workflow_name: string;
+      status: string;
+      assigned_to_user: string | null;
+      assigned_to_team: string | null;
+      assigned_at: string | null;
+      assigned_by: string | null;
+      parent_instance_id: string | null;
+      parent_workflow_id: string | null;
+      priority: string;
+      created_at: string;
+      updated_at: string;
+      citizen_email: string | null;
+      current_step: string | null;
+      completion_percentage: number;
+    }>;
+    total: number;
+    page: number;
+    page_size: number;
+  }> {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await fetch(`${API_BASE_URL}/assignments/?${searchParams}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch assigned instances');
+    }
+
+    return await response.json();
+  },
+
+  // Start an assigned workflow
+  async startAssignedWorkflow(instanceId: string, initialData?: Record<string, any>, notes?: string): Promise<{
+    instance_id: string;
+    status: string;
+    started_at: string;
+    started_by: string;
+    message: string;
+  }> {
+    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/start`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        initial_data: initialData || {},
+        notes: notes || ''
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to start assigned workflow');
+    }
+
+    return await response.json();
   }
 };
 

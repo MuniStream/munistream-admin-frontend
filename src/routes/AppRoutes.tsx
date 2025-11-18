@@ -9,6 +9,7 @@ import CitizenValidation from '@/pages/CitizenValidation';
 import WorkflowManagementPage from '@/pages/WorkflowManagementPage';
 import InstanceAssignmentPage from '@/pages/InstanceAssignmentPage';
 import { AdminWorkflowExecution } from '@/pages/AdminWorkflowExecution';
+import KeycloakStats from '@/pages/admin/KeycloakStats';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -109,6 +110,16 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="admin/keycloak"
+          element={
+            <ProtectedRoute requiredPermission="admin_system">
+              <KeycloakStats />
+            </ProtectedRoute>
+          }
+        />
+
       </Route>
     </Routes>
   );

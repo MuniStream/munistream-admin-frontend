@@ -5,6 +5,7 @@ import AppRoutes from './routes/AppRoutes';
 import { AuthProvider } from './contexts/AuthContext';
 import { I18nProvider } from './contexts/I18nContext';
 import { CustomThemeProvider } from './contexts/ThemeContext';
+import './i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: {

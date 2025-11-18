@@ -1,0 +1,599 @@
+import React, { useState, useEffect } from 'react'
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  TextField,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  IconButton,
+  Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+  TablePagination,
+  InputAdornment,
+  Tooltip,
+  Badge,
+  Card,
+  CardContent,
+  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material'
+import {
+  Person as PersonIcon,
+  Search as SearchIcon,
+  Refresh as RefreshIcon,
+  Sync as SyncIcon,
+  Group as GroupIcon,
+  AdminPanelSettings as AdminIcon,
+  ManageAccounts as ManagerIcon,
+  RateReview as ReviewerIcon,
+  CheckCircle as ApproverIcon,
+  Visibility as ViewerIcon
+} from '@mui/icons-material'
+import { useAuth } from '../../contexts/AuthContext'
+import { useTranslation } from 'react-i18next'
+import userService, { User } from '../../services/userService'
+import teamService, { Team } from '../../services/teamService'
+
+const UserAdministration: React.FC = () => {
+  const { user } = useAuth()
+  const { t } = useTranslation()
+
+  // State management
+  const [users, setUsers] = useState<User[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  // Pagination state
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+
+  // Filter and search state
+  const [searchTerm, setSearchTerm] = useState('')
+  const [roleFilter, setRoleFilter] = useState('admin') // Default to admin users only
+  const [statusFilter, setStatusFilter] = useState('')
+  const [teamFilter, setTeamFilter] = useState('')
+
+  // Dialog states
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [roleChangeOpen, setRoleChangeOpen] = useState(false)
+  const [teamsAssignOpen, setTeamsAssignOpen] = useState(false)
+  const [newRole, setNewRole] = useState('')
+
+  // Check if user is admin
+  const isAdmin = user?.role === 'admin'
+
+  // Fetch users with pagination and filtering
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const params = {
+        skip: page * rowsPerPage,
+        limit: rowsPerPage,
+        ...(searchTerm && { search: searchTerm }),
+        ...(roleFilter && { role: roleFilter }),
+        ...(statusFilter && { status: statusFilter }),
+        ...(teamFilter && { team_id: teamFilter })
+      }
+
+      const response = await userService.listUsers(params)
+      setUsers(response.users)
+      setTotalCount(response.pagination.total)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch users')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch teams for filter dropdown
+  const fetchTeams = async () => {
+    try {
+      const response = await teamService.listTeams({ limit: 100 })
+      setTeams(response.teams)
+    } catch (err) {
+      console.error('Failed to fetch teams:', err)
+    }
+  }
+
+  // Sync users from Keycloak
+  const handleSyncUsers = async () => {
+    try {
+      setSyncing(true)
+      setError(null)
+
+      const result = await userService.syncFromKeycloak()
+      setSuccess(`Successfully synced ${result.synced_count} users from Keycloak`)
+      await fetchUsers()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sync users')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  // Load users and teams on component mount and when filters change
+  useEffect(() => {
+    fetchUsers()
+  }, [page, rowsPerPage, searchTerm, roleFilter, statusFilter, teamFilter])
+
+  useEffect(() => {
+    fetchTeams()
+  }, [])
+
+  // Handlers
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
+
+  // User action handlers
+  const handleChangeRole = (user: User) => {
+    setSelectedUser(user)
+    setNewRole(user.role)
+    setRoleChangeOpen(true)
+  }
+
+  const handleAssignTeams = (user: User) => {
+    setSelectedUser(user)
+    setTeamsAssignOpen(true)
+  }
+
+  const handleRoleChangeConfirm = async () => {
+    if (!selectedUser || !newRole) return
+
+    try {
+      setLoading(true)
+      await userService.changeRole(selectedUser.id, newRole)
+      setSuccess(`Rol de ${selectedUser.full_name} cambiado a ${newRole}`)
+      setRoleChangeOpen(false)
+      setSelectedUser(null)
+      setNewRole('')
+      await fetchUsers()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cambiar el rol')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleTeamAssignConfirm = async (teamIds: string[]) => {
+    if (!selectedUser) return
+
+    try {
+      setLoading(true)
+      await userService.assignToTeams(selectedUser.id, teamIds)
+      setSuccess(`Equipos asignados a ${selectedUser.full_name}`)
+      setTeamsAssignOpen(false)
+      setSelectedUser(null)
+      await fetchUsers()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al asignar equipos')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Get role icon and color
+  const getRoleDisplay = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return { icon: <AdminIcon />, color: 'error', label: 'Admin' }
+      case 'manager':
+        return { icon: <ManagerIcon />, color: 'warning', label: 'Manager' }
+      case 'reviewer':
+        return { icon: <ReviewerIcon />, color: 'info', label: 'Revisor' }
+      case 'approver':
+        return { icon: <ApproverIcon />, color: 'success', label: 'Aprobador' }
+      case 'viewer':
+        return { icon: <ViewerIcon />, color: 'default', label: 'Visor' }
+      default:
+        return { icon: <PersonIcon />, color: 'default', label: role }
+    }
+  }
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'success'
+      case 'inactive': return 'default'
+      case 'suspended': return 'error'
+      case 'pending': return 'warning'
+      default: return 'default'
+    }
+  }
+
+  // Get user's team assignments
+  const getUserTeamNames = (user: User) => {
+    if (!user.team_ids?.length) return []
+    return teams
+      .filter(team => user.team_ids.includes(team.team_id))
+      .map(team => team.name)
+  }
+
+  // Stats calculations
+  const stats = {
+    total: users.length,
+    admins: users.filter(u => u.role === 'admin').length,
+    managers: users.filter(u => u.role === 'manager').length,
+    active: users.filter(u => u.status === 'active').length,
+    withTeams: users.filter(u => u.team_ids?.length > 0).length
+  }
+
+  return (
+    <Box p={3}>
+      <Paper sx={{ p: 3 }}>
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Typography variant="h4" component="h1" display="flex" alignItems="center" gap={1}>
+            <PersonIcon />
+            Gestión de Usuarios
+          </Typography>
+
+          {isAdmin && (
+            <Button
+              variant="contained"
+              startIcon={<SyncIcon />}
+              onClick={handleSyncUsers}
+              disabled={syncing}
+            >
+              {syncing ? 'Sincronizando...' : 'Sincronizar Keycloak'}
+            </Button>
+          )}
+        </Box>
+
+        {/* Stats Cards */}
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card variant="outlined">
+              <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                <Typography variant="h4" color="primary">{stats.total}</Typography>
+                <Typography variant="body2">Total Usuarios</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card variant="outlined">
+              <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                <Typography variant="h4" color="error">{stats.admins}</Typography>
+                <Typography variant="body2">Admins</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card variant="outlined">
+              <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                <Typography variant="h4" color="warning">{stats.managers}</Typography>
+                <Typography variant="body2">Managers</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card variant="outlined">
+              <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                <Typography variant="h4" color="success">{stats.active}</Typography>
+                <Typography variant="body2">Activos</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card variant="outlined">
+              <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                <Typography variant="h4" color="info">{stats.withTeams}</Typography>
+                <Typography variant="body2">En Equipos</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Filters */}
+        <Box display="flex" gap={2} mb={3} flexWrap="wrap">
+          <TextField
+            size="small"
+            placeholder="Buscar usuarios..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ minWidth: 200 }}
+          />
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Rol</InputLabel>
+            <Select
+              value={roleFilter}
+              label="Rol"
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
+              <MenuItem value="">Staff</MenuItem>
+              <MenuItem value="admin">Admin</MenuItem>
+              <MenuItem value="manager">Manager</MenuItem>
+              <MenuItem value="reviewer">Revisor</MenuItem>
+              <MenuItem value="approver">Aprobador</MenuItem>
+              <MenuItem value="viewer">Visor</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Estado</InputLabel>
+            <Select
+              value={statusFilter}
+              label="Estado"
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              <MenuItem value="active">Activo</MenuItem>
+              <MenuItem value="inactive">Inactivo</MenuItem>
+              <MenuItem value="suspended">Suspendido</MenuItem>
+              <MenuItem value="pending">Pendiente</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Equipo</InputLabel>
+            <Select
+              value={teamFilter}
+              label="Equipo"
+              onChange={(e) => setTeamFilter(e.target.value)}
+            >
+              <MenuItem value="">Todos</MenuItem>
+              {teams.map((team) => (
+                <MenuItem key={team.team_id} value={team.team_id}>
+                  {team.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Tooltip title="Actualizar lista">
+            <IconButton onClick={fetchUsers} disabled={loading}>
+              <RefreshIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        {/* Error/Success Messages */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+            {success}
+          </Alert>
+        )}
+
+        {/* Info Alert */}
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Los usuarios se sincronizan automáticamente desde Keycloak. Las asignaciones de equipos se gestionan internamente.
+        </Alert>
+
+        {/* Users Table */}
+        {loading && users.length === 0 ? (
+          <Box display="flex" justifyContent="center" py={4}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Usuario</TableCell>
+                    <TableCell align="center">Rol</TableCell>
+                    <TableCell align="center">Estado</TableCell>
+                    <TableCell align="center">Equipos</TableCell>
+                    <TableCell align="center">Departamento</TableCell>
+                    <TableCell align="center">Último Login</TableCell>
+                    <TableCell align="center">Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {users.map((user) => {
+                    const roleDisplay = getRoleDisplay(user.role)
+                    const userTeams = getUserTeamNames(user)
+
+                    return (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <Box>
+                            <Typography variant="subtitle2" fontWeight="bold">
+                              {user.full_name || user.username}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {user.email}
+                            </Typography>
+                            {user.phone && (
+                              <Typography variant="caption" color="text.secondary">
+                                {user.phone}
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+
+                        <TableCell align="center">
+                          <Tooltip title={roleDisplay.label}>
+                            <Chip
+                              icon={roleDisplay.icon}
+                              label={roleDisplay.label}
+                              color={roleDisplay.color}
+                              size="small"
+                            />
+                          </Tooltip>
+                        </TableCell>
+
+                        <TableCell align="center">
+                          <Chip
+                            label={user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                            color={getStatusColor(user.status)}
+                            size="small"
+                          />
+                        </TableCell>
+
+                        <TableCell align="center">
+                          {userTeams.length > 0 ? (
+                            <Tooltip title={userTeams.join(', ')}>
+                              <Badge badgeContent={userTeams.length} color="primary">
+                                <GroupIcon />
+                              </Badge>
+                            </Tooltip>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              Sin equipos
+                            </Typography>
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center">
+                          {user.department ? (
+                            <Chip label={user.department} size="small" variant="outlined" />
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">-</Typography>
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center">
+                          {user.last_login ? (
+                            <Typography variant="body2">
+                              {new Date(user.last_login).toLocaleDateString('es-ES')}
+                            </Typography>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              Nunca
+                            </Typography>
+                          )}
+                        </TableCell>
+
+                        <TableCell align="center">
+                          {isAdmin && (
+                            <Box display="flex" gap={1} justifyContent="center">
+                              <Tooltip title="Cambiar rol">
+                                <IconButton
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleChangeRole(user)}
+                                >
+                                  <AdminIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Asignar a equipos">
+                                <IconButton
+                                  size="small"
+                                  color="info"
+                                  onClick={() => handleAssignTeams(user)}
+                                >
+                                  <GroupIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Pagination */}
+            <TablePagination
+              component="div"
+              count={totalCount}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[5, 10, 25, 50]}
+              labelRowsPerPage="Filas por página:"
+              labelDisplayedRows={({ from, to, count }) =>
+                `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+              }
+            />
+          </>
+        )}
+      </Paper>
+
+      {/* Role Change Dialog */}
+      <Dialog open={roleChangeOpen} onClose={() => setRoleChangeOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Cambiar Rol de Usuario</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            ¿Deseas cambiar el rol de <strong>{selectedUser?.full_name}</strong>?
+          </Typography>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Nuevo Rol</InputLabel>
+            <Select
+              value={newRole}
+              label="Nuevo Rol"
+              onChange={(e) => setNewRole(e.target.value)}
+            >
+              <MenuItem value="admin">Admin</MenuItem>
+              <MenuItem value="manager">Manager</MenuItem>
+              <MenuItem value="reviewer">Revisor</MenuItem>
+              <MenuItem value="approver">Aprobador</MenuItem>
+              <MenuItem value="viewer">Visor</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRoleChangeOpen(false)}>Cancelar</Button>
+          <Button
+            onClick={handleRoleChangeConfirm}
+            variant="contained"
+            disabled={!newRole || newRole === selectedUser?.role}
+          >
+            Cambiar Rol
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Team Assignment Dialog */}
+      <Dialog open={teamsAssignOpen} onClose={() => setTeamsAssignOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Asignar Equipos</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Gestionar asignación de equipos para <strong>{selectedUser?.full_name}</strong>
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Funcionalidad disponible próximamente
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTeamsAssignOpen(false)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  )
+}
+
+export default UserAdministration
