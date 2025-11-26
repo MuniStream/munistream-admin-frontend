@@ -592,6 +592,21 @@ export const workflowService = {
     }
 
     return await response.json();
+  },
+
+  // Submit workflow instance data (form submissions, signatures, etc.)
+  async submitInstanceData(instanceId: string, data: Record<string, any>): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/instances/${instanceId}/submit-data`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to submit instance data');
+    }
+
+    return await response.json();
   }
 };
 
