@@ -1,0 +1,298 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  TextField,
+  Alert,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Paper
+} from '@mui/material';
+import {
+  ExpandMore as ExpandMoreIcon,
+  CheckCircle as ApproveIcon,
+  Cancel as RejectIcon
+} from '@mui/icons-material';
+import { EntityViewer } from './EntityViewer';
+
+interface ContextValidationDisplayProps {
+  instanceId: string;
+  formConfig: {
+    title: string;
+    description: string;
+    sections?: Array<{
+      title: string;
+      type: string;
+      data: any;
+      collapsible?: boolean;
+      collapsed?: boolean;
+    }>;
+    validation_fields?: Array<{
+      name: string;
+      label: string;
+      type: string;
+      required: boolean;
+      options?: Array<{
+        value: string;
+        label: string;
+      }>;
+      placeholder?: string;
+    }>;
+  };
+  onSubmit: (data: Record<string, any>) => void;
+  loading: boolean;
+  error?: string | null;
+}
+
+export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> = ({
+  instanceId,
+  formConfig,
+  onSubmit,
+  loading,
+  error
+}) => {
+  const [validationDecision, setValidationDecision] = useState<string>('');
+  const [validationComments, setValidationComments] = useState<string>('');
+
+  const handleApprove = () => {
+    onSubmit({
+      validation_decision: 'approved',
+      validation_comments: validationComments
+    });
+  };
+
+  const handleReject = () => {
+    onSubmit({
+      validation_decision: 'rejected',
+      validation_comments: validationComments
+    });
+  };
+
+  const renderDataSection = (section: any) => {
+    const { title, type, data, collapsible = false, collapsed = false } = section;
+
+    const renderContent = () => {
+      switch (type) {
+        case 'info_display':
+          return (
+            <List dense>
+              {data && Object.entries(data).map(([key, value]) => (
+                <ListItem key={key}>
+                  <ListItemText
+                    primary={key}
+                    secondary={String(value)}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          );
+
+        case 'entities_display':
+          return (
+            <Box>
+              {data && Object.entries(data).map(([entityGroup, entities]) => (
+                <Box key={entityGroup} mb={2}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    {entityGroup.replace('_', ' ').toUpperCase()}
+                  </Typography>
+                  {Array.isArray(entities) ? entities.map((entity: any, index: number) => (
+                    <Card key={index} variant="outlined" sx={{ mb: 1 }}>
+                      <CardContent>
+                        <Typography variant="body2">
+                          <strong>Nombre:</strong> {entity.name || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>Tipo:</strong> {entity.entity_type || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                          <strong>ID:</strong> {entity.entity_id || 'N/A'}
+                        </Typography>
+                        {entity.created_at && (
+                          <Typography variant="body2">
+                            <strong>Fecha:</strong> {new Date(entity.created_at).toLocaleDateString()}
+                          </Typography>
+                        )}
+
+                        {/* Entity Viewer with iframe */}
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="body2" fontWeight="bold" gutterBottom>
+                            Vista previa del documento:
+                          </Typography>
+                          <EntityViewer
+                            entityId={entity.entity_id}
+                            entityName={entity.name}
+                          />
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  )) : (
+                    <Typography variant="body2" color="text.secondary">
+                      {entities?.error || 'No hay entidades disponibles'}
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          );
+
+        case 'form_data_display':
+          return (
+            <Box>
+              {data && Object.entries(data).map(([formType, formData]) => (
+                <Box key={formType} mb={2}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    {formType}
+                  </Typography>
+                  <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                      <TableBody>
+                        {Object.entries(formData as Record<string, any>).map(([field, value]) => (
+                          <TableRow key={field}>
+                            <TableCell component="th" scope="row">
+                              <Typography variant="body2" fontWeight="medium">
+                                {field.replace('_', ' ').toUpperCase()}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">
+                                {String(value)}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              ))}
+            </Box>
+          );
+
+        case 'json_display':
+          return (
+            <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+              <pre style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+                {JSON.stringify(data, null, 2)}
+              </pre>
+            </Box>
+          );
+
+        default:
+          return (
+            <Typography variant="body2" color="text.secondary">
+              Tipo de sección desconocido: {type}
+            </Typography>
+          );
+      }
+    };
+
+    if (collapsible) {
+      return (
+        <Accordion key={title} defaultExpanded={!collapsed}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">{title}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {renderContent()}
+          </AccordionDetails>
+        </Accordion>
+      );
+    }
+
+    return (
+      <Card key={title} sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            {title}
+          </Typography>
+          {renderContent()}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <Box>
+      <Card sx={{ mb: 3, border: 2, borderColor: 'info.main' }}>
+        <CardContent>
+          <Typography variant="h5" gutterBottom>
+            {formConfig.title}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" paragraph>
+            {formConfig.description}
+          </Typography>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Render data sections */}
+          {formConfig.sections && formConfig.sections.map((section, index) => (
+            <div key={index}>
+              {renderDataSection(section)}
+            </div>
+          ))}
+
+          {/* Comments Section */}
+          <Box mt={4} p={3} sx={{ backgroundColor: 'grey.50', borderRadius: 1 }}>
+            <Typography variant="h6" gutterBottom>
+              Comentarios de Validación
+            </Typography>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Comentarios de Validación"
+              placeholder="Comentarios opcionales sobre la decisión de validación..."
+              value={validationComments}
+              onChange={(e) => setValidationComments(e.target.value)}
+              margin="normal"
+            />
+          </Box>
+
+          {/* Action Buttons */}
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
+            <Button
+              variant="contained"
+              color="success"
+              startIcon={<ApproveIcon />}
+              onClick={handleApprove}
+              disabled={loading}
+            >
+              {loading ? 'Aprobando...' : 'Aprobar Contexto'}
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<RejectIcon />}
+              onClick={handleReject}
+              disabled={loading}
+            >
+              {loading ? 'Rechazando...' : 'Rechazar Contexto'}
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+};
