@@ -35,6 +35,8 @@ import {
 } from '@mui/icons-material';
 import { workflowService } from '@/services/workflowService';
 import { AdminDataCollectionForm } from '@/components/AdminDataCollectionForm';
+import { DigitalSignatureForm } from '@/components/DigitalSignatureForm';
+import { ContextValidationDisplay } from '@/components/ContextValidationDisplay';
 
 export interface AdminWorkflowProgress {
   instance_id: string;
@@ -76,6 +78,12 @@ export const AdminWorkflowExecution: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isSubmittingData, setIsSubmittingData] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState<string | null>(null);
+
+  // Check the type of input required - now comes from top level
+  const waitingFor = progress?.waiting_for;
+  const isEntitySelection = waitingFor === 'entity_selection';
+  const isDigitalSignature = waitingFor === 'signature';
+  const isContextValidation = waitingFor === 'context_validation';
 
   const fetchProgress = async () => {
     if (!instanceId) return;
@@ -139,6 +147,57 @@ export const AdminWorkflowExecution: React.FC = () => {
     }
   };
 
+  console.log('🔍 AdminWorkflowExecution: progress object:', progress);
+  console.log('🔍 AdminWorkflowExecution: waitingFor value:', waitingFor);
+  console.log('🔍 AdminWorkflowExecution: input_form:', progress?.input_form);
+  console.log('🔍 AdminWorkflowExecution: isDigitalSignature:', isDigitalSignature);
+  console.log('🔍 AdminWorkflowExecution: isEntitySelection:', isEntitySelection);
+
+  const handleSignatureSubmission = async (signatureData: any) => {
+    if (!instanceId) return;
+
+    console.log('🔐 AdminWorkflowExecution: Handling signature submission');
+    console.log('🔐 Signature data received:', signatureData);
+
+    setIsSubmittingData(true);
+    setError(null);
+
+    try {
+      // Send only the signature data (no files, no passwords)
+      const response = await fetch(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_BASE_URL}/instances/${instanceId}/submit-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionStorage.getItem('kc_token')}`
+        },
+        body: JSON.stringify(signatureData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to submit signature: ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('✅ Backend response to signature:', responseData);
+
+      setSubmissionSuccess('Digital signature submitted successfully. Workflow continuing...');
+
+      // Refresh progress to see updated status
+      setTimeout(fetchProgress, 2000);
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSubmissionSuccess(null);
+      }, 5000);
+
+    } catch (err) {
+      console.error('❌ Signature submission error:', err);
+      setError(err instanceof Error ? err.message : 'Signature submission failed');
+    } finally {
+      setIsSubmittingData(false);
+    }
+  };
+
   const handleDataSubmission = async (data: Record<string, any>) => {
     if (!instanceId) return;
 
@@ -146,9 +205,6 @@ export const AdminWorkflowExecution: React.FC = () => {
     setError(null);
 
     try {
-      // Check if this is entity selection data
-      const waitingFor = progress?.input_form?.waiting_for;
-      const isEntitySelection = waitingFor === 'entity_selection';
 
       if (isEntitySelection) {
         // Handle entity selection submission
@@ -409,7 +465,8 @@ export const AdminWorkflowExecution: React.FC = () => {
       </Card>
 
       {/* Data Collection Section */}
-      {progress.requires_input && progress.input_form && (
+      {progress.status === 'paused' && progress.input_form &&
+       progress.waiting_for && ['user_input', 'signature', 'context_validation'].includes(progress.waiting_for) && (
         <Card sx={{ mb: 3, border: 2, borderColor: 'warning.main' }}>
           <CardContent>
             <Alert severity="warning" sx={{ mb: 2 }}>
@@ -429,6 +486,29 @@ export const AdminWorkflowExecution: React.FC = () => {
                   The workflow will continue processing automatically.
                 </Typography>
               </Alert>
+            ) : isDigitalSignature ? (
+              <DigitalSignatureForm
+                instanceId={instanceId}
+                documentToSign={progress.input_form.signable_data || progress.input_form.document_to_sign || progress.input_form}
+                operatorConfig={{
+                  task_id: progress.input_form.current_step_id || 'signature_step',
+                  certificate_field: progress.input_form.certificate_field || 'digital_signature_certificate',
+                  private_key_field: progress.input_form.private_key_field || 'digital_signature_private_key',
+                  password_field: progress.input_form.password_field || 'digital_signature_password',
+                  document_type: progress.input_form.document_type || 'DOCUMENTO_OFICIAL'
+                }}
+                onSubmitSignature={handleSignatureSubmission}
+                loading={isSubmittingData}
+                error={error}
+              />
+            ) : isContextValidation ? (
+              <ContextValidationDisplay
+                instanceId={instanceId}
+                formConfig={progress.input_form}
+                onSubmit={handleDataSubmission}
+                loading={isSubmittingData}
+                error={error}
+              />
             ) : (
               <AdminDataCollectionForm
                 title={progress.input_form.title || 'Provide Required Information'}
