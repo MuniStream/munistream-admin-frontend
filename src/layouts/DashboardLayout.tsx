@@ -37,6 +37,7 @@ import {
   Assignment as AssignmentIcon,
   Security as SecurityIcon,
   AdminPanelSettings as AdminPanelSettingsIcon,
+  Storage as CatalogIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -49,6 +50,7 @@ const menuItems = [
   { text: 'Citizen Tracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
   { text: 'Instance Assignments', path: '/instance-assignments', icon: <AssignmentIcon />, permission: 'view_instances' },
   { text: 'Citizen Validation', path: '/citizen-validation', icon: <ValidationIcon />, permission: 'verify_documents' },
+  { text: 'Catálogos', path: '/catalogs', icon: <CatalogIcon />, permission: 'admin_system' },
   { text: 'divider' }, // Visual separator for admin section
   { text: 'Keycloak Stats', path: '/admin/keycloak', icon: <SecurityIcon />, permission: 'admin_system' },
 ];
