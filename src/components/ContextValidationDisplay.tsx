@@ -186,6 +186,239 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
             </Box>
           );
 
+        case 's3_files_display':
+          return (
+            <Box>
+              {data && Object.entries(data).map(([uploadKey, files]) => (
+                <Box key={uploadKey} mb={2}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    {uploadKey.replace('upload_', '').replace('_s3_result', '').replace('_', ' ').toUpperCase()}
+                  </Typography>
+                  {Array.isArray(files) ? files.map((file: any, index: number) => (
+                    <Card key={index} variant="outlined" sx={{ mb: 1 }}>
+                      <CardContent>
+                        <Box display="flex" alignItems="flex-start" gap={2}>
+                          {/* File Preview */}
+                          {file.preview_data && !file.error && (
+                            <Box sx={{ flexShrink: 0 }}>
+                              <img
+                                src={`data:image/png;base64,${file.preview_data}`}
+                                alt={file.filename}
+                                style={{
+                                  maxWidth: '150px',
+                                  maxHeight: '150px',
+                                  objectFit: 'contain',
+                                  border: '1px solid #ddd',
+                                  borderRadius: '4px'
+                                }}
+                              />
+                            </Box>
+                          )}
+
+                          {/* File Info */}
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2">
+                              <strong>Archivo:</strong> {file.filename}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Origen:</strong> {file.source_task || 'Unknown'}
+                            </Typography>
+                            {file.size && (
+                              <Typography variant="body2">
+                                <strong>Tamaño:</strong> {(file.size / 1024).toFixed(1)} KB
+                              </Typography>
+                            )}
+                            {file.file_type && (
+                              <Typography variant="body2">
+                                <strong>Tipo:</strong> {file.file_type.toUpperCase()}
+                              </Typography>
+                            )}
+                            {file.error && (
+                              <Typography variant="body2" color="error">
+                                <strong>Error:</strong> {file.error}
+                              </Typography>
+                            )}
+
+                            {/* Download Link */}
+                            {file.url && (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                href={file.url}
+                                target="_blank"
+                                sx={{ mt: 1 }}
+                              >
+                                Descargar Original
+                              </Button>
+                            )}
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  )) : (
+                    <Card variant="outlined" sx={{ mb: 1 }}>
+                      <CardContent>
+                        <Box display="flex" alignItems="flex-start" gap={2}>
+                          {/* Single File Preview */}
+                          {files.preview_data && !files.error && (
+                            <Box sx={{ flexShrink: 0 }}>
+                              <img
+                                src={`data:image/png;base64,${files.preview_data}`}
+                                alt={files.filename}
+                                style={{
+                                  maxWidth: '150px',
+                                  maxHeight: '150px',
+                                  objectFit: 'contain',
+                                  border: '1px solid #ddd',
+                                  borderRadius: '4px'
+                                }}
+                              />
+                            </Box>
+                          )}
+
+                          {/* Single File Info */}
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2">
+                              <strong>Archivo:</strong> {files.filename}
+                            </Typography>
+                            <Typography variant="body2">
+                              <strong>Origen:</strong> {files.source_task || 'Unknown'}
+                            </Typography>
+                            {files.size && (
+                              <Typography variant="body2">
+                                <strong>Tamaño:</strong> {(files.size / 1024).toFixed(1)} KB
+                              </Typography>
+                            )}
+                            {files.file_type && (
+                              <Typography variant="body2">
+                                <strong>Tipo:</strong> {files.file_type.toUpperCase()}
+                              </Typography>
+                            )}
+                            {files.error && (
+                              <Typography variant="body2" color="error">
+                                <strong>Error:</strong> {files.error}
+                              </Typography>
+                            )}
+
+                            {/* Download Link */}
+                            {files.url && (
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                href={files.url}
+                                target="_blank"
+                                sx={{ mt: 1 }}
+                              >
+                                Descargar Original
+                              </Button>
+                            )}
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          );
+
+        case 'validation_results_display':
+          return (
+            <Box>
+              {data && Object.entries(data).map(([validationType, validationData]) => (
+                <Card key={validationType} variant="outlined" sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      {validationType}
+                    </Typography>
+
+                    {/* Validation Score */}
+                    {(validationData as any)?.score !== undefined && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2">
+                          <strong>Puntuación de Calidad:</strong> {(validationData as any).score}
+                        </Typography>
+                        <Chip
+                          label={`Score: ${(validationData as any).score}`}
+                          color={(validationData as any).score >= 80 ? 'success' : (validationData as any).score >= 60 ? 'warning' : 'error'}
+                          size="small"
+                        />
+                      </Box>
+                    )}
+
+                    {/* Validation Details */}
+                    {(validationData as any)?.validation_details && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Detalles de Validación:
+                        </Typography>
+                        <TableContainer component={Paper} variant="outlined">
+                          <Table size="small">
+                            <TableBody>
+                              {Object.entries((validationData as any).validation_details).map(([key, value]) => (
+                                <TableRow key={key}>
+                                  <TableCell component="th" scope="row">
+                                    <Typography variant="body2" fontWeight="medium">
+                                      {key.replace('_', ' ').toUpperCase()}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography variant="body2">
+                                      {typeof value === 'boolean'
+                                        ? (value ? 'Sí' : 'No')
+                                        : typeof value === 'object' && value !== null
+                                        ? JSON.stringify(value, null, 2)
+                                        : String(value)}
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </Box>
+                    )}
+
+                    {/* Provenance Information */}
+                    {(validationData as any)?.provenance && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Información de Captura:
+                        </Typography>
+                        <TableContainer component={Paper} variant="outlined">
+                          <Table size="small">
+                            <TableBody>
+                              {Object.entries((validationData as any).provenance)
+                                .filter(([key, value]) => value !== null && value !== undefined)
+                                .map(([key, value]) => (
+                                <TableRow key={key}>
+                                  <TableCell component="th" scope="row">
+                                    <Typography variant="body2" fontWeight="medium">
+                                      {key.replace('_', ' ').toUpperCase()}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography variant="body2">
+                                      {typeof value === 'boolean'
+                                        ? (value ? 'Sí' : 'No')
+                                        : typeof value === 'object' && value !== null
+                                        ? JSON.stringify(value, null, 2)
+                                        : String(value)}
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          );
+
         case 'json_display':
           return (
             <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
