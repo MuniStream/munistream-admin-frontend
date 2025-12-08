@@ -10,6 +10,7 @@ import WorkflowManagementPage from '@/pages/WorkflowManagementPage';
 import InstanceAssignmentPage from '@/pages/InstanceAssignmentPage';
 import { AdminWorkflowExecution } from '@/pages/AdminWorkflowExecution';
 import KeycloakStats from '@/pages/admin/KeycloakStats';
+import CatalogsPage from '@/pages/CatalogsPage';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -107,6 +108,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredPermission="manage_workflows">
               <WorkflowManagementPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="catalogs"
+          element={
+            <ProtectedRoute requiredPermission="admin_system">
+              <CatalogsPage />
             </ProtectedRoute>
           }
         />
