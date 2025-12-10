@@ -33,6 +33,8 @@ import {
 } from '@mui/icons-material';
 import { EntityViewer } from './EntityViewer';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 interface ContextValidationDisplayProps {
   instanceId: string;
   formConfig: {
@@ -139,6 +141,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                           <EntityViewer
                             entityId={entity.entity_id}
                             entityName={entity.name}
+                            apiBaseUrl={`${API_URL}/api/v1`}
                           />
                         </Box>
                       </CardContent>
@@ -187,6 +190,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
           );
 
         case 's3_files_display':
+        case 'files_display_with_viewer':
           return (
             <Box>
               {data && Object.entries(data).map(([uploadKey, files]) => (
@@ -239,16 +243,34 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                               </Typography>
                             )}
 
-                            {/* Download Link */}
-                            {file.url && (
+                            {/* Download Button - Use proxy download like EntityViewer */}
+                            {(file.download_url || file.url) && (
                               <Button
                                 variant="outlined"
                                 size="small"
-                                href={file.url}
-                                target="_blank"
+                                onClick={async () => {
+                                  try {
+                                    const downloadUrl = file.download_url || file.url;
+                                    const response = await fetch(`${API_URL}${downloadUrl}`);
+                                    if (!response.ok) {
+                                      throw new Error('Error al descargar archivo');
+                                    }
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = file.filename;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                  } catch (err) {
+                                    console.error('Error downloading file:', err);
+                                  }
+                                }}
                                 sx={{ mt: 1 }}
                               >
-                                Descargar Original
+                                Descargar Archivo
                               </Button>
                             )}
                           </Box>
@@ -300,16 +322,34 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                               </Typography>
                             )}
 
-                            {/* Download Link */}
-                            {files.url && (
+                            {/* Download Button - Use proxy download like EntityViewer */}
+                            {(files.download_url || files.url) && (
                               <Button
                                 variant="outlined"
                                 size="small"
-                                href={files.url}
-                                target="_blank"
+                                onClick={async () => {
+                                  try {
+                                    const downloadUrl = files.download_url || files.url;
+                                    const response = await fetch(`${API_URL}${downloadUrl}`);
+                                    if (!response.ok) {
+                                      throw new Error('Error al descargar archivo');
+                                    }
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = files.filename;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                  } catch (err) {
+                                    console.error('Error downloading file:', err);
+                                  }
+                                }}
                                 sx={{ mt: 1 }}
                               >
-                                Descargar Original
+                                Descargar Archivo
                               </Button>
                             )}
                           </Box>
@@ -317,6 +357,43 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                       </CardContent>
                     </Card>
                   )}
+                </Box>
+              ))}
+            </Box>
+          );
+
+        case 'catalog_selections_display':
+          return (
+            <Box>
+              {data && Object.entries(data).map(([selectionKey, selection]) => (
+                <Box key={selectionKey} mb={2}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    {(selection as any)?.catalog_name || selectionKey.replace('selected_', '').replace('_', ' ').toUpperCase()}
+                  </Typography>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableBody>
+                            {(selection as any)?.fields && Object.entries((selection as any).fields).map(([field, value]) => (
+                              <TableRow key={field}>
+                                <TableCell component="th" scope="row">
+                                  <Typography variant="body2" fontWeight="medium">
+                                    {field.replace('_', ' ').toUpperCase()}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2">
+                                    {String(value)}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </CardContent>
+                  </Card>
                 </Box>
               ))}
             </Box>
