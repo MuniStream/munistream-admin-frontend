@@ -35,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import { workflowService } from '@/services/workflowService';
 import { AdminDataCollectionForm } from '@/components/AdminDataCollectionForm';
+import { AdminCatalogSelector } from '@/components/AdminCatalogSelector';
 import { DigitalSignatureForm } from '@/components/DigitalSignatureForm';
 import { ContextValidationDisplay } from '@/components/ContextValidationDisplay';
 
@@ -82,6 +83,7 @@ export const AdminWorkflowExecution: React.FC = () => {
   // Check the type of input required - now comes from top level
   const waitingFor = progress?.waiting_for;
   const isEntitySelection = waitingFor === 'entity_selection';
+  const isCatalogSelection = waitingFor === 'catalog_selection';
   const isDigitalSignature = waitingFor === 'signature';
   const isContextValidation = waitingFor === 'context_validation';
 
@@ -229,6 +231,35 @@ export const AdminWorkflowExecution: React.FC = () => {
         const result = await response.json();
         if (result.success) {
           setSubmissionSuccess(result.message || 'Entity selections submitted successfully');
+          // Refresh progress to get updated state
+          setTimeout(() => {
+            fetchProgress();
+            setSubmissionSuccess(null);
+          }, 2000);
+        }
+      } else if (isCatalogSelection) {
+        // Handle catalog selection submission
+        const taskId = progress?.input_form?.current_step_id || 'catalog_selector';
+        const selectionData = {
+          [`${taskId}_input`]: data
+        };
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_BASE_URL}/instances/${instanceId}/submit-data`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionStorage.getItem('kc_token')}`
+          },
+          body: JSON.stringify(selectionData),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to submit catalog selections');
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          setSubmissionSuccess(result.message || 'Catalog selections submitted successfully');
           // Refresh progress to get updated state
           setTimeout(() => {
             fetchProgress();
@@ -466,7 +497,7 @@ export const AdminWorkflowExecution: React.FC = () => {
 
       {/* Data Collection Section */}
       {progress.status === 'paused' && progress.input_form &&
-       progress.waiting_for && ['user_input', 'signature', 'context_validation'].includes(progress.waiting_for) && (
+       progress.waiting_for && ['user_input', 'signature', 'context_validation', 'catalog_selection'].includes(progress.waiting_for) && (
         <Card sx={{ mb: 3, border: 2, borderColor: 'warning.main' }}>
           <CardContent>
             <Alert severity="warning" sx={{ mb: 2 }}>
@@ -508,6 +539,16 @@ export const AdminWorkflowExecution: React.FC = () => {
                 onSubmit={handleDataSubmission}
                 loading={isSubmittingData}
                 error={error}
+              />
+            ) : isCatalogSelection ? (
+              <AdminCatalogSelector
+                title={progress.input_form.title || 'Seleccione del Catálogo'}
+                description={progress.input_form.description || 'Seleccione los elementos necesarios del catálogo para continuar.'}
+                catalog_config={progress.input_form.catalog_config}
+                validation={progress.input_form.validation}
+                validation_errors={progress.input_form.validation_errors || []}
+                previous_input={progress.input_form.previous_input}
+                onSubmit={handleDataSubmission}
               />
             ) : (
               <AdminDataCollectionForm
