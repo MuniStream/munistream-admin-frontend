@@ -1,0 +1,615 @@
+<!-- Admin Dashboard Header Template -->
+<header class="dashboard-header" style="
+  background: {{components.header.backgroundColor}};
+  color: {{components.header.color}};
+  height: {{components.header.height}}px;
+  box-shadow: {{components.header.boxShadow}};
+  border-bottom: {{components.header.borderBottom}};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 {{spacing.lg}}px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+">
+  <!-- Header Left Side -->
+  <div class="header-left" style="
+    display: flex;
+    align-items: center;
+    gap: {{spacing.md}}px;
+  ">
+    <!-- Menu Toggle Button -->
+    <button class="menu-toggle-btn" onclick="toggleSidebar()" style="
+      background: transparent;
+      border: none;
+      color: {{colors.text_primary}};
+      font-size: 24px;
+      padding: {{spacing.sm}}px;
+      border-radius: {{borders.radius_sm}}px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background-color {{custom_variables.transition_duration}};
+    ">
+      <span id="menu-icon">☰</span>
+    </button>
+
+    <!-- Page Title -->
+    <div class="page-title-section">
+      <h1 style="
+        color: {{colors.text_primary}};
+        font-size: {{typography.font_size_large}}px;
+        font-weight: {{typography.font_weight_bold}};
+        margin: 0;
+      ">
+        {{page.title || i18n.dashboard || 'Panel Administrativo'}}
+      </h1>
+      {{#if page.subtitle}}
+      <p style="
+        color: {{colors.text_secondary}};
+        font-size: {{typography.font_size_small}}px;
+        margin: 0;
+        font-weight: {{typography.font_weight_regular}};
+      ">
+        {{page.subtitle}}
+      </p>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Header Center - Breadcrumb -->
+  {{#if breadcrumb}}
+  <nav class="breadcrumb" style="
+    display: flex;
+    align-items: center;
+    gap: {{spacing.xs}}px;
+    color: {{colors.text_secondary}};
+    font-size: {{typography.font_size_small}}px;
+  ">
+    {{#each breadcrumb}}
+    <span class="breadcrumb-item" style="
+      display: flex;
+      align-items: center;
+      gap: {{../spacing.xs}}px;
+    ">
+      {{#unless @first}}
+      <span style="color: {{../colors.text_disabled}};">/</span>
+      {{/unless}}
+      {{#if this.url}}
+      <a href="{{this.url}}" style="
+        color: {{../colors.primary_main}};
+        text-decoration: none;
+        transition: color {{../custom_variables.transition_duration}};
+      ">
+        {{this.label}}
+      </a>
+      {{else}}
+      <span style="
+        color: {{../colors.text_primary}};
+        font-weight: {{../typography.font_weight_medium}};
+      ">
+        {{this.label}}
+      </span>
+      {{/if}}
+    </span>
+    {{/each}}
+  </nav>
+  {{/if}}
+
+  <!-- Header Right Side -->
+  <div class="header-right" style="
+    display: flex;
+    align-items: center;
+    gap: {{spacing.md}}px;
+  ">
+    <!-- Quick Actions -->
+    <div class="quick-actions" style="
+      display: flex;
+      align-items: center;
+      gap: {{spacing.sm}}px;
+    ">
+      <!-- Refresh Button -->
+      <button onclick="refreshDashboard()" style="
+        background: transparent;
+        border: 1px solid {{colors.borders.color}};
+        color: {{colors.text_primary}};
+        padding: {{spacing.sm}}px {{spacing.md}}px;
+        border-radius: {{borders.radius_sm}}px;
+        font-size: {{typography.font_size_small}}px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: {{spacing.xs}}px;
+        transition: all {{custom_variables.transition_duration}};
+      ">
+        <span>🔄</span>
+        <span>{{i18n.refresh || 'Actualizar'}}</span>
+      </button>
+
+      <!-- Export Button -->
+      <button onclick="showExportOptions()" style="
+        background: {{colors.primary_main}};
+        border: none;
+        color: {{colors.primary_contrast_text}};
+        padding: {{spacing.sm}}px {{spacing.md}}px;
+        border-radius: {{borders.radius_sm}}px;
+        font-size: {{typography.font_size_small}}px;
+        font-weight: {{typography.font_weight_medium}};
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: {{spacing.xs}}px;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span>📊</span>
+        <span>{{i18n.export || 'Exportar'}}</span>
+      </button>
+    </div>
+
+    <!-- Notifications -->
+    <div class="notifications" style="position: relative;">
+      <button class="notification-btn" onclick="toggleNotifications()" style="
+        background: transparent;
+        border: none;
+        color: {{colors.text_primary}};
+        font-size: 20px;
+        padding: {{spacing.sm}}px;
+        border-radius: 50%;
+        cursor: pointer;
+        position: relative;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span>🔔</span>
+        {{#if notifications.unread_count}}
+        <span class="notification-badge" style="
+          position: absolute;
+          top: 0;
+          right: 0;
+          background: {{colors.error}};
+          color: white;
+          font-size: 10px;
+          font-weight: bold;
+          padding: 2px 6px;
+          border-radius: 10px;
+          min-width: 16px;
+          text-align: center;
+        ">
+          {{notifications.unread_count}}
+        </span>
+        {{/if}}
+      </button>
+
+      <!-- Notifications Dropdown -->
+      <div id="notifications-dropdown" class="notifications-dropdown" style="
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: {{colors.background_paper}};
+        border: 1px solid {{borders.color}};
+        border-radius: {{borders.radius_md}}px;
+        box-shadow: {{shadows.lg}};
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+      ">
+        <div class="notifications-header" style="
+          padding: {{spacing.md}}px;
+          border-bottom: 1px solid {{borders.color}};
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        ">
+          <h3 style="
+            margin: 0;
+            font-size: {{typography.font_size_base}}px;
+            font-weight: {{typography.font_weight_bold}};
+            color: {{colors.text_primary}};
+          ">
+            {{i18n.notifications || 'Notificaciones'}}
+          </h3>
+          <button onclick="markAllAsRead()" style="
+            background: transparent;
+            border: none;
+            color: {{colors.primary_main}};
+            font-size: {{typography.font_size_small}}px;
+            cursor: pointer;
+          ">
+            {{i18n.mark_all_read || 'Marcar todas'}}
+          </button>
+        </div>
+
+        <div class="notifications-list">
+          {{#each notifications.items}}
+          <div class="notification-item" data-id="{{this.id}}" style="
+            padding: {{../spacing.md}}px;
+            border-bottom: 1px solid {{../borders.color}};
+            cursor: pointer;
+            transition: background-color {{../custom_variables.transition_duration}};
+            {{#unless this.read}}background: {{../colors.primary_light}}10;{{/unless}}
+          ">
+            <div style="
+              display: flex;
+              align-items: flex-start;
+              gap: {{../spacing.sm}}px;
+            ">
+              <span class="notification-icon" style="
+                font-size: 16px;
+                margin-top: 2px;
+              ">
+                {{get_notification_icon this.type}}
+              </span>
+              <div style="flex: 1;">
+                <p style="
+                  margin: 0 0 {{../spacing.xs}}px 0;
+                  font-size: {{../typography.font_size_small}}px;
+                  font-weight: {{../typography.font_weight_medium}};
+                  color: {{../colors.text_primary}};
+                ">
+                  {{this.title}}
+                </p>
+                <p style="
+                  margin: 0;
+                  font-size: {{../typography.font_size_small}}px;
+                  color: {{../colors.text_secondary}};
+                  line-height: {{../typography.line_height_base}};
+                ">
+                  {{this.message}}
+                </p>
+                <span style="
+                  font-size: {{../typography.font_size_small}}px;
+                  color: {{../colors.text_disabled}};
+                  margin-top: {{../spacing.xs}}px;
+                  display: block;
+                ">
+                  {{format_time this.created_at}}
+                </span>
+              </div>
+              {{#unless this.read}}
+              <span style="
+                width: 8px;
+                height: 8px;
+                background: {{../colors.primary_main}};
+                border-radius: 50%;
+                margin-top: {{../spacing.xs}}px;
+              "></span>
+              {{/unless}}
+            </div>
+          </div>
+          {{else}}
+          <div style="
+            padding: {{../spacing.xl}}px;
+            text-align: center;
+            color: {{../colors.text_secondary}};
+            font-size: {{../typography.font_size_small}};
+          ">
+            {{../i18n.no_notifications || 'No hay notificaciones'}}
+          </div>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+
+    <!-- User Profile -->
+    <div class="user-profile" style="position: relative;">
+      <button class="profile-btn" onclick="toggleUserMenu()" style="
+        background: transparent;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: {{spacing.sm}}px;
+        padding: {{spacing.sm}}px;
+        border-radius: {{borders.radius_md}}px;
+        cursor: pointer;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <img class="user-avatar" src="{{user.avatar || assets.user_avatar_default}}" alt="{{user.name}}" style="
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          object-fit: cover;
+        " />
+        <div class="user-info" style="
+          text-align: left;
+          display: none;
+        ">
+          <div style="
+            font-size: {{typography.font_size_small}}px;
+            font-weight: {{typography.font_weight_medium}};
+            color: {{colors.text_primary}};
+          ">
+            {{user.name || user.email}}
+          </div>
+          <div style="
+            font-size: {{typography.font_size_small}}px;
+            color: {{colors.text_secondary}};
+          ">
+            {{user.role || i18n.admin}}
+          </div>
+        </div>
+        <span style="
+          color: {{colors.text_secondary}};
+          font-size: 12px;
+        ">▼</span>
+      </button>
+
+      <!-- User Menu Dropdown -->
+      <div id="user-menu-dropdown" class="user-menu-dropdown" style="
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: {{colors.background_paper}};
+        border: 1px solid {{borders.color}};
+        border-radius: {{borders.radius_md}}px;
+        box-shadow: {{shadows.lg}};
+        width: 200px;
+        z-index: 1000;
+        display: none;
+      ">
+        <div class="user-menu-header" style="
+          padding: {{spacing.md}}px;
+          border-bottom: 1px solid {{borders.color}};
+          text-align: center;
+        ">
+          <div style="
+            font-weight: {{typography.font_weight_bold}};
+            color: {{colors.text_primary}};
+            font-size: {{typography.font_size_base}}px;
+          ">
+            {{user.name || user.email}}
+          </div>
+          <div style="
+            font-size: {{typography.font_size_small}}px;
+            color: {{colors.text_secondary}};
+          ">
+            {{user.role || i18n.admin}}
+          </div>
+        </div>
+
+        <nav class="user-menu-nav">
+          <a href="/profile" class="menu-item" style="
+            display: flex;
+            align-items: center;
+            gap: {{spacing.sm}}px;
+            padding: {{spacing.md}}px;
+            color: {{colors.text_primary}};
+            text-decoration: none;
+            font-size: {{typography.font_size_small}}px;
+            transition: background-color {{custom_variables.transition_duration}};
+          ">
+            <span>👤</span>
+            <span>{{i18n.profile || 'Perfil'}}</span>
+          </a>
+          <a href="/settings" class="menu-item" style="
+            display: flex;
+            align-items: center;
+            gap: {{spacing.sm}}px;
+            padding: {{spacing.md}}px;
+            color: {{colors.text_primary}};
+            text-decoration: none;
+            font-size: {{typography.font_size_small}}px;
+            transition: background-color {{custom_variables.transition_duration}};
+          ">
+            <span>⚙️</span>
+            <span>{{i18n.settings || 'Configuración'}}</span>
+          </a>
+          <div style="
+            height: 1px;
+            background: {{borders.color}};
+            margin: {{spacing.xs}}px 0;
+          "></div>
+          <button onclick="logout()" class="menu-item" style="
+            display: flex;
+            align-items: center;
+            gap: {{spacing.sm}}px;
+            padding: {{spacing.md}}px;
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: {{colors.error}};
+            font-size: {{typography.font_size_small}}px;
+            cursor: pointer;
+            transition: background-color {{custom_variables.transition_duration}};
+            text-align: left;
+          ">
+            <span>🚪</span>
+            <span>{{i18n.logout || 'Cerrar Sesión'}}</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  {{slot:header_right}}
+</header>
+
+<style>
+/* Hover effects */
+.menu-toggle-btn:hover {
+  background: {{colors.text_disabled}}20 !important;
+}
+
+.quick-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.quick-actions button:first-child:hover {
+  background: {{colors.text_disabled}}20 !important;
+}
+
+.quick-actions button:last-child:hover {
+  background: {{colors.primary_dark}} !important;
+}
+
+.notification-btn:hover {
+  background: {{colors.text_disabled}}20 !important;
+}
+
+.profile-btn:hover {
+  background: {{colors.text_disabled}}20 !important;
+}
+
+.notification-item:hover {
+  background: {{colors.text_disabled}}10 !important;
+}
+
+.menu-item:hover {
+  background: {{colors.text_disabled}}10 !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .dashboard-header {
+    padding: 0 {{spacing.md}}px !important;
+  }
+
+  .page-title-section h1 {
+    font-size: {{typography.font_size_base}}px !important;
+  }
+
+  .breadcrumb {
+    display: none !important;
+  }
+
+  .user-info {
+    display: none !important;
+  }
+
+  .quick-actions {
+    display: none !important;
+  }
+
+  .notifications-dropdown {
+    width: 280px !important;
+    right: -140px !important;
+  }
+
+  .user-menu-dropdown {
+    right: -100px !important;
+  }
+}
+
+/* Focus states for accessibility */
+.menu-toggle-btn:focus,
+.quick-actions button:focus,
+.notification-btn:focus,
+.profile-btn:focus {
+  outline: 2px solid {{colors.primary_main}};
+  outline-offset: 2px;
+}
+</style>
+
+<script>
+// Header functionality
+function toggleSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const menuIcon = document.getElementById('menu-icon');
+
+  if (sidebar) {
+    sidebar.classList.toggle('collapsed');
+    menuIcon.textContent = sidebar.classList.contains('collapsed') ? '☰' : '✕';
+  }
+
+  // Trigger sidebar toggle event for other components
+  window.dispatchEvent(new CustomEvent('sidebarToggle', {
+    detail: { collapsed: sidebar?.classList.contains('collapsed') }
+  }));
+}
+
+function refreshDashboard() {
+  if (typeof window.dashboardService !== 'undefined') {
+    window.dashboardService.refresh();
+  } else {
+    window.location.reload();
+  }
+}
+
+function showExportOptions() {
+  // Trigger export modal or dropdown
+  if (typeof window.exportService !== 'undefined') {
+    window.exportService.showOptions();
+  }
+}
+
+function toggleNotifications() {
+  const dropdown = document.getElementById('notifications-dropdown');
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+
+  // Close user menu if open
+  const userMenu = document.getElementById('user-menu-dropdown');
+  if (userMenu) userMenu.style.display = 'none';
+}
+
+function toggleUserMenu() {
+  const dropdown = document.getElementById('user-menu-dropdown');
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+
+  // Close notifications if open
+  const notificationsMenu = document.getElementById('notifications-dropdown');
+  if (notificationsMenu) notificationsMenu.style.display = 'none';
+}
+
+function markAllAsRead() {
+  if (typeof window.notificationService !== 'undefined') {
+    window.notificationService.markAllAsRead();
+  }
+}
+
+function logout() {
+  if (typeof window.authService !== 'undefined') {
+    window.authService.logout();
+  } else {
+    window.location.href = '/logout';
+  }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+  const notificationsDropdown = document.getElementById('notifications-dropdown');
+  const userMenuDropdown = document.getElementById('user-menu-dropdown');
+  const notificationBtn = document.querySelector('.notification-btn');
+  const profileBtn = document.querySelector('.profile-btn');
+
+  if (notificationsDropdown && !notificationBtn.contains(event.target)) {
+    notificationsDropdown.style.display = 'none';
+  }
+
+  if (userMenuDropdown && !profileBtn.contains(event.target)) {
+    userMenuDropdown.style.display = 'none';
+  }
+});
+
+// Helper functions for Handlebars
+if (typeof Handlebars !== 'undefined') {
+  Handlebars.registerHelper('get_notification_icon', function(type) {
+    const icons = {
+      'workflow': '📋',
+      'approval': '✅',
+      'document': '📄',
+      'system': '⚙️',
+      'error': '❌',
+      'warning': '⚠️',
+      'info': 'ℹ️'
+    };
+    return icons[type] || '📢';
+  });
+
+  Handlebars.registerHelper('format_time', function(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 1) return 'Ahora';
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+    if (days < 7) return `${days}d`;
+    return date.toLocaleDateString('es-ES');
+  });
+}
+</script>

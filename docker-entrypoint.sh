@@ -1,6 +1,22 @@
 #!/bin/sh
 set -e
 
+# Load theme if script exists and plugins are mounted
+if [ -f "/app/load-theme.sh" ] && [ -d "/app/plugins" ]; then
+    echo "🎨 Loading admin theme for tenant: ${VITE_TENANT_ID:-${VITE_TENANT}}"
+    cd /app && ./load-theme.sh
+
+    # Copy themes to nginx html directory if they exist
+    if [ -d "/app/public/themes" ]; then
+        echo "📁 Copying admin themes to nginx html directory..."
+        mkdir -p /usr/share/nginx/html/themes
+        cp -r /app/public/themes/* /usr/share/nginx/html/themes/
+        echo "✅ Admin themes copied successfully"
+    fi
+else
+    echo "ℹ️  No admin theme loading - script or plugins not found"
+fi
+
 # Replace environment variables in the built files
 echo "Configuring admin portal for tenant: ${VITE_TENANT}"
 

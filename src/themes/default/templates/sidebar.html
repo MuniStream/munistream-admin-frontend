@@ -1,0 +1,514 @@
+<!-- Default Admin Sidebar Template -->
+<nav class="admin-sidebar" style="
+  width: {{layout.sidebar_width}}px;
+  background: {{colors.custom.sidebar_bg}};
+  color: {{colors.custom.sidebar_text}};
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  box-shadow: {{shadows.lg}};
+  transition: width {{custom_variables.transition_duration}};
+  overflow-y: auto;
+  overflow-x: hidden;
+" data-collapsed="false">
+
+  {{slot:sidebar_top}}
+
+  <!-- Sidebar Header -->
+  <div class="sidebar-header" style="
+    padding: {{spacing.lg}}px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: {{spacing.md}}px;
+    min-height: {{layout.header_height}}px;
+  ">
+    {{#if assets.sidebar_logo}}
+    <img
+      src="/api/v1/themes/current/assets/{{assets.sidebar_logo}}"
+      alt="{{metadata.organization}}"
+      class="sidebar-logo"
+      style="
+        height: 32px;
+        width: auto;
+        max-width: 120px;
+      "
+    />
+    {{else}}
+    <div style="
+      font-size: {{typography.font_size_large}}px;
+      font-weight: {{typography.font_weight_bold}};
+      color: {{colors.custom.sidebar_text}};
+    ">
+      {{metadata.organization || variables.app_name}}
+    </div>
+    {{/if}}
+
+    <!-- Collapse Toggle -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()" style="
+      background: transparent;
+      border: none;
+      color: {{colors.custom.sidebar_text}};
+      cursor: pointer;
+      padding: {{spacing.xs}}px;
+      border-radius: {{borders.radius_sm}}px;
+      margin-left: auto;
+      opacity: 0.7;
+      transition: opacity {{custom_variables.transition_duration}};
+    ">
+      <span class="toggle-icon">‹</span>
+    </button>
+  </div>
+
+  <!-- Navigation Menu -->
+  <div class="sidebar-menu" style="
+    padding: {{spacing.md}}px 0;
+  ">
+    <!-- Dashboard Section -->
+    <div class="menu-section">
+      <div class="menu-section-title" style="
+        padding: {{spacing.sm}}px {{spacing.lg}}px;
+        color: rgba(255,255,255,0.6);
+        font-size: {{typography.font_size_small}}px;
+        font-weight: {{typography.font_weight_bold}};
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: {{spacing.sm}}px;
+      ">
+        {{i18n.dashboard || 'Dashboard'}}
+      </div>
+
+      <a href="/admin/dashboard" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+        border-radius: 0;
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">📊</span>
+        <span class="menu-text">{{i18n.overview || 'Resumen'}}</span>
+      </a>
+
+      <a href="/admin/analytics" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">📈</span>
+        <span class="menu-text">{{i18n.analytics || 'Analíticas'}}</span>
+      </a>
+    </div>
+
+    <!-- Workflow Management Section -->
+    <div class="menu-section">
+      <div class="menu-section-title" style="
+        padding: {{spacing.sm}}px {{spacing.lg}}px;
+        color: rgba(255,255,255,0.6);
+        font-size: {{typography.font_size_small}}px;
+        font-weight: {{typography.font_weight_bold}};
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: {{spacing.lg}}px 0 {{spacing.sm}}px 0;
+      ">
+        {{i18n.workflows || 'Flujos de Trabajo'}}
+      </div>
+
+      <a href="/admin/instances" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">📋</span>
+        <span class="menu-text">{{i18n.instances || 'Instancias'}}</span>
+        {{#if pending_instances_count}}
+        <span class="badge" style="
+          background: {{colors.custom.status_pending}};
+          color: {{colors.primary_contrast_text}};
+          padding: {{spacing.xs}}px {{spacing.sm}}px;
+          border-radius: {{borders.radius_lg}}px;
+          font-size: {{typography.font_size_small}}px;
+          font-weight: {{typography.font_weight_bold}};
+          margin-left: auto;
+        ">
+          {{pending_instances_count}}
+        </span>
+        {{/if}}
+      </a>
+
+      <a href="/admin/workflows" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">⚙️</span>
+        <span class="menu-text">{{i18n.workflow_definitions || 'Definiciones'}}</span>
+      </a>
+
+      <a href="/admin/approvals" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">✅</span>
+        <span class="menu-text">{{i18n.approvals || 'Aprobaciones'}}</span>
+        {{#if pending_approvals_count}}
+        <span class="badge" style="
+          background: {{colors.secondary_main}};
+          color: {{colors.secondary_contrast_text}};
+          padding: {{spacing.xs}}px {{spacing.sm}}px;
+          border-radius: {{borders.radius_lg}}px;
+          font-size: {{typography.font_size_small}}px;
+          font-weight: {{typography.font_weight_bold}};
+          margin-left: auto;
+        ">
+          {{pending_approvals_count}}
+        </span>
+        {{/if}}
+      </a>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="menu-section">
+      <div class="menu-section-title" style="
+        padding: {{spacing.sm}}px {{spacing.lg}}px;
+        color: rgba(255,255,255,0.6);
+        font-size: {{typography.font_size_small}}px;
+        font-weight: {{typography.font_weight_bold}};
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: {{spacing.lg}}px 0 {{spacing.sm}}px 0;
+      ">
+        {{i18n.users || 'Usuarios'}}
+      </div>
+
+      <a href="/admin/users" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">👥</span>
+        <span class="menu-text">{{i18n.manage_users || 'Gestionar Usuarios'}}</span>
+      </a>
+
+      <a href="/admin/teams" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">🏢</span>
+        <span class="menu-text">{{i18n.teams || 'Equipos'}}</span>
+      </a>
+
+      <a href="/admin/permissions" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">🔐</span>
+        <span class="menu-text">{{i18n.permissions || 'Permisos'}}</span>
+      </a>
+    </div>
+
+    <!-- System Section -->
+    <div class="menu-section">
+      <div class="menu-section-title" style="
+        padding: {{spacing.sm}}px {{spacing.lg}}px;
+        color: rgba(255,255,255,0.6);
+        font-size: {{typography.font_size_small}}px;
+        font-weight: {{typography.font_weight_bold}};
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: {{spacing.lg}}px 0 {{spacing.sm}}px 0;
+      ">
+        {{i18n.system || 'Sistema'}}
+      </div>
+
+      <a href="/admin/settings" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">⚙️</span>
+        <span class="menu-text">{{i18n.settings || 'Configuración'}}</span>
+      </a>
+
+      <a href="/admin/logs" class="menu-item" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.md}}px;
+        padding: {{spacing.md}}px {{spacing.lg}}px;
+        color: {{colors.custom.sidebar_text}};
+        text-decoration: none;
+        transition: background-color {{custom_variables.transition_duration}};
+      ">
+        <span class="menu-icon" style="
+          width: 20px;
+          text-align: center;
+          font-size: 18px;
+        ">📝</span>
+        <span class="menu-text">{{i18n.logs || 'Registros'}}</span>
+      </a>
+    </div>
+  </div>
+
+  {{slot:sidebar_bottom}}
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer" style="
+    margin-top: auto;
+    padding: {{spacing.lg}}px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  ">
+    <!-- User Profile -->
+    <div class="user-profile" style="
+      display: flex;
+      align-items: center;
+      gap: {{spacing.md}}px;
+      padding: {{spacing.sm}}px;
+      background: rgba(255,255,255,0.1);
+      border-radius: {{borders.radius_md}}px;
+      cursor: pointer;
+    " onclick="toggleUserMenu()">
+      <div class="user-avatar" style="
+        width: 32px;
+        height: 32px;
+        background: {{colors.primary_main}};
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: {{colors.primary_contrast_text}};
+        font-weight: {{typography.font_weight_bold}};
+        font-size: {{typography.font_size_small}}px;
+      ">
+        {{user.initials || 'A'}}
+      </div>
+      <div class="user-info" style="
+        flex: 1;
+        min-width: 0;
+      ">
+        <div class="user-name" style="
+          color: {{colors.custom.sidebar_text}};
+          font-size: {{typography.font_size_small}}px;
+          font-weight: {{typography.font_weight_medium}};
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">
+          {{user.name || user.email}}
+        </div>
+        <div class="user-role" style="
+          color: rgba(255,255,255,0.6);
+          font-size: {{typography.font_size_small}}px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        ">
+          {{user.role || 'Administrador'}}
+        </div>
+      </div>
+      <span style="
+        color: rgba(255,255,255,0.6);
+        font-size: 12px;
+      ">⋯</span>
+    </div>
+
+    <!-- Version Info -->
+    <div class="version-info" style="
+      text-align: center;
+      margin-top: {{spacing.md}}px;
+      color: rgba(255,255,255,0.4);
+      font-size: {{typography.font_size_small}}px;
+    ">
+      MuniStream v{{metadata.version || '1.0.0'}}
+    </div>
+  </div>
+</nav>
+
+<style>
+/* Sidebar hover effects */
+.menu-item:hover {
+  background: {{colors.custom.sidebar_hover}} !important;
+}
+
+.sidebar-toggle:hover {
+  opacity: 1 !important;
+}
+
+/* Active menu item */
+.menu-item.active {
+  background: {{colors.custom.sidebar_hover}} !important;
+  border-right: 3px solid {{colors.primary_main}};
+}
+
+/* Collapsed sidebar styles */
+.admin-sidebar[data-collapsed="true"] {
+  width: {{layout.sidebar_collapsed_width}}px !important;
+}
+
+.admin-sidebar[data-collapsed="true"] .menu-text,
+.admin-sidebar[data-collapsed="true"] .menu-section-title,
+.admin-sidebar[data-collapsed="true"] .sidebar-logo,
+.admin-sidebar[data-collapsed="true"] .user-info,
+.admin-sidebar[data-collapsed="true"] .version-info,
+.admin-sidebar[data-collapsed="true"] .badge {
+  display: none !important;
+}
+
+.admin-sidebar[data-collapsed="true"] .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.admin-sidebar[data-collapsed="true"] .menu-item {
+  justify-content: center !important;
+  padding: {{spacing.md}}px !important;
+}
+
+/* Focus states for accessibility */
+.menu-item:focus,
+.sidebar-toggle:focus {
+  outline: 2px solid {{colors.primary_main}};
+  outline-offset: -2px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+    transition: transform {{custom_variables.transition_duration}};
+  }
+
+  .admin-sidebar.mobile-open {
+    transform: translateX(0) !important;
+  }
+}
+
+/* Scrollbar styling */
+.admin-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.1);
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
+}
+</style>
+
+<script>
+function toggleSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const isCollapsed = sidebar.getAttribute('data-collapsed') === 'true';
+  sidebar.setAttribute('data-collapsed', !isCollapsed);
+
+  // Trigger layout update event
+  if (typeof window.adminLayout !== 'undefined') {
+    window.adminLayout.onSidebarToggle(!isCollapsed);
+  }
+}
+
+function toggleUserMenu() {
+  if (typeof window.userMenu !== 'undefined') {
+    window.userMenu.toggle();
+  }
+}
+
+// Set active menu item based on current route
+document.addEventListener('DOMContentLoaded', function() {
+  const currentPath = window.location.pathname;
+  const menuItems = document.querySelectorAll('.menu-item');
+
+  menuItems.forEach(item => {
+    const href = item.getAttribute('href');
+    if (href && currentPath.startsWith(href)) {
+      item.classList.add('active');
+    }
+  });
+});
+
+// Handle mobile menu
+function toggleMobileSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  sidebar.classList.toggle('mobile-open');
+}
+</script>

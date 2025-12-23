@@ -1,0 +1,724 @@
+<!-- Admin Workflow Card Template -->
+<div class="workflow-card" onclick="openWorkflow('{{workflow.id}}')" style="
+  background: {{components.dashboard_card.backgroundColor}};
+  border-radius: {{components.dashboard_card.borderRadius}}px;
+  padding: {{components.dashboard_card.padding}}px;
+  margin: {{components.dashboard_card.margin}}px;
+  box-shadow: {{components.dashboard_card.boxShadow}};
+  cursor: pointer;
+  transition: all {{custom_variables.transition_duration}};
+  border: 1px solid transparent;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+">
+  <!-- Card Header -->
+  <div class="workflow-header" style="
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: {{spacing.lg}}px;
+  ">
+    <div class="workflow-info" style="flex: 1;">
+      <h3 style="
+        color: {{colors.text_primary}};
+        font-size: {{typography.font_size_large}}px;
+        font-weight: {{typography.font_weight_bold}};
+        margin: 0 0 {{spacing.sm}}px 0;
+        line-height: {{typography.line_height_heading}};
+      ">
+        {{workflow.name}}
+      </h3>
+
+      {{#if workflow.description}}
+      <p style="
+        color: {{colors.text_secondary}};
+        font-size: {{typography.font_size_small}}px;
+        margin: 0;
+        line-height: {{typography.line_height_base}};
+      ">
+        {{truncate_text workflow.description 100}}
+      </p>
+      {{/if}}
+    </div>
+
+    <!-- Status Badge -->
+    <div class="workflow-status" style="
+      background: {{get_workflow_status_color workflow.status colors}};
+      color: white;
+      padding: {{spacing.xs}}px {{spacing.sm}}px;
+      border-radius: {{borders.radius_sm}}px;
+      font-size: {{typography.font_size_small}}px;
+      font-weight: {{typography.font_weight_bold}};
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    ">
+      {{get_workflow_status_text workflow.status i18n}}
+    </div>
+  </div>
+
+  <!-- Workflow Metrics -->
+  <div class="workflow-metrics" style="
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: {{spacing.md}}px;
+    margin-bottom: {{spacing.lg}}px;
+  ">
+    <!-- Total Instances -->
+    <div class="metric-item" style="
+      background: {{colors.background_default}};
+      padding: {{spacing.md}}px;
+      border-radius: {{borders.radius_sm}}px;
+      text-align: center;
+    ">
+      <div style="
+        font-size: {{typography.font_size_large}}px;
+        font-weight: {{typography.font_weight_bold}};
+        color: {{colors.primary_main}};
+        margin-bottom: {{spacing.xs}}px;
+      ">
+        {{workflow.metrics.total_instances || 0}}
+      </div>
+      <div style="
+        font-size: {{typography.font_size_small}}px;
+        color: {{colors.text_secondary}};
+        font-weight: {{typography.font_weight_medium}};
+      ">
+        {{i18n.total_instances || 'Total'}}
+      </div>
+    </div>
+
+    <!-- Active Instances -->
+    <div class="metric-item" style="
+      background: {{colors.background_default}};
+      padding: {{spacing.md}}px;
+      border-radius: {{borders.radius_sm}}px;
+      text-align: center;
+    ">
+      <div style="
+        font-size: {{typography.font_size_large}}px;
+        font-weight: {{typography.font_weight_bold}};
+        color: {{colors.warning}};
+        margin-bottom: {{spacing.xs}}px;
+      ">
+        {{workflow.metrics.active_instances || 0}}
+      </div>
+      <div style="
+        font-size: {{typography.font_size_small}}px;
+        color: {{colors.text_secondary}};
+        font-weight: {{typography.font_weight_medium}};
+      ">
+        {{i18n.active || 'Activas'}}
+      </div>
+    </div>
+
+    <!-- Success Rate -->
+    <div class="metric-item" style="
+      background: {{colors.background_default}};
+      padding: {{spacing.md}}px;
+      border-radius: {{borders.radius_sm}}px;
+      text-align: center;
+    ">
+      <div style="
+        font-size: {{typography.font_size_large}}px;
+        font-weight: {{typography.font_weight_bold}};
+        color: {{colors.success}};
+        margin-bottom: {{spacing.xs}}px;
+      ">
+        {{workflow.metrics.success_rate || 0}}%
+      </div>
+      <div style="
+        font-size: {{typography.font_size_small}}px;
+        color: {{colors.text_secondary}};
+        font-weight: {{typography.font_weight_medium}};
+      ">
+        {{i18n.success_rate || 'Éxito'}}
+      </div>
+    </div>
+
+    <!-- Average Duration -->
+    <div class="metric-item" style="
+      background: {{colors.background_default}};
+      padding: {{spacing.md}}px;
+      border-radius: {{borders.radius_sm}}px;
+      text-align: center;
+    ">
+      <div style="
+        font-size: {{typography.font_size_large}}px;
+        font-weight: {{typography.font_weight_bold}};
+        color: {{colors.info}};
+        margin-bottom: {{spacing.xs}}px;
+      ">
+        {{format_duration workflow.metrics.avg_duration}}
+      </div>
+      <div style="
+        font-size: {{typography.font_size_small}}px;
+        color: {{colors.text_secondary}};
+        font-weight: {{typography.font_weight_medium}};
+      ">
+        {{i18n.avg_duration || 'Duración'}}
+      </div>
+    </div>
+  </div>
+
+  <!-- Workflow Steps Preview -->
+  <div class="workflow-steps-preview" style="
+    margin-bottom: {{spacing.lg}}px;
+    flex: 1;
+  ">
+    <h4 style="
+      color: {{colors.text_primary}};
+      font-size: {{typography.font_size_small}}px;
+      font-weight: {{typography.font_weight_bold}};
+      margin: 0 0 {{spacing.md}}px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    ">
+      {{i18n.workflow_steps || 'Pasos del Workflow'}} ({{workflow.steps.length}})
+    </h4>
+
+    <div class="steps-list" style="
+      max-height: 120px;
+      overflow-y: auto;
+    ">
+      {{#each workflow.steps}}
+      {{#if @index < 4}}
+      <div class="step-preview" style="
+        display: flex;
+        align-items: center;
+        gap: {{../spacing.sm}}px;
+        padding: {{../spacing.sm}}px;
+        margin-bottom: {{../spacing.xs}}px;
+        background: {{../colors.background_default}};
+        border-radius: {{../borders.radius_sm}}px;
+      ">
+        <!-- Step Type Icon -->
+        <span class="step-icon" style="
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: {{get_step_type_color this.type ../colors}};
+          color: white;
+          border-radius: 50%;
+          font-size: 10px;
+          font-weight: bold;
+        ">
+          {{get_step_type_icon this.type}}
+        </span>
+
+        <!-- Step Name -->
+        <div style="flex: 1;">
+          <div style="
+            font-size: {{../typography.font_size_small}}px;
+            font-weight: {{../typography.font_weight_medium}};
+            color: {{../colors.text_primary}};
+          ">
+            {{this.name}}
+          </div>
+          {{#if this.type}}
+          <div style="
+            font-size: {{../typography.font_size_small}}px;
+            color: {{../colors.text_disabled}};
+            text-transform: capitalize;
+          ">
+            {{get_step_type_text this.type ../i18n}}
+          </div>
+          {{/if}}
+        </div>
+
+        <!-- Step Order -->
+        <div style="
+          font-size: {{../typography.font_size_small}}px;
+          color: {{../colors.text_disabled}};
+          font-weight: {{../typography.font_weight_bold}};
+        ">
+          {{add @index 1}}
+        </div>
+      </div>
+      {{/if}}
+      {{/each}}
+
+      {{#if workflow.steps.length > 4}}
+      <div style="
+        text-align: center;
+        padding: {{spacing.sm}}px;
+        color: {{colors.text_secondary}};
+        font-size: {{typography.font_size_small}};
+        font-style: italic;
+      ">
+        +{{subtract workflow.steps.length 4}} {{i18n.more_steps || 'pasos más'}}
+      </div>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  {{#if workflow.recent_activity}}
+  <div class="recent-activity" style="
+    margin-bottom: {{spacing.lg}}px;
+  ">
+    <h4 style="
+      color: {{colors.text_primary}};
+      font-size: {{typography.font_size_small}}px;
+      font-weight: {{typography.font_weight_bold}};
+      margin: 0 0 {{spacing.sm}}px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    ">
+      {{i18n.recent_activity || 'Actividad Reciente'}}
+    </h4>
+
+    <div style="
+      font-size: {{typography.font_size_small}}px;
+      color: {{colors.text_secondary}};
+    ">
+      <div>{{i18n.last_execution || 'Última ejecución'}}: {{format_relative_time workflow.recent_activity.last_execution}}</div>
+      <div>{{i18n.last_completion || 'Última finalización'}}: {{format_relative_time workflow.recent_activity.last_completion}}</div>
+    </div>
+  </div>
+  {{/if}}
+
+  <!-- Card Actions -->
+  <div class="workflow-actions" style="
+    display: flex;
+    gap: {{spacing.sm}}px;
+    margin-top: auto;
+    padding-top: {{spacing.md}}px;
+    border-top: 1px solid {{borders.color}};
+  ">
+    <button onclick="event.stopPropagation(); viewWorkflowDetails('{{workflow.id}}')" style="
+      flex: 1;
+      background: transparent;
+      color: {{colors.primary_main}};
+      border: 1px solid {{colors.primary_main}};
+      padding: {{spacing.sm}}px {{spacing.md}}px;
+      border-radius: {{borders.radius_sm}}px;
+      font-size: {{typography.font_size_small}}px;
+      font-weight: {{typography.font_weight_medium}};
+      cursor: pointer;
+      transition: all {{custom_variables.transition_duration}};
+    ">
+      {{i18n.view_details || 'Ver Detalles'}}
+    </button>
+
+    <button onclick="event.stopPropagation(); viewWorkflowInstances('{{workflow.id}}')" style="
+      flex: 1;
+      background: {{colors.primary_main}};
+      color: {{colors.primary_contrast_text}};
+      border: none;
+      padding: {{spacing.sm}}px {{spacing.md}}px;
+      border-radius: {{borders.radius_sm}}px;
+      font-size: {{typography.font_size_small}}px;
+      font-weight: {{typography.font_weight_medium}};
+      cursor: pointer;
+      transition: all {{custom_variables.transition_duration}};
+    ">
+      {{i18n.view_instances || 'Ver Instancias'}}
+    </button>
+
+    <!-- Dropdown Menu -->
+    <div class="workflow-menu" style="position: relative;">
+      <button onclick="event.stopPropagation(); toggleWorkflowMenu('{{workflow.id}}')" style="
+        background: transparent;
+        color: {{colors.text_secondary}};
+        border: 1px solid {{borders.color}};
+        padding: {{spacing.sm}}px;
+        border-radius: {{borders.radius_sm}}px;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+      ">
+        ⋮
+      </button>
+
+      <div id="workflow-menu-{{workflow.id}}" class="workflow-dropdown" style="
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: {{colors.background_paper}};
+        border: 1px solid {{borders.color}};
+        border-radius: {{borders.radius_md}}px;
+        box-shadow: {{shadows.lg}};
+        min-width: 160px;
+        z-index: 1000;
+        display: none;
+        margin-top: {{spacing.xs}}px;
+      ">
+        {{#if admin.workflows.show_dag_visualization}}
+        <a href="/workflows/{{workflow.id}}/diagram" class="menu-item" style="
+          display: flex;
+          align-items: center;
+          gap: {{spacing.sm}}px;
+          padding: {{spacing.md}}px;
+          color: {{colors.text_primary}};
+          text-decoration: none;
+          font-size: {{typography.font_size_small}}px;
+          transition: background-color {{custom_variables.transition_duration}};
+        ">
+          <span>📊</span>
+          <span>{{i18n.view_diagram || 'Ver Diagrama'}}</span>
+        </a>
+        {{/if}}
+
+        <a href="/workflows/{{workflow.id}}/analytics" class="menu-item" style="
+          display: flex;
+          align-items: center;
+          gap: {{spacing.sm}}px;
+          padding: {{spacing.md}}px;
+          color: {{colors.text_primary}};
+          text-decoration: none;
+          font-size: {{typography.font_size_small}}px;
+          transition: background-color {{custom_variables.transition_duration}};
+        ">
+          <span>📈</span>
+          <span>{{i18n.analytics || 'Análisis'}}</span>
+        </a>
+
+        <a href="/workflows/{{workflow.id}}/export" class="menu-item" style="
+          display: flex;
+          align-items: center;
+          gap: {{spacing.sm}}px;
+          padding: {{spacing.md}}px;
+          color: {{colors.text_primary}};
+          text-decoration: none;
+          font-size: {{typography.font_size_small}}px;
+          transition: background-color {{custom_variables.transition_duration}};
+        ">
+          <span>📤</span>
+          <span>{{i18n.export || 'Exportar'}}</span>
+        </a>
+
+        <div style="
+          height: 1px;
+          background: {{borders.color}};
+          margin: {{spacing.xs}}px 0;
+        "></div>
+
+        <button onclick="editWorkflow('{{workflow.id}}')" class="menu-item" style="
+          display: flex;
+          align-items: center;
+          gap: {{spacing.sm}}px;
+          padding: {{spacing.md}}px;
+          width: 100%;
+          border: none;
+          background: transparent;
+          color: {{colors.text_primary}};
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+          text-align: left;
+          transition: background-color {{custom_variables.transition_duration}};
+        ">
+          <span>✏️</span>
+          <span>{{i18n.edit || 'Editar'}}</span>
+        </button>
+
+        {{#if (eq workflow.status 'active')}}
+        <button onclick="disableWorkflow('{{workflow.id}}')" class="menu-item" style="
+          display: flex;
+          align-items: center;
+          gap: {{spacing.sm}}px;
+          padding: {{spacing.md}}px;
+          width: 100%;
+          border: none;
+          background: transparent;
+          color: {{colors.warning}};
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+          text-align: left;
+          transition: background-color {{custom_variables.transition_duration}};
+        ">
+          <span>⏸️</span>
+          <span>{{i18n.disable || 'Desactivar'}}</span>
+        </button>
+        {{else}}
+        <button onclick="enableWorkflow('{{workflow.id}}')" class="menu-item" style="
+          display: flex;
+          align-items: center;
+          gap: {{spacing.sm}}px;
+          padding: {{spacing.md}}px;
+          width: 100%;
+          border: none;
+          background: transparent;
+          color: {{colors.success}};
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+          text-align: left;
+          transition: background-color {{custom_variables.transition_duration}};
+        ">
+          <span>▶️</span>
+          <span>{{i18n.enable || 'Activar'}}</span>
+        </button>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+
+  {{slot:workflow_card_bottom}}
+</div>
+
+<style>
+/* Card hover effects */
+.workflow-card:hover {
+  box-shadow: {{shadows.lg}} !important;
+  transform: translateY(-2px);
+  border-color: {{colors.primary_main}} !important;
+}
+
+/* Button hover effects */
+.workflow-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.workflow-actions button:first-child:hover {
+  background: {{colors.primary_main}} !important;
+  color: {{colors.primary_contrast_text}} !important;
+}
+
+.workflow-actions button:nth-child(2):hover {
+  background: {{colors.primary_dark}} !important;
+}
+
+.workflow-actions button:last-child:hover {
+  background: {{colors.text_disabled}}20 !important;
+}
+
+/* Menu item hover effects */
+.menu-item:hover {
+  background: {{colors.text_disabled}}10 !important;
+}
+
+/* Step preview scroll styling */
+.steps-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.steps-list::-webkit-scrollbar-track {
+  background: {{colors.background_default}};
+  border-radius: 2px;
+}
+
+.steps-list::-webkit-scrollbar-thumb {
+  background: {{colors.text_disabled}};
+  border-radius: 2px;
+}
+
+.steps-list::-webkit-scrollbar-thumb:hover {
+  background: {{colors.text_secondary}};
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .workflow-metrics {
+    grid-template-columns: 1fr !important;
+  }
+
+  .workflow-actions {
+    flex-direction: column;
+  }
+
+  .workflow-menu {
+    position: static !important;
+  }
+
+  .workflow-dropdown {
+    position: relative !important;
+    display: block !important;
+    margin-top: {{spacing.sm}}px !important;
+  }
+}
+
+/* Focus states for accessibility */
+.workflow-card:focus {
+  outline: 2px solid {{colors.primary_main}};
+  outline-offset: 2px;
+}
+
+.workflow-actions button:focus {
+  outline: 2px solid {{colors.secondary_main}};
+  outline-offset: 2px;
+}
+</style>
+
+<script>
+// Workflow card functionality
+function openWorkflow(workflowId) {
+  if (typeof window.router !== 'undefined') {
+    window.router.push(`/workflows/${workflowId}`);
+  } else {
+    window.location.href = `/workflows/${workflowId}`;
+  }
+}
+
+function viewWorkflowDetails(workflowId) {
+  if (typeof window.router !== 'undefined') {
+    window.router.push(`/workflows/${workflowId}/details`);
+  } else {
+    window.location.href = `/workflows/${workflowId}/details`;
+  }
+}
+
+function viewWorkflowInstances(workflowId) {
+  if (typeof window.router !== 'undefined') {
+    window.router.push(`/workflows/${workflowId}/instances`);
+  } else {
+    window.location.href = `/workflows/${workflowId}/instances`;
+  }
+}
+
+function toggleWorkflowMenu(workflowId) {
+  const menu = document.getElementById(`workflow-menu-${workflowId}`);
+  const isVisible = menu.style.display !== 'none';
+
+  // Close all other menus first
+  document.querySelectorAll('.workflow-dropdown').forEach(dropdown => {
+    dropdown.style.display = 'none';
+  });
+
+  menu.style.display = isVisible ? 'none' : 'block';
+}
+
+function editWorkflow(workflowId) {
+  if (typeof window.router !== 'undefined') {
+    window.router.push(`/workflows/${workflowId}/edit`);
+  } else {
+    window.location.href = `/workflows/${workflowId}/edit`;
+  }
+}
+
+function disableWorkflow(workflowId) {
+  if (confirm('¿Desactivar este workflow? Las instancias en curso continuarán ejecutándose.')) {
+    if (typeof window.workflowService !== 'undefined') {
+      window.workflowService.disable(workflowId);
+    }
+  }
+}
+
+function enableWorkflow(workflowId) {
+  if (typeof window.workflowService !== 'undefined') {
+    window.workflowService.enable(workflowId);
+  }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+  if (!event.target.closest('.workflow-menu')) {
+    document.querySelectorAll('.workflow-dropdown').forEach(dropdown => {
+      dropdown.style.display = 'none';
+    });
+  }
+});
+
+// Helper functions for Handlebars
+if (typeof Handlebars !== 'undefined') {
+  Handlebars.registerHelper('get_workflow_status_color', function(status, colors) {
+    const statusColors = {
+      'active': colors.success,
+      'inactive': colors.text_disabled,
+      'draft': colors.custom.status_draft,
+      'deprecated': colors.warning,
+      'error': colors.error
+    };
+    return statusColors[status] || colors.text_disabled;
+  });
+
+  Handlebars.registerHelper('get_workflow_status_text', function(status, i18n) {
+    const statusTexts = {
+      'active': i18n.workflow_active || 'Activo',
+      'inactive': i18n.workflow_inactive || 'Inactivo',
+      'draft': i18n.workflow_draft || 'Borrador',
+      'deprecated': i18n.workflow_deprecated || 'Obsoleto',
+      'error': i18n.workflow_error || 'Error'
+    };
+    return statusTexts[status] || status;
+  });
+
+  Handlebars.registerHelper('get_step_type_color', function(type, colors) {
+    const typeColors = {
+      'action': colors.primary_main,
+      'approval': colors.warning,
+      'condition': colors.info,
+      'notification': colors.secondary_main,
+      'document': colors.success,
+      'integration': colors.custom.priority_medium
+    };
+    return typeColors[type] || colors.text_disabled;
+  });
+
+  Handlebars.registerHelper('get_step_type_icon', function(type) {
+    const typeIcons = {
+      'action': '⚡',
+      'approval': '✓',
+      'condition': '?',
+      'notification': '📧',
+      'document': '📄',
+      'integration': '🔗'
+    };
+    return typeIcons[type] || '●';
+  });
+
+  Handlebars.registerHelper('get_step_type_text', function(type, i18n) {
+    const typeTexts = {
+      'action': i18n.step_type_action || 'Acción',
+      'approval': i18n.step_type_approval || 'Aprobación',
+      'condition': i18n.step_type_condition || 'Condición',
+      'notification': i18n.step_type_notification || 'Notificación',
+      'document': i18n.step_type_document || 'Documento',
+      'integration': i18n.step_type_integration || 'Integración'
+    };
+    return typeTexts[type] || type;
+  });
+
+  Handlebars.registerHelper('format_duration', function(seconds) {
+    if (!seconds || seconds === 0) return '0m';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  });
+
+  Handlebars.registerHelper('format_relative_time', function(dateString) {
+    if (!dateString) return 'N/A';
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 1) return 'Ahora';
+    if (minutes < 60) return `hace ${minutes}m`;
+    if (hours < 24) return `hace ${hours}h`;
+    if (days < 7) return `hace ${days}d`;
+    return date.toLocaleDateString('es-ES');
+  });
+
+  Handlebars.registerHelper('truncate_text', function(text, length) {
+    if (!text) return '';
+    return text.length > length ? text.substring(0, length) + '...' : text;
+  });
+
+  Handlebars.registerHelper('add', function(a, b) {
+    return a + b;
+  });
+
+  Handlebars.registerHelper('subtract', function(a, b) {
+    return a - b;
+  });
+
+  Handlebars.registerHelper('eq', function(a, b) {
+    return a === b;
+  });
+}
+</script>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="{{i18n.locale || 'es'}}" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{metadata.description || 'MuniStream Admin Dashboard - Panel administrativo para workflows gubernamentales'}}">
+  <meta name="keywords" content="admin, dashboard, workflow, government, municipal">
+  <meta name="author" content="{{metadata.author || 'MuniStream Platform'}}">
+
+  <!-- Favicon -->
+  {{#if assets.favicon}}
+  <link rel="icon" type="image/x-icon" href="/api/v1/themes/current/assets/{{assets.favicon}}">
+  {{/if}}
+
+  <!-- Primary Title -->
+  <title>
+    {{#if page.title}}{{page.title}} - {{/if}}{{variables.app_name || 'Panel Administrativo'}}
+  </title>
+
+  <!-- Theme CSS Variables -->
+  <style>
+    :root {
+      /* Color Variables */
+      --color-primary-main: {{colors.primary_main}};
+      --color-primary-light: {{colors.primary_light}};
+      --color-primary-dark: {{colors.primary_dark}};
+      --color-primary-contrast: {{colors.primary_contrast_text}};
+
+      --color-secondary-main: {{colors.secondary_main}};
+      --color-secondary-light: {{colors.secondary_light}};
+      --color-secondary-dark: {{colors.secondary_dark}};
+      --color-secondary-contrast: {{colors.secondary_contrast_text}};
+
+      --color-background-default: {{colors.background_default}};
+      --color-background-paper: {{colors.background_paper}};
+
+      --color-text-primary: {{colors.text_primary}};
+      --color-text-secondary: {{colors.text_secondary}};
+      --color-text-disabled: {{colors.text_disabled}};
+
+      --color-error: {{colors.error}};
+      --color-warning: {{colors.warning}};
+      --color-info: {{colors.info}};
+      --color-success: {{colors.success}};
+
+      /* Custom Admin Colors */
+      --color-sidebar-bg: {{colors.custom.sidebar_bg}};
+      --color-sidebar-text: {{colors.custom.sidebar_text}};
+      --color-sidebar-hover: {{colors.custom.sidebar_hover}};
+      --color-dashboard-card: {{colors.custom.dashboard_card_bg}};
+      --color-table-header: {{colors.custom.table_header_bg}};
+      --color-table-hover: {{colors.custom.table_row_hover}};
+
+      /* Status Colors */
+      --color-status-draft: {{colors.custom.status_draft}};
+      --color-status-active: {{colors.custom.status_active}};
+      --color-status-pending: {{colors.custom.status_pending}};
+      --color-status-approved: {{colors.custom.status_approved}};
+      --color-status-rejected: {{colors.custom.status_rejected}};
+
+      /* Typography Variables */
+      --font-family: {{typography.font_family}};
+      --font-family-headings: {{typography.font_family_headings}};
+      --font-size-base: {{typography.font_size_base}}px;
+      --font-size-small: {{typography.font_size_small}}px;
+      --font-size-large: {{typography.font_size_large}}px;
+      --font-weight-light: {{typography.font_weight_light}};
+      --font-weight-regular: {{typography.font_weight_regular}};
+      --font-weight-medium: {{typography.font_weight_medium}};
+      --font-weight-bold: {{typography.font_weight_bold}};
+      --line-height-base: {{typography.line_height_base}};
+      --line-height-heading: {{typography.line_height_heading}};
+
+      /* Spacing Variables */
+      --spacing-unit: {{spacing.unit}}px;
+      --spacing-xs: {{spacing.xs}}px;
+      --spacing-sm: {{spacing.sm}}px;
+      --spacing-md: {{spacing.md}}px;
+      --spacing-lg: {{spacing.lg}}px;
+      --spacing-xl: {{spacing.xl}}px;
+
+      /* Border Variables */
+      --border-radius-sm: {{borders.radius_sm}}px;
+      --border-radius-md: {{borders.radius_md}}px;
+      --border-radius-lg: {{borders.radius_lg}}px;
+      --border-width: {{borders.width}}px;
+      --border-color: {{borders.color}};
+
+      /* Shadow Variables */
+      --shadow-sm: {{shadows.sm}};
+      --shadow-md: {{shadows.md}};
+      --shadow-lg: {{shadows.lg}};
+
+      /* Layout Variables */
+      --sidebar-width: {{custom_variables.sidebar_width}};
+      --sidebar-collapsed-width: {{custom_variables.sidebar_collapsed_width}};
+      --header-height: {{custom_variables.header_height}};
+      --content-padding: {{custom_variables.content_padding}};
+      --transition-duration: {{custom_variables.transition_duration}};
+    }
+
+    /* Dark Mode Support */
+    {{#if dark_mode}}
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-primary-main: {{dark_colors.primary_main}};
+        --color-primary-light: {{dark_colors.primary_light}};
+        --color-primary-dark: {{dark_colors.primary_dark}};
+        --color-secondary-main: {{dark_colors.secondary_main}};
+        --color-secondary-light: {{dark_colors.secondary_light}};
+        --color-secondary-dark: {{dark_colors.secondary_dark}};
+        --color-background-default: {{dark_colors.background_default}};
+        --color-background-paper: {{dark_colors.background_paper}};
+        --color-text-primary: {{dark_colors.text_primary}};
+        --color-text-secondary: {{dark_colors.text_secondary}};
+        --color-text-disabled: {{dark_colors.text_disabled}};
+        --color-sidebar-bg: {{dark_colors.custom.sidebar_bg}};
+        --color-sidebar-text: {{dark_colors.custom.sidebar_text}};
+        --color-sidebar-hover: {{dark_colors.custom.sidebar_hover}};
+      }
+    }
+    {{/if}}
+
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-base);
+      color: var(--color-text-primary);
+      background: var(--color-background-default);
+    }
+
+    /* Layout Structure */
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-left: var(--sidebar-width);
+      transition: margin-left var(--transition-duration);
+    }
+
+    .admin-layout.sidebar-collapsed .main-content {
+      margin-left: var(--sidebar-collapsed-width);
+    }
+
+    .content-area {
+      flex: 1;
+      padding: var(--content-padding);
+      overflow-y: auto;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0;
+      }
+
+      .admin-layout.sidebar-collapsed .main-content {
+        margin-left: 0;
+      }
+    }
+
+    /* Global Typography */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-family-headings);
+      line-height: var(--line-height-heading);
+      margin: 0;
+    }
+
+    h1 { font-size: calc(var(--font-size-base) * 2.5); font-weight: var(--font-weight-bold); }
+    h2 { font-size: calc(var(--font-size-base) * 2); font-weight: var(--font-weight-bold); }
+    h3 { font-size: calc(var(--font-size-base) * 1.5); font-weight: var(--font-weight-bold); }
+    h4 { font-size: calc(var(--font-size-base) * 1.25); font-weight: var(--font-weight-medium); }
+    h5 { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); }
+    h6 { font-size: var(--font-size-small); font-weight: var(--font-weight-medium); }
+
+    /* Global Form Styles */
+    input, textarea, select {
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      border: var(--border-width) solid var(--border-color);
+      border-radius: var(--border-radius-sm);
+      background: var(--color-background-paper);
+      color: var(--color-text-primary);
+      transition: border-color var(--transition-duration);
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--color-primary-main);
+    }
+
+    /* Global Button Styles */
+    button {
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+      border-radius: var(--border-radius-sm);
+      transition: all var(--transition-duration);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--color-primary-main);
+      color: var(--color-primary-contrast);
+      padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-dark);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-primary-main);
+      border: var(--border-width) solid var(--color-primary-main);
+      padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-primary-main);
+      color: var(--color-primary-contrast);
+    }
+
+    /* Scrollbar Styles */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--color-background-default);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-text-disabled);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-text-secondary);
+    }
+
+    /* Loading States */
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .loading::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid var(--color-text-disabled);
+      border-top: 2px solid var(--color-primary-main);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Accessibility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      :root {
+        --border-width: 2px;
+      }
+
+      button:focus,
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 3px solid var(--color-primary-main);
+        outline-offset: 2px;
+      }
+    }
+
+    /* Print styles */
+    @media print {
+      .admin-sidebar,
+      .dashboard-header .header-actions,
+      .workflow-actions,
+      .table-footer {
+        display: none !important;
+      }
+
+      .main-content {
+        margin-left: 0 !important;
+      }
+    }
+
+    {{html_injection.dashboard_scripts}}
+  </style>
+
+  {{html_injection.before_sidebar}}
+</head>
+
+<body class="admin-body">
+  <div id="admin-root" class="admin-layout">
+    <!-- Sidebar -->
+    {{>sidebar}}
+
+    <!-- Main Content Area -->
+    <main class="main-content" role="main">
+      <!-- Dashboard Header -->
+      {{html_injection.after_header}}
+      {{>dashboard_header}}
+
+      <!-- Page Content -->
+      <div class="content-area">
+        {{slot:main_content}}
+
+        <!-- Default Content (when no slot content) -->
+        {{#unless slot.main_content}}
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 50vh;
+          text-align: center;
+          color: var(--color-text-secondary);
+        ">
+          <div style="font-size: 64px; margin-bottom: var(--spacing-lg);">📋</div>
+          <h2 style="margin-bottom: var(--spacing-md); color: var(--color-text-primary);">
+            {{i18n.welcome_admin || 'Bienvenido al Panel Administrativo'}}
+          </h2>
+          <p style="max-width: 500px; margin-bottom: var(--spacing-xl);">
+            {{i18n.admin_welcome_message || 'Gestiona workflows, revisa instancias y supervisa el sistema desde este panel central.'}}
+          </p>
+          <div style="display: flex; gap: var(--spacing-md);">
+            <button onclick="window.location.href='/workflows'" class="btn-primary">
+              {{i18n.view_workflows || 'Ver Workflows'}}
+            </button>
+            <button onclick="window.location.href='/instances'" class="btn-secondary">
+              {{i18n.view_instances || 'Ver Instancias'}}
+            </button>
+          </div>
+        </div>
+        {{/unless}}
+      </div>
+    </main>
+
+    <!-- Notifications Container -->
+    <div id="notifications-container" style="
+      position: fixed;
+      top: calc(var(--header-height) + var(--spacing-md));
+      right: var(--spacing-md);
+      z-index: 9999;
+      max-width: 400px;
+    "></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    ">
+      <div style="
+        background: var(--color-background-paper);
+        padding: var(--spacing-xl);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+      ">
+        <div class="loading" style="
+          width: 40px;
+          height: 40px;
+          margin: 0 auto var(--spacing-md);
+        "></div>
+        <p style="margin: 0; color: var(--color-text-primary);">
+          {{i18n.loading || 'Cargando...'}}
+        </p>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10001;
+    ">
+      <div style="
+        background: var(--color-background-paper);
+        padding: var(--spacing-xl);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-lg);
+        max-width: 500px;
+        width: 90%;
+      ">
+        <h3 id="modal-title" style="
+          margin-bottom: var(--spacing-md);
+          color: var(--color-text-primary);
+        "></h3>
+        <p id="modal-message" style="
+          margin-bottom: var(--spacing-xl);
+          color: var(--color-text-secondary);
+        "></p>
+        <div style="
+          display: flex;
+          gap: var(--spacing-md);
+          justify-content: flex-end;
+        ">
+          <button id="modal-cancel" class="btn-secondary">
+            {{i18n.cancel || 'Cancelar'}}
+          </button>
+          <button id="modal-confirm" class="btn-primary">
+            {{i18n.confirm || 'Confirmar'}}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Handlebars Runtime (if using client-side templating) -->
+  {{#if templates.enabled}}
+  <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.runtime.min.js"></script>
+  {{/if}}
+
+  <!-- Core Admin Scripts -->
+  <script>
+    // Global admin utilities
+    window.AdminUtils = {
+      // Show loading overlay
+      showLoading: function() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+      },
+
+      // Hide loading overlay
+      hideLoading: function() {
+        document.getElementById('loading-overlay').style.display = 'none';
+      },
+
+      // Show confirmation modal
+      showConfirm: function(title, message, onConfirm, onCancel) {
+        const modal = document.getElementById('confirmation-modal');
+        const titleEl = document.getElementById('modal-title');
+        const messageEl = document.getElementById('modal-message');
+        const confirmBtn = document.getElementById('modal-confirm');
+        const cancelBtn = document.getElementById('modal-cancel');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        confirmBtn.onclick = function() {
+          modal.style.display = 'none';
+          if (onConfirm) onConfirm();
+        };
+
+        cancelBtn.onclick = function() {
+          modal.style.display = 'none';
+          if (onCancel) onCancel();
+        };
+
+        modal.style.display = 'flex';
+      },
+
+      // Show notification
+      showNotification: function(message, type = 'info', duration = 5000) {
+        const container = document.getElementById('notifications-container');
+        const notification = document.createElement('div');
+
+        const colors = {
+          success: 'var(--color-success)',
+          error: 'var(--color-error)',
+          warning: 'var(--color-warning)',
+          info: 'var(--color-info)'
+        };
+
+        notification.style.cssText = `
+          background: ${colors[type] || colors.info};
+          color: white;
+          padding: var(--spacing-md);
+          border-radius: var(--border-radius-md);
+          margin-bottom: var(--spacing-sm);
+          box-shadow: var(--shadow-md);
+          animation: slideInRight 0.3s ease;
+        `;
+
+        notification.textContent = message;
+        container.appendChild(notification);
+
+        // Auto remove
+        setTimeout(() => {
+          notification.style.animation = 'slideOutRight 0.3s ease forwards';
+          setTimeout(() => {
+            container.removeChild(notification);
+          }, 300);
+        }, duration);
+      }
+    };
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+      // Ctrl/Cmd + K: Focus search
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        const searchInput = document.querySelector('#instance-search');
+        if (searchInput) searchInput.focus();
+      }
+
+      // ESC: Close modals
+      if (event.key === 'Escape') {
+        document.getElementById('confirmation-modal').style.display = 'none';
+        document.querySelectorAll('.widget-menu, .workflow-dropdown, .user-menu-dropdown, .notifications-dropdown').forEach(el => {
+          el.style.display = 'none';
+        });
+      }
+    });
+
+    // CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+
+      @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Theme persistence
+    if (localStorage.getItem('admin-theme-mode')) {
+      document.documentElement.setAttribute('data-theme', localStorage.getItem('admin-theme-mode'));
+    }
+  </script>
+
+  {{slot:layout_scripts}}
+</body>
+</html>

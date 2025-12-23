@@ -90,6 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ];
       case 'reviewer':
         return [
+          'view_analytics',
           'view_workflows',
           'view_instances',
           'view_documents',
@@ -98,9 +99,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       case 'viewer':
       default:
         return [
-          'view_workflows',
-          'view_instances',
-          'view_documents'
+          'view_workflows'
         ];
     }
   };

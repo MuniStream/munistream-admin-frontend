@@ -1,0 +1,972 @@
+<!-- Admin Instance Table Template -->
+<div class="instance-table-container" style="
+  background: {{colors.background_paper}};
+  border-radius: {{borders.radius_md}}px;
+  box-shadow: {{shadows.md}};
+  overflow: hidden;
+">
+  <!-- Table Header -->
+  <div class="table-header" style="
+    background: {{components.data_table.headerBackgroundColor}};
+    color: {{components.data_table.headerColor}};
+    padding: {{spacing.lg}}px;
+    border-bottom: 1px solid {{borders.color}};
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  ">
+    <div class="header-left">
+      <h2 style="
+        margin: 0;
+        font-size: {{typography.font_size_large}}px;
+        font-weight: {{typography.font_weight_bold}};
+        color: {{colors.text_primary}};
+      ">
+        {{table.title || i18n.workflow_instances || 'Instancias de Workflow'}}
+      </h2>
+      {{#if table.subtitle}}
+      <p style="
+        margin: {{spacing.xs}}px 0 0;
+        font-size: {{typography.font_size_small}}px;
+        color: {{colors.text_secondary}};
+      ">
+        {{table.subtitle}}
+      </p>
+      {{/if}}
+    </div>
+
+    <div class="header-actions" style="
+      display: flex;
+      gap: {{spacing.sm}}px;
+      align-items: center;
+    ">
+      <!-- Search Input -->
+      <div class="search-container" style="position: relative;">
+        <input
+          type="text"
+          id="instance-search"
+          placeholder="{{i18n.search_placeholder || 'Buscar instancias...'}}"
+          onkeyup="filterInstances(this.value)"
+          style="
+            padding: {{spacing.sm}}px {{spacing.md}}px;
+            padding-left: {{spacing.xl}}px;
+            border: 1px solid {{borders.color}};
+            border-radius: {{borders.radius_sm}}px;
+            font-size: {{typography.font_size_small}}px;
+            width: 250px;
+            background: {{colors.background_default}};
+          "
+        />
+        <span class="search-icon" style="
+          position: absolute;
+          left: {{spacing.sm}}px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: {{colors.text_disabled}};
+          font-size: 16px;
+        ">🔍</span>
+      </div>
+
+      <!-- Filter Button -->
+      <button onclick="toggleFilters()" style="
+        background: transparent;
+        border: 1px solid {{borders.color}};
+        color: {{colors.text_primary}};
+        padding: {{spacing.sm}}px {{spacing.md}}px;
+        border-radius: {{borders.radius_sm}}px;
+        font-size: {{typography.font_size_small}}px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: {{spacing.xs}}px;
+      ">
+        <span>🔽</span>
+        <span>{{i18n.filters || 'Filtros'}}</span>
+      </button>
+
+      <!-- Refresh Button -->
+      <button onclick="refreshInstances()" style="
+        background: {{colors.primary_main}};
+        border: none;
+        color: {{colors.primary_contrast_text}};
+        padding: {{spacing.sm}}px {{spacing.md}}px;
+        border-radius: {{borders.radius_sm}}px;
+        font-size: {{typography.font_size_small}}px;
+        font-weight: {{typography.font_weight_medium}};
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: {{spacing.xs}}px;
+      ">
+        <span>🔄</span>
+        <span>{{i18n.refresh || 'Actualizar'}}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Panel -->
+  <div id="filters-panel" class="filters-panel" style="
+    display: none;
+    background: {{colors.background_default}};
+    padding: {{spacing.lg}}px;
+    border-bottom: 1px solid {{borders.color}};
+  ">
+    <div class="filters-grid" style="
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: {{spacing.md}}px;
+      align-items: end;
+    ">
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label style="
+          display: block;
+          font-size: {{typography.font_size_small}}px;
+          font-weight: {{typography.font_weight_medium}};
+          color: {{colors.text_primary}};
+          margin-bottom: {{spacing.xs}}px;
+        ">
+          {{i18n.status || 'Estado'}}:
+        </label>
+        <select id="status-filter" onchange="applyFilters()" style="
+          width: 100%;
+          padding: {{spacing.sm}}px;
+          border: 1px solid {{borders.color}};
+          border-radius: {{borders.radius_sm}}px;
+          font-size: {{typography.font_size_small}}px;
+          background: {{colors.background_paper}};
+        ">
+          <option value="">{{i18n.all_statuses || 'Todos los estados'}}</option>
+          <option value="pending">{{i18n.status_pending || 'Pendiente'}}</option>
+          <option value="running">{{i18n.status_running || 'En Proceso'}}</option>
+          <option value="completed">{{i18n.status_completed || 'Completado'}}</option>
+          <option value="failed">{{i18n.status_failed || 'Fallido'}}</option>
+        </select>
+      </div>
+
+      <!-- Workflow Filter -->
+      <div class="filter-group">
+        <label style="
+          display: block;
+          font-size: {{typography.font_size_small}}px;
+          font-weight: {{typography.font_weight_medium}};
+          color: {{colors.text_primary}};
+          margin-bottom: {{spacing.xs}}px;
+        ">
+          {{i18n.workflow || 'Workflow'}}:
+        </label>
+        <select id="workflow-filter" onchange="applyFilters()" style="
+          width: 100%;
+          padding: {{spacing.sm}}px;
+          border: 1px solid {{borders.color}};
+          border-radius: {{borders.radius_sm}}px;
+          font-size: {{typography.font_size_small}}px;
+          background: {{colors.background_paper}};
+        ">
+          <option value="">{{i18n.all_workflows || 'Todos los workflows'}}</option>
+          {{#each workflows}}
+          <option value="{{this.id}}">{{this.name}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <!-- Date Range Filter -->
+      <div class="filter-group">
+        <label style="
+          display: block;
+          font-size: {{typography.font_size_small}}px;
+          font-weight: {{typography.font_weight_medium}};
+          color: {{colors.text_primary}};
+          margin-bottom: {{spacing.xs}}px;
+        ">
+          {{i18n.date_range || 'Rango de fechas'}}:
+        </label>
+        <input
+          type="date"
+          id="date-from"
+          onchange="applyFilters()"
+          style="
+            width: 100%;
+            padding: {{spacing.sm}}px;
+            border: 1px solid {{borders.color}};
+            border-radius: {{borders.radius_sm}}px;
+            font-size: {{typography.font_size_small}}px;
+            background: {{colors.background_paper}};
+          "
+        />
+      </div>
+
+      <!-- Clear Filters -->
+      <div class="filter-group">
+        <button onclick="clearFilters()" style="
+          background: transparent;
+          border: 1px solid {{colors.error}};
+          color: {{colors.error}};
+          padding: {{spacing.sm}}px {{spacing.md}}px;
+          border-radius: {{borders.radius_sm}}px;
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+          width: 100%;
+        ">
+          {{i18n.clear_filters || 'Limpiar Filtros'}}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Actions -->
+  <div id="bulk-actions" class="bulk-actions" style="
+    display: none;
+    background: {{colors.primary_light}}20;
+    padding: {{spacing.md}}px {{spacing.lg}}px;
+    border-bottom: 1px solid {{borders.color}};
+  ">
+    <div style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    ">
+      <span style="
+        color: {{colors.text_primary}};
+        font-size: {{typography.font_size_small}}px;
+        font-weight: {{typography.font_weight_medium}};
+      ">
+        <span id="selected-count">0</span> {{i18n.items_selected || 'elementos seleccionados'}}
+      </span>
+      <div class="bulk-buttons" style="
+        display: flex;
+        gap: {{spacing.sm}}px;
+      ">
+        <button onclick="bulkApprove()" style="
+          background: {{colors.success}};
+          color: white;
+          border: none;
+          padding: {{spacing.sm}}px {{spacing.md}}px;
+          border-radius: {{borders.radius_sm}}px;
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+        ">
+          {{i18n.approve_selected || 'Aprobar Seleccionados'}}
+        </button>
+        <button onclick="bulkReject()" style="
+          background: {{colors.error}};
+          color: white;
+          border: none;
+          padding: {{spacing.sm}}px {{spacing.md}}px;
+          border-radius: {{borders.radius_sm}}px;
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+        ">
+          {{i18n.reject_selected || 'Rechazar Seleccionados'}}
+        </button>
+        <button onclick="clearSelection()" style="
+          background: transparent;
+          color: {{colors.text_secondary}};
+          border: 1px solid {{borders.color}};
+          padding: {{spacing.sm}}px {{spacing.md}}px;
+          border-radius: {{borders.radius_sm}}px;
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+        ">
+          {{i18n.clear_selection || 'Limpiar Selección'}}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Content -->
+  <div class="table-content" style="overflow-x: auto;">
+    <table class="instances-table" style="
+      width: 100%;
+      border-collapse: collapse;
+    ">
+      <thead>
+        <tr style="
+          background: {{components.data_table.headerBackgroundColor}};
+          border-bottom: 1px solid {{borders.color}};
+        ">
+          {{#if admin.workflows.enable_bulk_actions}}
+          <th style="
+            padding: {{spacing.md}}px;
+            text-align: left;
+            width: 40px;
+          ">
+            <input
+              type="checkbox"
+              id="select-all"
+              onchange="toggleSelectAll(this.checked)"
+              style="cursor: pointer;"
+            />
+          </th>
+          {{/if}}
+          <th onclick="sortTable('instance_id')" style="
+            padding: {{spacing.md}}px;
+            text-align: left;
+            color: {{colors.text_primary}};
+            font-size: {{typography.font_size_small}}px;
+            font-weight: {{typography.font_weight_bold}};
+            cursor: pointer;
+            user-select: none;
+          ">
+            {{i18n.instance_id || 'ID'}} <span class="sort-indicator">↕️</span>
+          </th>
+          <th onclick="sortTable('workflow_name')" style="
+            padding: {{spacing.md}}px;
+            text-align: left;
+            color: {{colors.text_primary}};
+            font-size: {{typography.font_size_small}}px;
+            font-weight: {{typography.font_weight_bold}};
+            cursor: pointer;
+          ">
+            {{i18n.workflow || 'Workflow'}} <span class="sort-indicator">↕️</span>
+          </th>
+          <th onclick="sortTable('status')" style="
+            padding: {{spacing.md}}px;
+            text-align: left;
+            color: {{colors.text_primary}};
+            font-size: {{typography.font_size_small}}px;
+            font-weight: {{typography.font_weight_bold}};
+            cursor: pointer;
+          ">
+            {{i18n.status || 'Estado'}} <span class="sort-indicator">↕️</span>
+          </th>
+          <th onclick="sortTable('created_at')" style="
+            padding: {{spacing.md}}px;
+            text-align: left;
+            color: {{colors.text_primary}};
+            font-size: {{typography.font_size_small}}px;
+            font-weight: {{typography.font_weight_bold}};
+            cursor: pointer;
+          ">
+            {{i18n.created_at || 'Creado'}} <span class="sort-indicator">↕️</span>
+          </th>
+          <th style="
+            padding: {{spacing.md}}px;
+            text-align: left;
+            color: {{colors.text_primary}};
+            font-size: {{typography.font_size_small}}px;
+            font-weight: {{typography.font_weight_bold}};
+          ">
+            {{i18n.progress || 'Progreso'}}
+          </th>
+          <th style="
+            padding: {{spacing.md}}px;
+            text-align: center;
+            color: {{colors.text_primary}};
+            font-size: {{typography.font_size_small}}px;
+            font-weight: {{typography.font_weight_bold}};
+          ">
+            {{i18n.actions || 'Acciones'}}
+          </th>
+        </tr>
+      </thead>
+      <tbody id="instances-tbody">
+        {{#each instances}}
+        <tr class="instance-row" data-instance-id="{{this.instance_id}}" style="
+          border-bottom: 1px solid {{../borders.color}};
+          {{#if ../components.data_table.stripedRows}}
+            {{#if @index % 2}}background: {{../colors.background_default}};{{/if}}
+          {{/if}}
+          transition: background-color {{../custom_variables.transition_duration}};
+        ">
+          {{#if ../admin.workflows.enable_bulk_actions}}
+          <td style="padding: {{../spacing.md}}px;">
+            <input
+              type="checkbox"
+              class="instance-checkbox"
+              value="{{this.instance_id}}"
+              onchange="updateBulkSelection()"
+              style="cursor: pointer;"
+            />
+          </td>
+          {{/if}}
+
+          <td style="
+            padding: {{../spacing.md}}px;
+            font-size: {{../typography.font_size_small}}px;
+            color: {{../colors.text_primary}};
+            font-family: monospace;
+          ">
+            <span class="instance-id" style="
+              background: {{../colors.primary_light}}20;
+              padding: {{../spacing.xs}}px {{../spacing.sm}}px;
+              border-radius: {{../borders.radius_sm}}px;
+              font-weight: {{../typography.font_weight_medium}};
+            ">
+              {{truncate this.instance_id 8}}
+            </span>
+          </td>
+
+          <td style="
+            padding: {{../spacing.md}}px;
+            font-size: {{../typography.font_size_small}}px;
+            color: {{../colors.text_primary}};
+          ">
+            <div>
+              <div style="
+                font-weight: {{../typography.font_weight_medium}};
+                margin-bottom: {{../spacing.xs}}px;
+              ">
+                {{this.workflow_name}}
+              </div>
+              {{#if this.citizen_info}}
+              <div style="
+                font-size: {{../typography.font_size_small}}px;
+                color: {{../colors.text_secondary}};
+              ">
+                {{this.citizen_info.name || this.citizen_info.email}}
+              </div>
+              {{/if}}
+            </div>
+          </td>
+
+          <td style="padding: {{../spacing.md}}px;">
+            <span class="status-badge" style="
+              background: {{get_status_color this.status ../colors}};
+              color: white;
+              padding: {{../spacing.xs}}px {{../spacing.sm}}px;
+              border-radius: {{../borders.radius_sm}}px;
+              font-size: {{../typography.font_size_small}}px;
+              font-weight: {{../typography.font_weight_bold}};
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            ">
+              {{get_status_text this.status ../i18n}}
+            </span>
+          </td>
+
+          <td style="
+            padding: {{../spacing.md}}px;
+            font-size: {{../typography.font_size_small}}px;
+            color: {{../colors.text_secondary}};
+          ">
+            <div>{{format_date this.created_at}}</div>
+            <div style="
+              font-size: {{../typography.font_size_small}}px;
+              color: {{../colors.text_disabled}};
+            ">
+              {{format_relative_time this.created_at}}
+            </div>
+          </td>
+
+          <td style="padding: {{../spacing.md}}px;">
+            <div class="progress-container" style="
+              display: flex;
+              align-items: center;
+              gap: {{../spacing.sm}}px;
+            ">
+              <div class="progress-bar" style="
+                flex: 1;
+                height: 6px;
+                background: {{../colors.text_disabled}};
+                border-radius: 3px;
+                overflow: hidden;
+              ">
+                <div style="
+                  width: {{this.progress_percentage}}%;
+                  height: 100%;
+                  background: linear-gradient(90deg, {{../colors.primary_main}}, {{../colors.primary_light}});
+                  transition: width 0.3s ease;
+                "></div>
+              </div>
+              <span style="
+                font-size: {{../typography.font_size_small}}px;
+                font-weight: {{../typography.font_weight_bold}};
+                color: {{../colors.text_primary}};
+                min-width: 35px;
+              ">
+                {{this.progress_percentage}}%
+              </span>
+            </div>
+          </td>
+
+          <td style="
+            padding: {{../spacing.md}}px;
+            text-align: center;
+          ">
+            <div class="action-buttons" style="
+              display: flex;
+              gap: {{../spacing.xs}}px;
+              justify-content: center;
+            ">
+              <button onclick="viewInstance('{{this.instance_id}}')" title="{{../i18n.view_details || 'Ver Detalles'}}" style="
+                background: {{../colors.info}};
+                color: white;
+                border: none;
+                padding: {{../spacing.xs}}px {{../spacing.sm}}px;
+                border-radius: {{../borders.radius_sm}}px;
+                font-size: 12px;
+                cursor: pointer;
+              ">
+                👁️
+              </button>
+
+              {{#if (eq this.status 'pending')}}
+              <button onclick="approveInstance('{{this.instance_id}}')" title="{{../i18n.approve || 'Aprobar'}}" style="
+                background: {{../colors.success}};
+                color: white;
+                border: none;
+                padding: {{../spacing.xs}}px {{../spacing.sm}}px;
+                border-radius: {{../borders.radius_sm}}px;
+                font-size: 12px;
+                cursor: pointer;
+              ">
+                ✅
+              </button>
+              <button onclick="rejectInstance('{{this.instance_id}}')" title="{{../i18n.reject || 'Rechazar'}}" style="
+                background: {{../colors.error}};
+                color: white;
+                border: none;
+                padding: {{../spacing.xs}}px {{../spacing.sm}}px;
+                border-radius: {{../borders.radius_sm}}px;
+                font-size: 12px;
+                cursor: pointer;
+              ">
+                ❌
+              </button>
+              {{/if}}
+
+              {{#if (eq this.status 'running')}}
+              <button onclick="pauseInstance('{{this.instance_id}}')" title="{{../i18n.pause || 'Pausar'}}" style="
+                background: {{../colors.warning}};
+                color: white;
+                border: none;
+                padding: {{../spacing.xs}}px {{../spacing.sm}}px;
+                border-radius: {{../borders.radius_sm}}px;
+                font-size: 12px;
+                cursor: pointer;
+              ">
+                ⏸️
+              </button>
+              {{/if}}
+
+              <button onclick="showInstanceMenu('{{this.instance_id}}')" title="{{../i18n.more_actions || 'Más Acciones'}}" style="
+                background: {{../colors.text_secondary}};
+                color: white;
+                border: none;
+                padding: {{../spacing.xs}}px {{../spacing.sm}}px;
+                border-radius: {{../borders.radius_sm}}px;
+                font-size: 12px;
+                cursor: pointer;
+              ">
+                ⋮
+              </button>
+            </div>
+          </td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="{{#if admin.workflows.enable_bulk_actions}}7{{else}}6{{/if}}" style="
+            padding: {{../spacing.xl}}px;
+            text-align: center;
+            color: {{../colors.text_secondary}};
+            font-size: {{../typography.font_size_base}}px;
+          ">
+            {{../i18n.no_instances || 'No hay instancias disponibles'}}
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="table-footer" style="
+    padding: {{spacing.lg}}px;
+    border-top: 1px solid {{borders.color}};
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  ">
+    <div class="pagination-info" style="
+      font-size: {{typography.font_size_small}}px;
+      color: {{colors.text_secondary}};
+    ">
+      {{i18n.showing || 'Mostrando'}} {{pagination.start}}-{{pagination.end}}
+      {{i18n.of || 'de'}} {{pagination.total}} {{i18n.results || 'resultados'}}
+    </div>
+
+    <div class="pagination-controls" style="
+      display: flex;
+      gap: {{spacing.xs}}px;
+      align-items: center;
+    ">
+      <button onclick="previousPage()" {{#unless pagination.has_previous}}disabled{{/unless}} style="
+        background: {{#if pagination.has_previous}}{{colors.primary_main}}{{else}}{{colors.text_disabled}}{{/if}};
+        color: white;
+        border: none;
+        padding: {{spacing.sm}}px {{spacing.md}}px;
+        border-radius: {{borders.radius_sm}}px;
+        font-size: {{typography.font_size_small}}px;
+        cursor: {{#if pagination.has_previous}}pointer{{else}}not-allowed{{/if}};
+      ">
+        ← {{i18n.previous || 'Anterior'}}
+      </button>
+
+      <span style="
+        padding: 0 {{spacing.md}}px;
+        font-size: {{typography.font_size_small}}px;
+        color: {{colors.text_primary}};
+      ">
+        {{i18n.page || 'Página'}} {{pagination.current}} {{i18n.of || 'de'}} {{pagination.total_pages}}
+      </span>
+
+      <button onclick="nextPage()" {{#unless pagination.has_next}}disabled{{/unless}} style="
+        background: {{#if pagination.has_next}}{{colors.primary_main}}{{else}}{{colors.text_disabled}}{{/if}};
+        color: white;
+        border: none;
+        padding: {{spacing.sm}}px {{spacing.md}}px;
+        border-radius: {{borders.radius_sm}}px;
+        font-size: {{typography.font_size_small}}px;
+        cursor: {{#if pagination.has_next}}pointer{{else}}not-allowed{{/if}};
+      ">
+        {{i18n.next || 'Siguiente'}} →
+      </button>
+    </div>
+  </div>
+
+  {{slot:instance_table_bottom}}
+</div>
+
+<style>
+/* Table hover effects */
+.instance-row:hover {
+  background: {{components.data_table.hoverBackgroundColor}} !important;
+}
+
+/* Button hover effects */
+.action-buttons button:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.search-container input:focus {
+  outline: 2px solid {{colors.primary_main}};
+  outline-offset: 2px;
+}
+
+/* Sort indicators */
+.sort-indicator {
+  opacity: 0.5;
+  margin-left: {{spacing.xs}}px;
+}
+
+th.sorted-asc .sort-indicator::before {
+  content: '↑';
+  opacity: 1;
+}
+
+th.sorted-desc .sort-indicator::before {
+  content: '↓';
+  opacity: 1;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .table-header {
+    flex-direction: column;
+    gap: {{spacing.md}}px;
+    align-items: stretch !important;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    gap: {{spacing.sm}}px !important;
+  }
+
+  .search-container input {
+    width: 100% !important;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .instances-table {
+    min-width: 800px;
+  }
+
+  .bulk-actions {
+    flex-direction: column;
+    gap: {{spacing.sm}}px !important;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: {{spacing.sm}}px !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .table-header,
+  .filters-panel,
+  .bulk-actions,
+  .action-buttons,
+  .table-footer {
+    display: none;
+  }
+}
+</style>
+
+<script>
+// Global variables
+let currentSortColumn = '';
+let currentSortDirection = 'asc';
+let selectedInstances = new Set();
+
+// Filter and search functionality
+function filterInstances(searchTerm) {
+  const rows = document.querySelectorAll('.instance-row');
+  const term = searchTerm.toLowerCase();
+
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(term) ? '' : 'none';
+  });
+
+  updateResultsCount();
+}
+
+function toggleFilters() {
+  const panel = document.getElementById('filters-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function applyFilters() {
+  const statusFilter = document.getElementById('status-filter').value;
+  const workflowFilter = document.getElementById('workflow-filter').value;
+  const dateFrom = document.getElementById('date-from').value;
+
+  const rows = document.querySelectorAll('.instance-row');
+
+  rows.forEach(row => {
+    let show = true;
+    const instanceId = row.dataset.instanceId;
+
+    // Apply filters based on row data
+    // This would typically call the backend API with filters
+
+    row.style.display = show ? '' : 'none';
+  });
+
+  updateResultsCount();
+}
+
+function clearFilters() {
+  document.getElementById('status-filter').value = '';
+  document.getElementById('workflow-filter').value = '';
+  document.getElementById('date-from').value = '';
+  document.getElementById('instance-search').value = '';
+
+  // Show all rows
+  document.querySelectorAll('.instance-row').forEach(row => {
+    row.style.display = '';
+  });
+
+  updateResultsCount();
+}
+
+// Sort functionality
+function sortTable(column) {
+  const direction = (currentSortColumn === column && currentSortDirection === 'asc') ? 'desc' : 'asc';
+
+  // Update sort indicators
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted-asc', 'sorted-desc'));
+  event.target.closest('th').classList.add(`sorted-${direction}`);
+
+  currentSortColumn = column;
+  currentSortDirection = direction;
+
+  // This would typically trigger a backend API call to get sorted data
+  if (typeof window.instanceService !== 'undefined') {
+    window.instanceService.loadInstances({ sort: column, direction });
+  }
+}
+
+// Bulk actions
+function toggleSelectAll(checked) {
+  const checkboxes = document.querySelectorAll('.instance-checkbox');
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = checked;
+  });
+  updateBulkSelection();
+}
+
+function updateBulkSelection() {
+  const checkboxes = document.querySelectorAll('.instance-checkbox:checked');
+  const bulkActions = document.getElementById('bulk-actions');
+  const selectedCount = document.getElementById('selected-count');
+
+  selectedInstances.clear();
+  checkboxes.forEach(checkbox => {
+    selectedInstances.add(checkbox.value);
+  });
+
+  if (selectedInstances.size > 0) {
+    bulkActions.style.display = 'block';
+    selectedCount.textContent = selectedInstances.size;
+  } else {
+    bulkActions.style.display = 'none';
+  }
+}
+
+function bulkApprove() {
+  if (selectedInstances.size === 0) return;
+
+  if (confirm(`¿Aprobar ${selectedInstances.size} instancias seleccionadas?`)) {
+    Array.from(selectedInstances).forEach(instanceId => {
+      approveInstance(instanceId);
+    });
+    clearSelection();
+  }
+}
+
+function bulkReject() {
+  if (selectedInstances.size === 0) return;
+
+  if (confirm(`¿Rechazar ${selectedInstances.size} instancias seleccionadas?`)) {
+    Array.from(selectedInstances).forEach(instanceId => {
+      rejectInstance(instanceId);
+    });
+    clearSelection();
+  }
+}
+
+function clearSelection() {
+  selectedInstances.clear();
+  document.querySelectorAll('.instance-checkbox').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  document.getElementById('select-all').checked = false;
+  document.getElementById('bulk-actions').style.display = 'none';
+}
+
+// Instance actions
+function viewInstance(instanceId) {
+  if (typeof window.router !== 'undefined') {
+    window.router.push(`/instances/${instanceId}`);
+  } else {
+    window.location.href = `/instances/${instanceId}`;
+  }
+}
+
+function approveInstance(instanceId) {
+  if (typeof window.instanceService !== 'undefined') {
+    window.instanceService.approve(instanceId);
+  }
+}
+
+function rejectInstance(instanceId) {
+  if (typeof window.instanceService !== 'undefined') {
+    window.instanceService.reject(instanceId);
+  }
+}
+
+function pauseInstance(instanceId) {
+  if (typeof window.instanceService !== 'undefined') {
+    window.instanceService.pause(instanceId);
+  }
+}
+
+function showInstanceMenu(instanceId) {
+  // Show context menu with additional actions
+  console.log('Show menu for instance:', instanceId);
+}
+
+// Pagination
+function previousPage() {
+  if (typeof window.instanceService !== 'undefined') {
+    window.instanceService.previousPage();
+  }
+}
+
+function nextPage() {
+  if (typeof window.instanceService !== 'undefined') {
+    window.instanceService.nextPage();
+  }
+}
+
+// Utility functions
+function refreshInstances() {
+  if (typeof window.instanceService !== 'undefined') {
+    window.instanceService.refresh();
+  } else {
+    window.location.reload();
+  }
+}
+
+function updateResultsCount() {
+  const visibleRows = document.querySelectorAll('.instance-row[style*="display: none"]').length;
+  const totalRows = document.querySelectorAll('.instance-row').length;
+  const showing = totalRows - visibleRows;
+
+  // Update pagination info if needed
+  const paginationInfo = document.querySelector('.pagination-info');
+  if (paginationInfo && showing !== totalRows) {
+    paginationInfo.textContent = `Mostrando ${showing} de ${totalRows} resultados (filtrados)`;
+  }
+}
+
+// Helper functions for Handlebars
+if (typeof Handlebars !== 'undefined') {
+  Handlebars.registerHelper('get_status_color', function(status, colors) {
+    const statusColors = {
+      'pending': colors.custom.status_pending,
+      'running': colors.primary_main,
+      'completed': colors.custom.status_approved,
+      'failed': colors.custom.status_rejected,
+      'cancelled': colors.text_disabled
+    };
+    return statusColors[status] || colors.text_disabled;
+  });
+
+  Handlebars.registerHelper('get_status_text', function(status, i18n) {
+    const statusTexts = {
+      'pending': i18n.status_pending || 'Pendiente',
+      'running': i18n.status_running || 'En Proceso',
+      'completed': i18n.status_completed || 'Completado',
+      'failed': i18n.status_failed || 'Fallido',
+      'cancelled': i18n.status_cancelled || 'Cancelado'
+    };
+    return statusTexts[status] || status;
+  });
+
+  Handlebars.registerHelper('format_date', function(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  });
+
+  Handlebars.registerHelper('format_relative_time', function(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 1) return 'Ahora';
+    if (minutes < 60) return `hace ${minutes}m`;
+    if (hours < 24) return `hace ${hours}h`;
+    if (days < 30) return `hace ${days}d`;
+    return 'hace tiempo';
+  });
+
+  Handlebars.registerHelper('truncate', function(str, length) {
+    if (!str) return '';
+    return str.length > length ? str.substring(0, length) + '...' : str;
+  });
+
+  Handlebars.registerHelper('eq', function(a, b) {
+    return a === b;
+  });
+}
+</script>

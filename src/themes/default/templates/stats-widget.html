@@ -1,0 +1,657 @@
+<!-- Admin Stats Widget Template -->
+<div class="stats-widget" style="
+  background: {{components.dashboard_card.backgroundColor}};
+  border-radius: {{components.dashboard_card.borderRadius}}px;
+  padding: {{components.dashboard_card.padding}}px;
+  margin: {{components.dashboard_card.margin}}px;
+  box-shadow: {{components.dashboard_card.boxShadow}};
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all {{custom_variables.transition_duration}};
+">
+  <!-- Widget Header -->
+  <div class="widget-header" style="
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: {{spacing.lg}}px;
+  ">
+    <div class="widget-title-section">
+      <h3 style="
+        color: {{colors.text_primary}};
+        font-size: {{typography.font_size_base}}px;
+        font-weight: {{typography.font_weight_bold}};
+        margin: 0;
+      ">
+        {{widget.title || i18n.statistics || 'Estadísticas'}}
+      </h3>
+      {{#if widget.subtitle}}
+      <p style="
+        color: {{colors.text_secondary}};
+        font-size: {{typography.font_size_small}}px;
+        margin: {{spacing.xs}}px 0 0 0;
+      ">
+        {{widget.subtitle}}
+      </p>
+      {{/if}}
+    </div>
+
+    <!-- Widget Actions -->
+    <div class="widget-actions" style="
+      display: flex;
+      gap: {{spacing.xs}}px;
+      align-items: center;
+    ">
+      {{#if widget.refreshable}}
+      <button onclick="refreshWidget('{{widget.id}}')" title="{{i18n.refresh || 'Actualizar'}}" style="
+        background: transparent;
+        border: none;
+        color: {{colors.text_secondary}};
+        font-size: 16px;
+        padding: {{spacing.xs}}px;
+        border-radius: {{borders.radius_sm}}px;
+        cursor: pointer;
+        transition: all {{custom_variables.transition_duration}};
+      ">
+        🔄
+      </button>
+      {{/if}}
+
+      {{#if widget.expandable}}
+      <button onclick="expandWidget('{{widget.id}}')" title="{{i18n.expand || 'Expandir'}}" style="
+        background: transparent;
+        border: none;
+        color: {{colors.text_secondary}};
+        font-size: 14px;
+        padding: {{spacing.xs}}px;
+        border-radius: {{borders.radius_sm}}px;
+        cursor: pointer;
+        transition: all {{custom_variables.transition_duration}};
+      ">
+        ⛶
+      </button>
+      {{/if}}
+
+      <button onclick="toggleWidgetMenu('{{widget.id}}')" title="{{i18n.more_options || 'Más opciones'}}" style="
+        background: transparent;
+        border: none;
+        color: {{colors.text_secondary}};
+        font-size: 16px;
+        padding: {{spacing.xs}}px;
+        border-radius: {{borders.radius_sm}}px;
+        cursor: pointer;
+        transition: all {{custom_variables.transition_duration}};
+      ">
+        ⋮
+      </button>
+
+      <!-- Widget Menu -->
+      <div id="widget-menu-{{widget.id}}" class="widget-menu" style="
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: {{colors.background_paper}};
+        border: 1px solid {{borders.color}};
+        border-radius: {{borders.radius_md}}px;
+        box-shadow: {{shadows.lg}};
+        min-width: 150px;
+        z-index: 1000;
+        display: none;
+      ">
+        <button onclick="exportWidget('{{widget.id}}')" class="menu-item" style="
+          display: flex;
+          align-items: center;
+          gap: {{spacing.sm}}px;
+          padding: {{spacing.sm}}px {{spacing.md}}px;
+          width: 100%;
+          border: none;
+          background: transparent;
+          color: {{colors.text_primary}};
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+          text-align: left;
+          transition: background-color {{custom_variables.transition_duration}};
+        ">
+          <span>📤</span>
+          <span>{{i18n.export || 'Exportar'}}</span>
+        </button>
+        <button onclick="configureWidget('{{widget.id}}')" class="menu-item" style="
+          display: flex;
+          align-items: center;
+          gap: {{spacing.sm}}px;
+          padding: {{spacing.sm}}px {{spacing.md}}px;
+          width: 100%;
+          border: none;
+          background: transparent;
+          color: {{colors.text_primary}};
+          font-size: {{typography.font_size_small}}px;
+          cursor: pointer;
+          text-align: left;
+          transition: background-color {{custom_variables.transition_duration}};
+        ">
+          <span>⚙️</span>
+          <span>{{i18n.configure || 'Configurar'}}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Widget Content -->
+  <div class="widget-content" style="
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  ">
+    {{#if (eq widget.type 'number')}}
+    <!-- Number Widget -->
+    <div class="number-stats" style="
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      flex: 1;
+    ">
+      <div class="main-number" style="
+        font-size: 48px;
+        font-weight: {{typography.font_weight_bold}};
+        color: {{get_metric_color widget.data.value widget.thresholds colors}};
+        margin-bottom: {{spacing.sm}}px;
+        line-height: 1;
+      ">
+        {{format_number widget.data.value widget.format}}
+      </div>
+
+      {{#if widget.data.label}}
+      <div class="number-label" style="
+        font-size: {{typography.font_size_small}}px;
+        color: {{colors.text_secondary}};
+        font-weight: {{typography.font_weight_medium}};
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: {{spacing.md}}px;
+      ">
+        {{widget.data.label}}
+      </div>
+      {{/if}}
+
+      {{#if widget.data.change}}
+      <div class="change-indicator" style="
+        display: flex;
+        align-items: center;
+        gap: {{spacing.xs}}px;
+        font-size: {{typography.font_size_small}}px;
+        font-weight: {{typography.font_weight_medium}};
+        color: {{get_change_color widget.data.change.value colors}};
+      ">
+        <span>{{get_change_icon widget.data.change.value}}</span>
+        <span>{{format_percentage widget.data.change.value}}%</span>
+        <span style="color: {{colors.text_secondary}};">vs {{widget.data.change.period}}</span>
+      </div>
+      {{/if}}
+    </div>
+
+    {{else if (eq widget.type 'progress')}}
+    <!-- Progress Widget -->
+    <div class="progress-stats" style="
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1;
+      gap: {{spacing.md}}px;
+    ">
+      {{#each widget.data.items}}
+      <div class="progress-item" style="
+        display: flex;
+        flex-direction: column;
+        gap: {{../spacing.sm}}px;
+      ">
+        <div class="progress-header" style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        ">
+          <span style="
+            font-size: {{../typography.font_size_small}}px;
+            font-weight: {{../typography.font_weight_medium}};
+            color: {{../colors.text_primary}};
+          ">
+            {{this.label}}
+          </span>
+          <span style="
+            font-size: {{../typography.font_size_small}}px;
+            font-weight: {{../typography.font_weight_bold}};
+            color: {{../colors.text_primary}};
+          ">
+            {{this.value}}/{{this.total}} ({{calculate_percentage this.value this.total}}%)
+          </span>
+        </div>
+        <div class="progress-bar" style="
+          width: 100%;
+          height: 8px;
+          background: {{../colors.text_disabled}};
+          border-radius: 4px;
+          overflow: hidden;
+        ">
+          <div style="
+            width: {{calculate_percentage this.value this.total}}%;
+            height: 100%;
+            background: {{get_progress_color this.color ../colors}};
+            transition: width 0.3s ease;
+          "></div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+
+    {{else if (eq widget.type 'list')}}
+    <!-- List Widget -->
+    <div class="list-stats" style="
+      flex: 1;
+    ">
+      <div class="stats-list" style="
+        display: flex;
+        flex-direction: column;
+        gap: {{spacing.sm}}px;
+        max-height: 200px;
+        overflow-y: auto;
+      ">
+        {{#each widget.data.items}}
+        <div class="list-item" style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: {{../spacing.sm}}px;
+          background: {{../colors.background_default}};
+          border-radius: {{../borders.radius_sm}}px;
+          transition: background-color {{../custom_variables.transition_duration}};
+        ">
+          <div class="item-info" style="
+            display: flex;
+            align-items: center;
+            gap: {{../spacing.sm}}px;
+            flex: 1;
+          ">
+            {{#if this.icon}}
+            <span style="font-size: 16px;">{{this.icon}}</span>
+            {{/if}}
+            <div>
+              <div style="
+                font-size: {{../typography.font_size_small}}px;
+                font-weight: {{../typography.font_weight_medium}};
+                color: {{../colors.text_primary}};
+              ">
+                {{this.label}}
+              </div>
+              {{#if this.subtitle}}
+              <div style="
+                font-size: {{../typography.font_size_small}}px;
+                color: {{../colors.text_secondary}};
+              ">
+                {{this.subtitle}}
+              </div>
+              {{/if}}
+            </div>
+          </div>
+
+          <div class="item-value" style="
+            font-size: {{../typography.font_size_small}}px;
+            font-weight: {{../typography.font_weight_bold}};
+            color: {{get_metric_color this.value this.thresholds ../colors}};
+          ">
+            {{format_number this.value this.format}}
+          </div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    {{else if (eq widget.type 'chart')}}
+    <!-- Chart Widget Placeholder -->
+    <div class="chart-stats" style="
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: {{colors.background_default}};
+      border-radius: {{borders.radius_sm}}px;
+      min-height: 150px;
+    ">
+      <div style="
+        text-align: center;
+        color: {{colors.text_secondary}};
+        font-size: {{typography.font_size_small}};
+      ">
+        <div style="font-size: 32px; margin-bottom: {{spacing.sm}}px;">📊</div>
+        <div>{{i18n.chart_placeholder || 'Gráfico será renderizado aquí'}}</div>
+        <div id="chart-container-{{widget.id}}" style="width: 100%; height: 100%;"></div>
+      </div>
+    </div>
+
+    {{else}}
+    <!-- Generic Widget -->
+    <div class="generic-stats" style="
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: {{spacing.md}}px;
+    ">
+      {{#if widget.data.items}}
+      {{#each widget.data.items}}
+      <div class="stat-item" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: {{../spacing.sm}}px 0;
+        border-bottom: 1px solid {{../borders.color}};
+      ">
+        <span style="
+          font-size: {{../typography.font_size_small}}px;
+          color: {{../colors.text_secondary}};
+        ">
+          {{this.label}}
+        </span>
+        <span style="
+          font-size: {{../typography.font_size_base}}px;
+          font-weight: {{../typography.font_weight_bold}};
+          color: {{../colors.text_primary}};
+        ">
+          {{format_number this.value this.format}}
+        </span>
+      </div>
+      {{/each}}
+      {{else}}
+      <div style="
+        text-align: center;
+        color: {{colors.text_secondary}};
+        font-size: {{typography.font_size_small}};
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        {{i18n.no_data || 'Sin datos disponibles'}}
+      </div>
+      {{/if}}
+    </div>
+    {{/if}}
+  </div>
+
+  <!-- Widget Footer -->
+  {{#if widget.footer}}
+  <div class="widget-footer" style="
+    margin-top: {{spacing.md}}px;
+    padding-top: {{spacing.md}}px;
+    border-top: 1px solid {{borders.color}};
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  ">
+    <div style="
+      font-size: {{typography.font_size_small}}px;
+      color: {{colors.text_secondary}};
+    ">
+      {{#if widget.footer.last_updated}}
+      {{i18n.last_updated || 'Actualizado'}}: {{format_relative_time widget.footer.last_updated}}
+      {{/if}}
+    </div>
+
+    {{#if widget.footer.action}}
+    <a href="{{widget.footer.action.url}}" style="
+      color: {{colors.primary_main}};
+      text-decoration: none;
+      font-size: {{typography.font_size_small}}px;
+      font-weight: {{typography.font_weight_medium}};
+      transition: color {{custom_variables.transition_duration}};
+    ">
+      {{widget.footer.action.label}} →
+    </a>
+    {{/if}}
+  </div>
+  {{/if}}
+
+  {{slot:stats_widget_bottom}}
+</div>
+
+<style>
+/* Widget hover effects */
+.stats-widget:hover {
+  box-shadow: {{shadows.lg}} !important;
+  transform: translateY(-1px);
+}
+
+/* Button hover effects */
+.widget-actions button:hover {
+  background: {{colors.text_disabled}}20 !important;
+  color: {{colors.primary_main}} !important;
+}
+
+.menu-item:hover {
+  background: {{colors.text_disabled}}10 !important;
+}
+
+/* List item hover effects */
+.list-item:hover {
+  background: {{colors.primary_light}}10 !important;
+}
+
+/* Scrollbar styling */
+.stats-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.stats-list::-webkit-scrollbar-track {
+  background: {{colors.background_default}};
+  border-radius: 2px;
+}
+
+.stats-list::-webkit-scrollbar-thumb {
+  background: {{colors.text_disabled}};
+  border-radius: 2px;
+}
+
+.stats-list::-webkit-scrollbar-thumb:hover {
+  background: {{colors.text_secondary}};
+}
+
+/* Animation for number changes */
+.main-number {
+  transition: all 0.3s ease;
+}
+
+.progress-bar div {
+  transition: width 0.5s ease;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .widget-header {
+    flex-direction: column;
+    gap: {{spacing.sm}}px;
+    align-items: flex-start !important;
+  }
+
+  .main-number {
+    font-size: 36px !important;
+  }
+
+  .progress-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: {{spacing.xs}}px !important;
+  }
+
+  .item-info {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
+
+/* Focus states for accessibility */
+.widget-actions button:focus {
+  outline: 2px solid {{colors.primary_main}};
+  outline-offset: 2px;
+}
+</style>
+
+<script>
+// Widget functionality
+function refreshWidget(widgetId) {
+  if (typeof window.widgetService !== 'undefined') {
+    window.widgetService.refresh(widgetId);
+  } else {
+    // Fallback: reload the page
+    window.location.reload();
+  }
+
+  // Add loading state
+  const widget = document.querySelector(`[data-widget-id="${widgetId}"]`);
+  if (widget) {
+    widget.style.opacity = '0.7';
+    setTimeout(() => {
+      widget.style.opacity = '1';
+    }, 1000);
+  }
+}
+
+function expandWidget(widgetId) {
+  if (typeof window.widgetService !== 'undefined') {
+    window.widgetService.expand(widgetId);
+  }
+}
+
+function toggleWidgetMenu(widgetId) {
+  const menu = document.getElementById(`widget-menu-${widgetId}`);
+  const isVisible = menu.style.display !== 'none';
+
+  // Close all other widget menus
+  document.querySelectorAll('.widget-menu').forEach(m => {
+    if (m !== menu) m.style.display = 'none';
+  });
+
+  menu.style.display = isVisible ? 'none' : 'block';
+}
+
+function exportWidget(widgetId) {
+  if (typeof window.exportService !== 'undefined') {
+    window.exportService.exportWidget(widgetId);
+  }
+}
+
+function configureWidget(widgetId) {
+  if (typeof window.widgetService !== 'undefined') {
+    window.widgetService.configure(widgetId);
+  }
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', function(event) {
+  if (!event.target.closest('.widget-actions')) {
+    document.querySelectorAll('.widget-menu').forEach(menu => {
+      menu.style.display = 'none';
+    });
+  }
+});
+
+// Auto-refresh widgets if enabled
+document.addEventListener('DOMContentLoaded', function() {
+  const autoRefreshInterval = 30000; // 30 seconds
+
+  setInterval(() => {
+    const refreshableWidgets = document.querySelectorAll('[data-auto-refresh="true"]');
+    refreshableWidgets.forEach(widget => {
+      const widgetId = widget.dataset.widgetId;
+      if (widgetId) {
+        refreshWidget(widgetId);
+      }
+    });
+  }, autoRefreshInterval);
+});
+
+// Helper functions for Handlebars
+if (typeof Handlebars !== 'undefined') {
+  Handlebars.registerHelper('get_metric_color', function(value, thresholds, colors) {
+    if (!thresholds || typeof value !== 'number') return colors.text_primary;
+
+    if (thresholds.critical && value >= thresholds.critical) return colors.error;
+    if (thresholds.warning && value >= thresholds.warning) return colors.warning;
+    if (thresholds.good && value >= thresholds.good) return colors.success;
+    return colors.text_primary;
+  });
+
+  Handlebars.registerHelper('get_change_color', function(value, colors) {
+    if (value > 0) return colors.success;
+    if (value < 0) return colors.error;
+    return colors.text_secondary;
+  });
+
+  Handlebars.registerHelper('get_change_icon', function(value) {
+    if (value > 0) return '↗';
+    if (value < 0) return '↘';
+    return '→';
+  });
+
+  Handlebars.registerHelper('get_progress_color', function(color, colors) {
+    const colorMap = {
+      'primary': colors.primary_main,
+      'success': colors.success,
+      'warning': colors.warning,
+      'error': colors.error,
+      'info': colors.info
+    };
+    return colorMap[color] || colors.primary_main;
+  });
+
+  Handlebars.registerHelper('format_number', function(value, format) {
+    if (typeof value !== 'number') return value || 0;
+
+    switch (format) {
+      case 'currency':
+        return new Intl.NumberFormat('es-MX', {
+          style: 'currency',
+          currency: 'MXN'
+        }).format(value);
+      case 'percentage':
+        return `${value}%`;
+      case 'compact':
+        return new Intl.NumberFormat('es-MX', {
+          notation: 'compact',
+          compactDisplay: 'short'
+        }).format(value);
+      default:
+        return new Intl.NumberFormat('es-MX').format(value);
+    }
+  });
+
+  Handlebars.registerHelper('format_percentage', function(value) {
+    return Math.abs(value).toFixed(1);
+  });
+
+  Handlebars.registerHelper('calculate_percentage', function(value, total) {
+    if (total === 0) return 0;
+    return Math.round((value / total) * 100);
+  });
+
+  Handlebars.registerHelper('format_relative_time', function(dateString) {
+    if (!dateString) return 'N/A';
+
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 1) return 'ahora';
+    if (minutes < 60) return `hace ${minutes}m`;
+    if (hours < 24) return `hace ${hours}h`;
+    if (days < 7) return `hace ${days}d`;
+    return date.toLocaleDateString('es-ES');
+  });
+
+  Handlebars.registerHelper('eq', function(a, b) {
+    return a === b;
+  });
+}
+</script>

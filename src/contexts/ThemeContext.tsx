@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme, Theme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { api } from '../services/api';
 
 interface ThemeColors {
   primary_main: string;
@@ -149,22 +148,26 @@ export function CustomThemeProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       setError(null);
 
-      const response = await api.get('/themes/current');
-      const config = response.data as ThemeConfig;
+      // Load theme from local static file
+      const response = await fetch('/themes/theme-config.json');
+      if (!response.ok) {
+        throw new Error(`Failed to load theme: ${response.status} ${response.statusText}`);
+      }
+      const config = await response.json() as ThemeConfig;
 
       setThemeConfig(config);
       setTheme(createMuiTheme(config));
 
       // Update document metadata if available
       if (config.metadata?.organization) {
-        document.title = `${config.metadata.organization} - Portal Ciudadano`;
+        document.title = `${config.metadata.organization} - Admin Portal`;
       }
 
       // Update favicon if available
       if (config.assets?.favicon) {
         const favicon = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
         if (favicon) {
-          favicon.href = `/api/v1/themes/current/assets/${config.assets.favicon}`;
+          favicon.href = `/themes/assets/${config.assets.favicon}`;
         }
       }
     } catch (err) {
