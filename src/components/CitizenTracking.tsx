@@ -89,6 +89,7 @@ interface InstanceProgress {
     started_at?: string;
     completed_at?: string;
     requires_citizen_input: boolean;
+    group?: string;
   }>;
   requires_input: boolean;
   input_form?: any;

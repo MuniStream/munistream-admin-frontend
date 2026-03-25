@@ -38,6 +38,7 @@ import { AdminDataCollectionForm } from '@/components/AdminDataCollectionForm';
 import { AdminCatalogSelector } from '@/components/AdminCatalogSelector';
 import { DigitalSignatureForm } from '@/components/DigitalSignatureForm';
 import { ContextValidationDisplay } from '@/components/ContextValidationDisplay';
+import { AdminAssertionReview } from '@/components/AdminAssertionReview';
 
 export interface AdminWorkflowProgress {
   instance_id: string;
@@ -51,6 +52,7 @@ export interface AdminWorkflowProgress {
   created_at: string;
   updated_at: string;
   requires_input: boolean;
+  waiting_for?: string;
   input_form?: {
     title?: string;
     description?: string;
@@ -58,6 +60,8 @@ export interface AdminWorkflowProgress {
     fields?: any[];
     waiting_for?: string;
     current_step_id?: string;
+    assertions?: any[];
+    [key: string]: any;
   };
   step_progress: Array<{
     step_id: string;
@@ -66,6 +70,7 @@ export interface AdminWorkflowProgress {
     status: string;
     started_at?: string;
     completed_at?: string;
+    group?: string;
   }>;
 }
 
@@ -86,6 +91,7 @@ export const AdminWorkflowExecution: React.FC = () => {
   const isCatalogSelection = waitingFor === 'catalog_selection';
   const isDigitalSignature = waitingFor === 'signature';
   const isContextValidation = waitingFor === 'context_validation';
+  const isAssertionReview = waitingFor === 'assertion_review';
 
   const fetchProgress = async () => {
     if (!instanceId) return;
@@ -208,7 +214,30 @@ export const AdminWorkflowExecution: React.FC = () => {
 
     try {
 
-      if (isEntitySelection) {
+      if (isAssertionReview) {
+        const taskId = progress?.input_form?.current_step_id || 'assertion_review';
+        const response = await fetch(`${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_BASE_URL}/instances/${instanceId}/submit-data`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${sessionStorage.getItem('kc_token')}`
+          },
+          body: JSON.stringify({ [`${taskId}_input`]: data }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to submit assertion review');
+        }
+
+        const result = await response.json();
+        if (result.success) {
+          setSubmissionSuccess(result.message || 'Verificación enviada exitosamente');
+          setTimeout(() => {
+            fetchProgress();
+            setSubmissionSuccess(null);
+          }, 2000);
+        }
+      } else if (isEntitySelection) {
         // Handle entity selection submission
         const taskId = progress?.input_form?.current_step_id || 'admin_workflow_step';
         const selectionData = {
@@ -497,7 +526,7 @@ export const AdminWorkflowExecution: React.FC = () => {
 
       {/* Data Collection Section */}
       {progress.status === 'paused' && progress.input_form &&
-       progress.waiting_for && ['user_input', 'signature', 'context_validation', 'catalog_selection'].includes(progress.waiting_for) && (
+       progress.waiting_for && ['user_input', 'signature', 'context_validation', 'catalog_selection', 'assertion_review'].includes(progress.waiting_for) && (
         <Card sx={{ mb: 3, border: 2, borderColor: 'warning.main' }}>
           <CardContent>
             <Alert severity="warning" sx={{ mb: 2 }}>
@@ -549,6 +578,15 @@ export const AdminWorkflowExecution: React.FC = () => {
                 validation_errors={progress.input_form.validation_errors || []}
                 previous_input={progress.input_form.previous_input}
                 onSubmit={handleDataSubmission}
+              />
+            ) : isAssertionReview ? (
+              <AdminAssertionReview
+                title={progress.input_form.title || 'Verificación de Datos'}
+                description={progress.input_form.description || 'Revise y confirme los resultados de verificación'}
+                assertions={progress.input_form.assertions || []}
+                onSubmit={handleDataSubmission}
+                loading={isSubmittingData}
+                error={error}
               />
             ) : (
               <AdminDataCollectionForm
