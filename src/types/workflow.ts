@@ -3,6 +3,7 @@ export interface Workflow {
   name: string;
   description: string;
   step_count: number;
+  status: 'draft' | 'active' | 'inactive' | 'archived';
 }
 
 export interface WorkflowStep {

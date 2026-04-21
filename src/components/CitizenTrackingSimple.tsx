@@ -201,7 +201,7 @@ const CitizenTrackingSimple: React.FC = () => {
                 <Select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  label="Estado"
+                  label={t('status')}
                 >
                   <MenuItem value="">{t('allStatuses')}</MenuItem>
                   <MenuItem value="pending">{t('statusPending')}</MenuItem>
@@ -263,7 +263,7 @@ const CitizenTrackingSimple: React.FC = () => {
                     <Select
                       value={workflowFilter}
                       onChange={(e) => setWorkflowFilter(e.target.value)}
-                      label="Workflow"
+                      label={t('workflow')}
                       disabled={loadingWorkflows}
                       MenuProps={{
                         PaperProps: {
@@ -296,7 +296,7 @@ const CitizenTrackingSimple: React.FC = () => {
                     label={t('filterByUser')}
                     value={userFilter}
                     onChange={(e) => setUserFilter(e.target.value)}
-                    placeholder="ID del usuario"
+                    placeholder={t('userIdPlaceholder')}
                   />
                 </Grid>
                 <Grid item xs={12} md={2}>

@@ -32,6 +32,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import workflowService from '@/services/workflowService';
 import WorkflowDiagram from '@/components/WorkflowDiagram';
+import WorkflowNotificationsTab from '@/components/notifications/WorkflowNotificationsTab';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -50,6 +52,8 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 function WorkflowDetail() {
   const { workflowId } = useParams<{ workflowId: string }>();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
+  const canManageIntegrations = hasPermission('manage_integrations');
   const [tabValue, setTabValue] = useState(0);
 
   const { data: workflowDetails, isLoading } = useQuery({
@@ -216,6 +220,7 @@ function WorkflowDetail() {
           <Tab label="Step Performance" />
           <Tab label="Active Instances" />
           <Tab label="Bottleneck Analysis" />
+          {canManageIntegrations && <Tab label="Notificaciones" />}
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
@@ -366,6 +371,12 @@ function WorkflowDetail() {
             </Box>
           )}
         </TabPanel>
+
+        {canManageIntegrations && (
+          <TabPanel value={tabValue} index={4}>
+            <WorkflowNotificationsTab workflowId={workflowId!} workflowData={workflowDetails} />
+          </TabPanel>
+        )}
       </Paper>
     </Box>
   );

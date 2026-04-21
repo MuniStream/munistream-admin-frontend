@@ -247,7 +247,7 @@ export const workflowService = {
   async updateWorkflow(workflowId: string, data: {
     name?: string;
     description?: string;
-    status?: 'draft' | 'active' | 'deprecated';
+    status?: 'draft' | 'active' | 'inactive' | 'archived';
     metadata?: Record<string, any>;
   }): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/workflows/${workflowId}`, {
@@ -589,6 +589,26 @@ export const workflowService = {
 
     if (!response.ok) {
       throw new Error('Failed to start assigned workflow');
+    }
+
+    return await response.json();
+  },
+
+  // Start a workflow on behalf of another user (admin/manager only)
+  async startWorkflowOnBehalf(workflowId: string, userId: string, context?: Record<string, any>): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/instances/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        workflow_id: workflowId,
+        on_behalf_of_user_id: userId,
+        initial_context: context || {},
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || 'Failed to start workflow on behalf of user');
     }
 
     return await response.json();

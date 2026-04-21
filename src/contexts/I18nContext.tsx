@@ -114,6 +114,15 @@ interface Translations {
   categoryColor: string;
   categoryIcon: string;
   assignedWorkflows: string;
+
+  // Admin form fields
+  userIdPlaceholder: string;
+  requiresCitizenInfo: string;
+  critical: string;
+  confirm: string;
+  override: string;
+  validationComments: string;
+  privateKeyPassword: string;
 }
 
 // Spanish translations
@@ -227,6 +236,15 @@ const esTranslations: Translations = {
   citizen: 'Ciudadano',
   team: 'Equipo',
   members: 'miembros',
+
+  // Admin form fields
+  userIdPlaceholder: 'ID del usuario',
+  requiresCitizenInfo: 'Requiere Info Ciudadano',
+  critical: 'Crítico',
+  confirm: 'Confirmar',
+  override: 'Sobreescribir',
+  validationComments: 'Comentarios de Validación',
+  privateKeyPassword: 'Contraseña de la llave privada',
 };
 
 // English translations
@@ -340,6 +358,15 @@ const enTranslations: Translations = {
   categoryColor: 'Color',
   categoryIcon: 'Icon',
   assignedWorkflows: 'Assigned Workflows',
+
+  // Admin form fields
+  userIdPlaceholder: 'User ID',
+  requiresCitizenInfo: 'Requires Citizen Info',
+  critical: 'Critical',
+  confirm: 'Confirm',
+  override: 'Override',
+  validationComments: 'Validation Comments',
+  privateKeyPassword: 'Private key password',
 };
 
 const translations = {

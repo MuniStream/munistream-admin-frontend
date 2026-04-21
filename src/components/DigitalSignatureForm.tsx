@@ -23,6 +23,7 @@ import {
   Assignment as DocumentIcon
 } from '@mui/icons-material';
 // workflowService no longer needed - parent component handles submission
+import { useI18n } from '../contexts/I18nContext';
 
 interface DigitalSignatureFormProps {
   instanceId: string;
@@ -62,6 +63,7 @@ export const DigitalSignatureForm: React.FC<DigitalSignatureFormProps> = ({
   loading = false,
   error
 }) => {
+  const { t } = useI18n();
   console.log('🔐 DigitalSignatureForm: Component rendered!');
   console.log('🔐 Props received:', { documentToSign, operatorConfig, loading, error });
   const [signatureData, setSignatureData] = useState<SignatureData>({
@@ -752,7 +754,7 @@ export const DigitalSignatureForm: React.FC<DigitalSignatureFormProps> = ({
           <TextField
             fullWidth
             type="password"
-            label="Contraseña de la llave privada"
+            label={t('privateKeyPassword')}
             value={signatureData[operatorConfig.password_field] || ''}
             onChange={handlePasswordChange}
             error={!!validationErrors.password}

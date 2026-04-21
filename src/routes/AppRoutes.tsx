@@ -6,11 +6,14 @@ import WorkflowDetail from '@/pages/WorkflowDetail';
 import InstanceTracking from '@/pages/InstanceTracking';
 import InstanceDetail from '@/pages/InstanceDetail';
 import CitizenValidation from '@/pages/CitizenValidation';
-import WorkflowManagementPage from '@/pages/WorkflowManagementPage';
 import InstanceAssignmentPage from '@/pages/InstanceAssignmentPage';
 import { AdminWorkflowExecution } from '@/pages/AdminWorkflowExecution';
 import KeycloakStats from '@/pages/admin/KeycloakStats';
 import CatalogsPage from '@/pages/CatalogsPage';
+import ProfileFieldsPage from '@/pages/ProfileFieldsPage';
+import NotificationIntegrations from '@/pages/admin/NotificationIntegrations';
+import NotificationTemplates from '@/pages/admin/NotificationTemplates';
+import NotificationDeliveries from '@/pages/admin/NotificationDeliveries';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -104,15 +107,6 @@ function AppRoutes() {
         />
 
         <Route
-          path="workflow-management"
-          element={
-            <ProtectedRoute requiredPermission="manage_workflows">
-              <WorkflowManagementPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="catalogs"
           element={
             <ProtectedRoute requiredPermission="admin_system">
@@ -122,10 +116,46 @@ function AppRoutes() {
         />
 
         <Route
+          path="profile-fields"
+          element={
+            <ProtectedRoute requiredPermission="admin_system">
+              <ProfileFieldsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="admin/keycloak"
           element={
             <ProtectedRoute requiredPermission="admin_system">
               <KeycloakStats />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="admin/integrations/notifications"
+          element={
+            <ProtectedRoute requiredPermission="manage_integrations">
+              <NotificationIntegrations />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="admin/integrations/templates"
+          element={
+            <ProtectedRoute requiredPermission="manage_integrations">
+              <NotificationTemplates />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="admin/notifications/deliveries"
+          element={
+            <ProtectedRoute requiredPermission="manage_integrations">
+              <NotificationDeliveries />
             </ProtectedRoute>
           }
         />

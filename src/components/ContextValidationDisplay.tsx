@@ -32,6 +32,7 @@ import {
   Cancel as RejectIcon
 } from '@mui/icons-material';
 import { EntityViewer } from './EntityViewer';
+import { useI18n } from '../contexts/I18nContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -71,6 +72,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
   loading,
   error
 }) => {
+  const { t } = useI18n();
   const [validationDecision, setValidationDecision] = useState<string>('');
   const [validationComments, setValidationComments] = useState<string>('');
 
@@ -572,7 +574,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
               fullWidth
               multiline
               rows={3}
-              label="Comentarios de Validación"
+              label={t('validationComments')}
               placeholder="Comentarios opcionales sobre la decisión de validación..."
               value={validationComments}
               onChange={(e) => setValidationComments(e.target.value)}

@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'manage_workflows',
           'manage_users',
           'manage_settings',
+          'manage_integrations',
           'approve_workflows',
           'review_documents',
           'create_workflows',

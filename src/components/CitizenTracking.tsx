@@ -357,15 +357,15 @@ export const CitizenTracking: React.FC = () => {
                 <Select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  label="Estado"
+                  label={t('status')}
                 >
-                  <MenuItem value="">Todos</MenuItem>
-                  <MenuItem value="pending">Pendiente</MenuItem>
-                  <MenuItem value="running">Ejecutándose</MenuItem>
-                  <MenuItem value="awaiting_input">Esperando Info</MenuItem>
-                  <MenuItem value="pending_validation">Pend. Validación</MenuItem>
-                  <MenuItem value="completed">Completado</MenuItem>
-                  <MenuItem value="failed">Fallido</MenuItem>
+                  <MenuItem value="">{t('allStatuses')}</MenuItem>
+                  <MenuItem value="pending">{t('statusPending')}</MenuItem>
+                  <MenuItem value="running">{t('statusRunning')}</MenuItem>
+                  <MenuItem value="awaiting_input">{t('statusAwaitingInput')}</MenuItem>
+                  <MenuItem value="pending_validation">{t('statusPendingValidation')}</MenuItem>
+                  <MenuItem value="completed">{t('statusCompleted')}</MenuItem>
+                  <MenuItem value="failed">{t('statusFailed')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -375,7 +375,7 @@ export const CitizenTracking: React.FC = () => {
                 <Select
                   value={workflowFilter}
                   onChange={(e) => setWorkflowFilter(e.target.value)}
-                  label="Workflow"
+                  label={t('workflow')}
                   disabled={loadingWorkflows}
                   MenuProps={{
                     PaperProps: {
@@ -721,7 +721,7 @@ export const CitizenTracking: React.FC = () => {
                         {step.description}
                       </Typography>
                       {step.requires_citizen_input && (
-                        <Chip size="small" label="Requiere Info Ciudadano" color="warning" sx={{ mt: 0.5 }} />
+                        <Chip size="small" label={t('requiresCitizenInfo')} color="warning" sx={{ mt: 0.5 }} />
                       )}
                     </Box>
                   ))

@@ -18,6 +18,7 @@ import {
   Menu,
   MenuItem,
   Chip,
+  Collapse,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -33,11 +34,13 @@ import {
   Settings as SettingsIcon,
   Person as PersonIcon,
   CheckCircle as ValidationIcon,
-  Build as BuildIcon,
   Assignment as AssignmentIcon,
   Security as SecurityIcon,
   AdminPanelSettings as AdminPanelSettingsIcon,
   Storage as CatalogIcon,
+  ExpandLess as ExpandLessIcon,
+  ExpandMore as ExpandMoreIcon,
+  Send as SendIcon,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -46,21 +49,46 @@ const drawerWidth = 240;
 const menuItems = [
   { text: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> }, // Always show dashboard
   { text: 'Workflows', path: '/workflows', icon: <WorkflowIcon />, permission: 'view_workflows' },
-  { text: 'Workflow Management', path: '/workflow-management', icon: <BuildIcon />, permission: 'manage_workflows' },
   { text: 'Citizen Tracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
   { text: 'Instance Assignments', path: '/instance-assignments', icon: <AssignmentIcon />, permission: 'view_instances' },
   { text: 'Citizen Validation', path: '/citizen-validation', icon: <ValidationIcon />, permission: 'verify_documents' },
   { text: 'Catálogos', path: '/catalogs', icon: <CatalogIcon />, permission: 'admin_system' },
+  { text: 'Campos de Perfil', path: '/profile-fields', icon: <PersonIcon />, permission: 'admin_system' },
   { text: 'divider' }, // Visual separator for admin section
+  {
+    text: 'Notificaciones',
+    icon: <NotificationIcon />,
+    permission: 'manage_integrations',
+    children: [
+      { text: 'Configuración', path: '/admin/integrations/notifications', icon: <SettingsIcon /> },
+      { text: 'Plantillas', path: '/admin/integrations/templates', icon: <DocumentIcon /> },
+      { text: 'Envíos', path: '/admin/notifications/deliveries', icon: <SendIcon /> },
+    ],
+  },
   { text: 'Keycloak Stats', path: '/admin/keycloak', icon: <SecurityIcon />, permission: 'admin_system' },
 ];
 
 function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, hasPermission, hasAnyRole } = useAuth();
+
+  const isGroupOpen = (item: any): boolean => {
+    if (openGroups[item.text] !== undefined) return openGroups[item.text];
+    return item.children?.some((c: any) => location.pathname.startsWith(c.path)) ?? false;
+  };
+
+  const toggleGroup = (text: string) => {
+    setOpenGroups((prev) => ({ ...prev, [text]: !isGroupOpenByText(text) }));
+  };
+
+  const isGroupOpenByText = (text: string): boolean => {
+    const item = menuItems.find((m: any) => m.text === text);
+    return item ? isGroupOpen(item) : false;
+  };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -88,7 +116,7 @@ function DashboardLayout() {
       </Toolbar>
       <Divider />
       <List>
-        {menuItems.map((item, index) => {
+        {menuItems.map((item: any, index) => {
           // Handle divider
           if (item.text === 'divider') {
             return <Divider key={`divider-${index}`} sx={{ my: 1 }} />;
@@ -101,6 +129,37 @@ function DashboardLayout() {
           // Only show item if user has permission/role
           if (!hasRequiredPermission || !hasRequiredRole) {
             return null;
+          }
+
+          // Group with children
+          if (item.children) {
+            const open = isGroupOpen(item);
+            return (
+              <Box key={item.text}>
+                <ListItem disablePadding>
+                  <ListItemButton onClick={() => toggleGroup(item.text)}>
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.text} />
+                    {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </ListItemButton>
+                </ListItem>
+                <Collapse in={open} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {item.children.map((child: any) => (
+                      <ListItemButton
+                        key={child.path}
+                        sx={{ pl: 4 }}
+                        selected={location.pathname === child.path}
+                        onClick={() => navigate(child.path)}
+                      >
+                        <ListItemIcon>{child.icon}</ListItemIcon>
+                        <ListItemText primary={child.text} />
+                      </ListItemButton>
+                    ))}
+                  </List>
+                </Collapse>
+              </Box>
+            );
           }
 
           return (

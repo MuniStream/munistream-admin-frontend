@@ -16,6 +16,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import { useI18n } from '../contexts/I18nContext';
 
 export interface AssertionResult {
   id: string;
@@ -78,6 +79,7 @@ export const AdminAssertionReview: React.FC<AdminAssertionReviewProps> = ({
   loading = false,
   error,
 }) => {
+  const { t } = useI18n();
   const initialDecisions: Record<string, DecisionState> = {};
   assertions.forEach((a) => {
     initialDecisions[a.id] = {
@@ -172,7 +174,7 @@ export const AdminAssertionReview: React.FC<AdminAssertionReviewProps> = ({
                 {isCriticalFail && (
                   <Chip
                     icon={<WarningAmberIcon />}
-                    label="Crítico"
+                    label={t('critical')}
                     color="warning"
                     size="small"
                   />
@@ -247,13 +249,13 @@ export const AdminAssertionReview: React.FC<AdminAssertionReviewProps> = ({
                     <FormControlLabel
                       value="confirm"
                       control={<Radio size="small" color="success" />}
-                      label="Confirmar"
+                      label={t('confirm')}
                       disabled={loading}
                     />
                     <FormControlLabel
                       value="override"
                       control={<Radio size="small" color="warning" />}
-                      label="Sobreescribir"
+                      label={t('override')}
                       disabled={loading}
                     />
                   </RadioGroup>
