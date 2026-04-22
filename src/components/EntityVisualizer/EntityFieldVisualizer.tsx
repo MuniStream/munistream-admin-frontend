@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress, Alert } from '@mui/material';
+import {
+  Box, Typography, CircularProgress, Alert,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Chip
+} from '@mui/material';
 
 // Individual visualizer components
 import { PDFViewer } from './visualizers/PDFViewer';
@@ -100,7 +103,86 @@ export const EntityFieldVisualizer: React.FC<EntityFieldVisualizerProps> = ({
     );
   }
 
+  const isPropietariosList = (
+    fieldName === 'propietarios' &&
+    Array.isArray(fieldValue) &&
+    fieldValue.length > 0 &&
+    fieldValue.every((it: any) => it && typeof it === 'object' && !Array.isArray(it))
+  );
+
+  const renderPropietariosTable = () => {
+    const idUrls: string[][] = (entity?.data?.propietarios_identificacion_urls as string[][]) || [];
+    const total = fieldValue.reduce((acc: number, p: any) => acc + (Number(p?.porcentaje) || 0), 0);
+    const sumOk = Math.abs(total - 100) < 0.01;
+
+    const displayName = (p: any): string => {
+      if (p.tipo_persona === 'moral') return p.razon_social || '—';
+      const parts = [p.nombres, p.primer_apellido, p.segundo_apellido].filter(Boolean);
+      if (parts.length > 0) return parts.join(' ');
+      return p.nombre_completo || '—';
+    };
+    const displayRfc = (p: any): string => p.rfc_empresa || p.rfc || '—';
+    const displayTipo = (p: any): string =>
+      p.tipo_persona === 'moral' ? 'Persona Moral'
+      : p.tipo_persona === 'fisica' ? 'Persona Física'
+      : '—';
+
+    return (
+      <Box>
+        <TableContainer component={Paper} variant="outlined">
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>#</TableCell>
+                <TableCell>Tipo</TableCell>
+                <TableCell>Nombre / Razón social</TableCell>
+                <TableCell>CURP</TableCell>
+                <TableCell>RFC</TableCell>
+                <TableCell align="right">%</TableCell>
+                <TableCell>Identificación</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {fieldValue.map((p: any, idx: number) => (
+                <TableRow key={idx}>
+                  <TableCell>{idx + 1}</TableCell>
+                  <TableCell>{displayTipo(p)}</TableCell>
+                  <TableCell>{displayName(p)}</TableCell>
+                  <TableCell>{p.curp || '—'}</TableCell>
+                  <TableCell>{displayRfc(p)}</TableCell>
+                  <TableCell align="right">{Number(p.porcentaje || 0).toFixed(2)}</TableCell>
+                  <TableCell>
+                    {(idUrls[idx] || []).length > 0 ? (
+                      (idUrls[idx] || []).map((u, i) => (
+                        <Link key={i} href={u} target="_blank" rel="noopener" sx={{ mr: 1 }}>
+                          Archivo {i + 1}
+                        </Link>
+                      ))
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">Sin archivos</Typography>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Box sx={{ mt: 1 }}>
+          <Chip
+            label={`Suma de porcentajes: ${total.toFixed(2)}%`}
+            color={sumOk ? 'success' : 'error'}
+            size="small"
+          />
+        </Box>
+      </Box>
+    );
+  };
+
   const renderVisualizer = () => {
+    if (isPropietariosList) {
+      return renderPropietariosTable();
+    }
+
     // Handle arrays by rendering each element with its own visualizer
     if (Array.isArray(fieldValue) && fieldValue.length > 0) {
       return (
