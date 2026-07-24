@@ -47,7 +47,7 @@ import {
     Visibility as ViewIcon,
 } from '@mui/icons-material';
 
-import { useI18n } from '../contexts/I18nContext';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import AssignmentService from '../services/assignmentService';
@@ -99,7 +99,7 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 }
 
 const InstanceAssignment: React.FC = () => {
-    const { t } = useI18n();
+    const { t } = useTranslation();
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -465,12 +465,12 @@ const InstanceAssignment: React.FC = () => {
                             >
                                 <MenuItem value="">{t('all')}</MenuItem>
                                 <MenuItem value="unassigned">{t('unassigned')}</MenuItem>
-                                <MenuItem value="pending_review">Pending Review</MenuItem>
-                                <MenuItem value="under_review">Under Review</MenuItem>
-                                <MenuItem value="approved_by_reviewer">Approved by Reviewer</MenuItem>
-                                <MenuItem value="rejected">Rejected</MenuItem>
-                                <MenuItem value="modification_requested">Modifications Requested</MenuItem>
-                                <MenuItem value="pending_signature">Pending Signature</MenuItem>
+                                <MenuItem value="pending_review">{t('instAssign.pendingReview')}</MenuItem>
+                                <MenuItem value="under_review">{t('instAssign.underReview')}</MenuItem>
+                                <MenuItem value="approved_by_reviewer">{t('instAssign.approvedByReviewer')}</MenuItem>
+                                <MenuItem value="rejected">{t('instAssign.rejected')}</MenuItem>
+                                <MenuItem value="modification_requested">{t('instAssign.modificationsRequested')}</MenuItem>
+                                <MenuItem value="pending_signature">{t('instAssign.pendingSignature')}</MenuItem>
                                 <MenuItem value="completed">{t('completed')}</MenuItem>
                                 <MenuItem value="escalated">{t('escalated')}</MenuItem>
                             </Select>
@@ -582,7 +582,7 @@ const InstanceAssignment: React.FC = () => {
                                 </TableCell>
                                 <TableCell>
                                     <Box sx={{ display: 'flex', gap: 1 }}>
-                                        <Tooltip title="View Instance Details">
+                                        <Tooltip title={t('instAssign.viewInstanceDetails')}>
                                             <IconButton
                                                 size="small"
                                                 color="info"
@@ -766,20 +766,20 @@ const InstanceAssignment: React.FC = () => {
                         <Box sx={{ mt: 2 }}>
                             <Card sx={{ mb: 3 }}>
                                 <CardContent>
-                                    <Typography variant="h6" gutterBottom>Basic Information</Typography>
+                                    <Typography variant="h6" gutterBottom>{t('instAssign.basicInfo')}</Typography>
                                     <Grid container spacing={2}>
                                         <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="textSecondary">Instance ID:</Typography>
+                                            <Typography variant="body2" color="textSecondary">{t('instance_id')}:</Typography>
                                             <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
                                                 {instanceDetails.instance_id}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="textSecondary">Workflow:</Typography>
+                                            <Typography variant="body2" color="textSecondary">{t('workflow')}:</Typography>
                                             <Typography variant="body1">{instanceDetails.workflow_id}</Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="textSecondary">Status:</Typography>
+                                            <Typography variant="body2" color="textSecondary">{t('status')}:</Typography>
                                             <Chip
                                                 label={instanceDetails.status}
                                                 color={getInstanceStatusColor(instanceDetails.status)}
@@ -787,7 +787,7 @@ const InstanceAssignment: React.FC = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="textSecondary">Created:</Typography>
+                                            <Typography variant="body2" color="textSecondary">{t('created')}:</Typography>
                                             <Typography variant="body1">
                                                 {new Date(instanceDetails.created_at).toLocaleString()}
                                             </Typography>
@@ -798,10 +798,10 @@ const InstanceAssignment: React.FC = () => {
 
                             <Card sx={{ mb: 3 }}>
                                 <CardContent>
-                                    <Typography variant="h6" gutterBottom>Assignment Information</Typography>
+                                    <Typography variant="h6" gutterBottom>{t('instAssign.assignmentInfo')}</Typography>
                                     <Grid container spacing={2}>
                                         <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="textSecondary">Assignment Status:</Typography>
+                                            <Typography variant="body2" color="textSecondary">{t('assignment_status')}:</Typography>
                                             <Chip
                                                 label={instanceDetails.assignment_status || 'unassigned'}
                                                 color={getStatusColor(instanceDetails.assignment_status || 'unassigned')}
@@ -809,21 +809,21 @@ const InstanceAssignment: React.FC = () => {
                                             />
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="textSecondary">Assigned To:</Typography>
+                                            <Typography variant="body2" color="textSecondary">{t('assigned_to')}:</Typography>
                                             <Typography variant="body1">
-                                                {instanceDetails.assigned_user_id || instanceDetails.assigned_team_id || 'Not assigned'}
+                                                {instanceDetails.assigned_user_id || instanceDetails.assigned_team_id || t('instAssign.notAssigned')}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="textSecondary">Assigned At:</Typography>
+                                            <Typography variant="body2" color="textSecondary">{t('assigned_at')}:</Typography>
                                             <Typography variant="body1">
                                                 {formatDate(instanceDetails.assigned_at)}
                                             </Typography>
                                         </Grid>
                                         <Grid item xs={12} sm={6}>
-                                            <Typography variant="body2" color="textSecondary">Assignment Notes:</Typography>
+                                            <Typography variant="body2" color="textSecondary">{t('assignment_notes')}:</Typography>
                                             <Typography variant="body1">
-                                                {instanceDetails.assignment_notes || 'No notes'}
+                                                {instanceDetails.assignment_notes || t('instAssign.noNotes')}
                                             </Typography>
                                         </Grid>
                                     </Grid>
@@ -832,7 +832,7 @@ const InstanceAssignment: React.FC = () => {
 
                             <Card>
                                 <CardContent>
-                                    <Typography variant="h6" gutterBottom>Raw Context Data</Typography>
+                                    <Typography variant="h6" gutterBottom>{t('instAssign.rawContext')}</Typography>
                                     <Box sx={{
                                         bgcolor: 'grey.100',
                                         p: 2,

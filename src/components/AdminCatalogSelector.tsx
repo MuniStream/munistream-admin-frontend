@@ -32,6 +32,7 @@ import {
   FilterList as FilterIcon,
   Sort as SortIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { api } from '../services/api';
 
 export interface CatalogColumn {
@@ -99,6 +100,7 @@ export const AdminCatalogSelector: React.FC<AdminCatalogSelectorProps> = ({
   onSubmit,
   onCancel
 }) => {
+  const { t } = useTranslation();
   const [catalogData, setCatalogData] = useState<CatalogData | null>(null);
   const [catalogSchema, setCatalogSchema] = useState<CatalogSchema | null>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
@@ -125,7 +127,7 @@ export const AdminCatalogSelector: React.FC<AdminCatalogSelectorProps> = ({
         setCatalogSchema(response.data);
       } catch (err: any) {
         console.error('Error fetching catalog schema:', err);
-        setError('Failed to load catalog schema');
+        setError(t('catalog.errorLoadSchema'));
       }
     };
 
@@ -167,7 +169,7 @@ export const AdminCatalogSelector: React.FC<AdminCatalogSelectorProps> = ({
       setCatalogData(response.data);
     } catch (err: any) {
       console.error('Error fetching catalog data:', err);
-      setError(err.response?.data?.detail || 'Failed to load catalog data');
+      setError(err.response?.data?.detail || t('catalog.errorLoadData'));
     } finally {
       setLoading(false);
     }

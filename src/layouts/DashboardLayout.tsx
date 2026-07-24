@@ -42,33 +42,35 @@ import {
   ExpandMore as ExpandMoreIcon,
   Send as SendIcon,
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 
 const drawerWidth = 240;
 
 const menuItems = [
-  { text: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> }, // Always show dashboard
-  { text: 'Workflows', path: '/workflows', icon: <WorkflowIcon />, permission: 'view_workflows' },
-  { text: 'Citizen Tracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
-  { text: 'Instance Assignments', path: '/instance-assignments', icon: <AssignmentIcon />, permission: 'view_instances' },
-  { text: 'Citizen Validation', path: '/citizen-validation', icon: <ValidationIcon />, permission: 'verify_documents' },
-  { text: 'Catálogos', path: '/catalogs', icon: <CatalogIcon />, permission: 'admin_system' },
-  { text: 'Campos de Perfil', path: '/profile-fields', icon: <PersonIcon />, permission: 'admin_system' },
+  { text: 'dashboard', path: '/dashboard', icon: <DashboardIcon /> }, // Always show dashboard
+  { text: 'workflows', path: '/workflows', icon: <WorkflowIcon />, permission: 'view_workflows' },
+  { text: 'citizenTracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
+  { text: 'instanceAssignments', path: '/instance-assignments', icon: <AssignmentIcon />, permission: 'view_instances' },
+  { text: 'citizenValidation', path: '/citizen-validation', icon: <ValidationIcon />, permission: 'verify_documents' },
+  { text: 'nav.catalogs', path: '/catalogs', icon: <CatalogIcon />, permission: 'admin_system' },
+  { text: 'nav.profileFields', path: '/profile-fields', icon: <PersonIcon />, permission: 'admin_system' },
   { text: 'divider' }, // Visual separator for admin section
   {
-    text: 'Notificaciones',
+    text: 'nav.notifications',
     icon: <NotificationIcon />,
     permission: 'manage_integrations',
     children: [
-      { text: 'Configuración', path: '/admin/integrations/notifications', icon: <SettingsIcon /> },
-      { text: 'Plantillas', path: '/admin/integrations/templates', icon: <DocumentIcon /> },
-      { text: 'Envíos', path: '/admin/notifications/deliveries', icon: <SendIcon /> },
+      { text: 'nav.configuration', path: '/admin/integrations/notifications', icon: <SettingsIcon /> },
+      { text: 'nav.templates', path: '/admin/integrations/templates', icon: <DocumentIcon /> },
+      { text: 'nav.deliveries', path: '/admin/notifications/deliveries', icon: <SendIcon /> },
     ],
   },
-  { text: 'Keycloak Stats', path: '/admin/keycloak', icon: <SecurityIcon />, permission: 'admin_system' },
+  { text: 'nav.keycloakStats', path: '/admin/keycloak', icon: <SecurityIcon />, permission: 'admin_system' },
 ];
 
 function DashboardLayout() {
+  const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
@@ -139,7 +141,7 @@ function DashboardLayout() {
                 <ListItem disablePadding>
                   <ListItemButton onClick={() => toggleGroup(item.text)}>
                     <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.text} />
+                    <ListItemText primary={t(item.text)} />
                     {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                   </ListItemButton>
                 </ListItem>
@@ -153,7 +155,7 @@ function DashboardLayout() {
                         onClick={() => navigate(child.path)}
                       >
                         <ListItemIcon>{child.icon}</ListItemIcon>
-                        <ListItemText primary={child.text} />
+                        <ListItemText primary={t(child.text)} />
                       </ListItemButton>
                     ))}
                   </List>
@@ -177,7 +179,7 @@ function DashboardLayout() {
                     item.icon
                   )}
                 </ListItemIcon>
-                <ListItemText primary={item.text} />
+                <ListItemText primary={t(item.text)} />
               </ListItemButton>
             </ListItem>
           );
@@ -207,7 +209,7 @@ function DashboardLayout() {
           </IconButton>
           
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            MuniStream Admin Dashboard
+            {t('nav.appTitle')}
           </Typography>
 
           <IconButton color="inherit" sx={{ mr: 1 }}>
@@ -271,16 +273,16 @@ function DashboardLayout() {
             <Divider />
             <MenuItem onClick={() => { navigate('/profile'); handleProfileMenuClose(); }}>
               <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
-              Profile
+              {t('nav.profile')}
             </MenuItem>
             <MenuItem onClick={() => { navigate('/settings'); handleProfileMenuClose(); }}>
               <ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon>
-              Settings
+              {t('nav.settings')}
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleLogout}>
               <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
-              Logout
+              {t('nav.logout')}
             </MenuItem>
           </Menu>
         </Toolbar>

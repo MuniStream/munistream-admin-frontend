@@ -23,7 +23,7 @@ import {
   Assignment as DocumentIcon
 } from '@mui/icons-material';
 // workflowService no longer needed - parent component handles submission
-import { useI18n } from '../contexts/I18nContext';
+import { useTranslation } from 'react-i18next';
 
 interface DigitalSignatureFormProps {
   instanceId: string;
@@ -63,7 +63,7 @@ export const DigitalSignatureForm: React.FC<DigitalSignatureFormProps> = ({
   loading = false,
   error
 }) => {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   console.log('🔐 DigitalSignatureForm: Component rendered!');
   console.log('🔐 Props received:', { documentToSign, operatorConfig, loading, error });
   const [signatureData, setSignatureData] = useState<SignatureData>({
@@ -401,7 +401,7 @@ export const DigitalSignatureForm: React.FC<DigitalSignatureFormProps> = ({
         privateKeyFile: !!privateKeyFile,
         password: !!signatureData[operatorConfig.password_field]
       });
-      throw new Error('Missing required signing materials');
+      throw new Error(t('sign.missingMaterials'));
     }
 
     try {

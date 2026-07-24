@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box, Typography, CircularProgress, Alert,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Chip
@@ -40,6 +41,7 @@ export const EntityFieldVisualizer: React.FC<EntityFieldVisualizerProps> = ({
   className,
   showLabel = true
 }) => {
+  const { t } = useTranslation();
   const [detectedField, setDetectedField] = useState<DetectedField | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export const EntityFieldVisualizer: React.FC<EntityFieldVisualizerProps> = ({
       });
       setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze field');
+      setError(err instanceof Error ? err.message : t('entViz.analyzeFailed'));
       setLoading(false);
     }
   }, [fieldValue, fieldName, visualizationConfig]);
@@ -81,7 +83,7 @@ export const EntityFieldVisualizer: React.FC<EntityFieldVisualizerProps> = ({
       <Box className={className} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <CircularProgress size={16} />
         <Typography variant="body2" color="text.secondary">
-          Analyzing field...
+          {t('entViz.analyzingField')}
         </Typography>
       </Box>
     );
@@ -98,7 +100,7 @@ export const EntityFieldVisualizer: React.FC<EntityFieldVisualizerProps> = ({
   if (!detectedField) {
     return (
       <Typography variant="body2" color="text.secondary">
-        No data to display
+        {t('entViz.noData')}
       </Typography>
     );
   }

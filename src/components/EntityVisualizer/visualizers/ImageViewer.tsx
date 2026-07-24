@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Paper, IconButton, CircularProgress, Typography } from '@mui/material';
 import { GetApp, ZoomIn, ZoomOut, FullscreenExit, Fullscreen } from '@mui/icons-material';
 import type { DetectedField } from '../../../utils/entityFieldDetector';
@@ -18,6 +19,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
   detectedField,
   options = {}
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -42,7 +44,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     return (
       <Paper variant="outlined" sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="body2" color="error">
-          Failed to load image: {fieldValue}
+          {t('entViz.imageLoadFailed', { value: fieldValue })}
         </Typography>
       </Paper>
     );
@@ -52,7 +54,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
     <Paper variant="outlined" sx={{ p: 1, position: 'relative' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
         <Typography variant="caption" color="text.secondary">
-          {detectedField.metadata?.fileExtension?.toUpperCase() || 'Image'}
+          {detectedField.metadata?.fileExtension?.toUpperCase() || t('entViz.image')}
         </Typography>
 
         <Box>
@@ -123,7 +125,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({
 
       {zoom !== 1 && (
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, textAlign: 'center' }}>
-          Zoom: {(zoom * 100).toFixed(0)}%
+          {t('entViz.zoom', { value: (zoom * 100).toFixed(0) })}
         </Typography>
       )}
     </Paper>

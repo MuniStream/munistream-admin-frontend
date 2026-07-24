@@ -36,6 +36,7 @@ import {
   PriorityHigh as PriorityHighIcon
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import InboxSection from '@/components/dashboard/InboxSection';
 import {
   LineChart,
@@ -113,6 +114,7 @@ function StatsCard({ title, value, icon, color, subtitle, trend, loading }: Stat
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 function DashboardEnhanced() {
+  const { t } = useTranslation();
   const { data: dashboardData, isLoading, error, refetch } = useQuery({
     queryKey: ['dashboard'],
     queryFn: adminService.getDashboardData,
@@ -129,8 +131,8 @@ function DashboardEnhanced() {
     return (
       <Box p={3}>
         <Alert severity="error">
-          Error loading dashboard data: {(error as Error).message}
-          <Button onClick={() => refetch()} sx={{ ml: 2 }}>Retry</Button>
+          {t('dash.errorLoading', { message: (error as Error).message })}
+          <Button onClick={() => refetch()} sx={{ ml: 2 }}>{t('dash.retry')}</Button>
         </Alert>
       </Box>
     );
@@ -146,10 +148,10 @@ function DashboardEnhanced() {
 
   // Prepare data for charts
   const pieData = pendingItems ? [
-    { name: 'Approvals', value: pendingItems.pending_approvals },
-    { name: 'Documents', value: pendingItems.pending_documents },
-    { name: 'Signatures', value: pendingItems.pending_signatures },
-    { name: 'Reviews', value: pendingItems.manual_reviews },
+    { name: t('dash.approvals'), value: pendingItems.pending_approvals },
+    { name: t('dash.documents'), value: pendingItems.pending_documents },
+    { name: t('dash.signatures'), value: pendingItems.pending_signatures },
+    { name: t('dash.reviews'), value: pendingItems.manual_reviews },
   ].filter(item => item.value > 0) : [];
 
   const activityData = recentActivity.map(item => ({
@@ -161,11 +163,11 @@ function DashboardEnhanced() {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" component="h1">
-          System Dashboard
+          {t('dash.title')}
         </Typography>
         {dashboardData && (
           <Typography variant="body2" color="text.secondary">
-            Last updated: {new Date(dashboardData.last_updated).toLocaleTimeString()}
+            {t('dash.lastUpdated', { time: new Date(dashboardData.last_updated).toLocaleTimeString() })}
           </Typography>
         )}
       </Box>
@@ -177,44 +179,44 @@ function DashboardEnhanced() {
         {/* Key Metrics Cards */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
-            title="Active Citizens"
+            title={t('dash.activeCitizens')}
             value={systemMetrics?.total_active_citizens || 0}
             icon={<PeopleIcon sx={{ fontSize: 40 }} />}
             color="primary.main"
-            subtitle="Unique users"
+            subtitle={t('dash.uniqueUsers')}
             loading={isLoading}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
-            title="Total Instances"
+            title={t('dash.totalInstances')}
             value={systemMetrics?.total_workflow_instances || 0}
             icon={<WorkflowIcon sx={{ fontSize: 40 }} />}
             color="info.main"
-            subtitle={`+${systemMetrics?.instances_created_today || 0} today`}
+            subtitle={t('dash.createdToday', { count: systemMetrics?.instances_created_today || 0 })}
             loading={isLoading}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
-            title="Pending Items"
+            title={t('dash.pendingItems')}
             value={pendingItems?.total_pending || 0}
             icon={<AssignmentIcon sx={{ fontSize: 40 }} />}
             color="warning.main"
-            subtitle={`${pendingItems?.pending_by_priority?.high || 0} high priority`}
+            subtitle={t('dash.highPriority', { count: pendingItems?.pending_by_priority?.high || 0 })}
             loading={isLoading}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatsCard
-            title="Success Rate"
+            title={t('dash.successRate')}
             value={`${performanceMetrics?.success_rate?.toFixed(1) || 0}%`}
             icon={<CheckCircleIcon sx={{ fontSize: 40 }} />}
             color="success.main"
-            subtitle={`Avg: ${performanceMetrics?.average_processing_time_hours?.toFixed(1) || 0}h`}
+            subtitle={t('dash.avgTime', { hours: performanceMetrics?.average_processing_time_hours?.toFixed(1) || 0 })}
             loading={isLoading}
           />
         </Grid>
@@ -223,7 +225,7 @@ function DashboardEnhanced() {
         <Grid size={{ xs: 12, md: 8 }}>
           <Paper sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom>
-              Weekly Activity
+              {t('dash.weeklyActivity')}
             </Typography>
             {activityData.length > 0 ? (
               <ResponsiveContainer width="100%" height="85%">
@@ -238,13 +240,13 @@ function DashboardEnhanced() {
                     dataKey="value"
                     stroke="#8884d8"
                     strokeWidth={2}
-                    name="Instances Created"
+                    name={t('dash.instancesCreated')}
                   />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
               <Box display="flex" alignItems="center" justifyContent="center" height="85%">
-                <Typography color="text.secondary">No activity data available</Typography>
+                <Typography color="text.secondary">{t('dash.noActivityData')}</Typography>
               </Box>
             )}
           </Paper>
@@ -280,7 +282,7 @@ function DashboardEnhanced() {
               <Box display="flex" alignItems="center" justifyContent="center" height="85%">
                 <Stack spacing={2} alignItems="center">
                   <CheckCircleIcon sx={{ fontSize: 60, color: 'success.main' }} />
-                  <Typography color="text.secondary">No pending items!</Typography>
+                  <Typography color="text.secondary">{t('dash.noPendingItems')}</Typography>
                 </Stack>
               </Box>
             )}
@@ -291,7 +293,7 @@ function DashboardEnhanced() {
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom>
-              Top Workflows
+              {t('dash.topWorkflows')}
             </Typography>
             {topWorkflows.length > 0 ? (
               <ResponsiveContainer width="100%" height="85%">
@@ -306,10 +308,10 @@ function DashboardEnhanced() {
                           <Paper sx={{ p: 1 }}>
                             <Typography variant="body2">{payload[0].payload.name}</Typography>
                             <Typography variant="body2" color="primary">
-                              Instances: {payload[0].value}
+                              {t('dash.tooltipInstances', { value: payload[0].value })}
                             </Typography>
                             <Typography variant="body2" color="success.main">
-                              Success: {payload[0].payload.success_rate}%
+                              {t('dash.tooltipSuccess', { value: payload[0].payload.success_rate })}
                             </Typography>
                           </Paper>
                         );
@@ -322,7 +324,7 @@ function DashboardEnhanced() {
               </ResponsiveContainer>
             ) : (
               <Box display="flex" alignItems="center" justifyContent="center" height="85%">
-                <Typography color="text.secondary">No workflow data available</Typography>
+                <Typography color="text.secondary">{t('dash.noWorkflowData')}</Typography>
               </Box>
             )}
           </Paper>
@@ -332,7 +334,7 @@ function DashboardEnhanced() {
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3, height: 400 }}>
             <Typography variant="h6" gutterBottom>
-              System Health
+              {t('dash.systemHealth')}
             </Typography>
             <List>
               <ListItem>
@@ -342,8 +344,8 @@ function DashboardEnhanced() {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary="System Status"
-                  secondary={systemHealth?.status || 'Unknown'}
+                  primary={t('dash.systemStatus')}
+                  secondary={systemHealth?.status || t('dash.unknown')}
                 />
               </ListItem>
               <Divider variant="inset" component="li" />
@@ -354,7 +356,7 @@ function DashboardEnhanced() {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary="Response Time"
+                  primary={t('dash.responseTime')}
                   secondary={`${systemHealth?.average_response_time_ms || 0}ms`}
                 />
               </ListItem>
@@ -366,7 +368,7 @@ function DashboardEnhanced() {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary="High Priority Items"
+                  primary={t('dash.highPriorityItems')}
                   secondary={pendingItems?.pending_by_priority?.high || 0}
                 />
               </ListItem>
@@ -378,7 +380,7 @@ function DashboardEnhanced() {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary="Performance Score"
+                  primary={t('dash.performanceScore')}
                   secondary={
                     <LinearProgress
                       variant="determinate"

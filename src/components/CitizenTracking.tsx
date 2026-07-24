@@ -47,7 +47,7 @@ import {
 } from '@mui/icons-material';
 import { workflowService } from '../services/workflowService';
 import type { WorkflowInstance } from '../types/workflow';
-import { useI18n } from '../contexts/I18nContext';
+import { useTranslation } from 'react-i18next';
 
 interface CitizenInstance {
   instance_id: string;
@@ -133,7 +133,7 @@ const getStatusLabel = (status: string, t: any) => {
 };
 
 export const CitizenTracking: React.FC = () => {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [instances, setInstances] = useState<CitizenInstance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -33,6 +33,7 @@ import {
   PlayCircle as RunningIcon,
   Pause as PauseIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { workflowService } from '@/services/workflowService';
 import { AdminDataCollectionForm } from '@/components/AdminDataCollectionForm';
 import { AdminCatalogSelector } from '@/components/AdminCatalogSelector';
@@ -75,6 +76,7 @@ export interface AdminWorkflowProgress {
 }
 
 export const AdminWorkflowExecution: React.FC = () => {
+  const { t } = useTranslation();
   const { instanceId } = useParams<{ instanceId: string }>();
   const navigate = useNavigate();
 
@@ -108,14 +110,14 @@ export const AdminWorkflowExecution: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch admin workflow progress');
+        throw new Error(t('wfExec.errFetchProgress'));
       }
 
       const progressData = await response.json();
       setProgress(progressData);
       setLastUpdated(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch progress');
+      setError(err instanceof Error ? err.message : t('wfExec.errFetchProgressGeneric'));
     } finally {
       setIsLoading(false);
     }
@@ -182,13 +184,13 @@ export const AdminWorkflowExecution: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to submit signature: ${response.statusText}`);
+        throw new Error(t('wfExec.errSubmitSignature', { status: response.statusText }));
       }
 
       const responseData = await response.json();
       console.log('✅ Backend response to signature:', responseData);
 
-      setSubmissionSuccess('Digital signature submitted successfully. Workflow continuing...');
+      setSubmissionSuccess(t('wfExec.signatureSuccess'));
 
       // Refresh progress to see updated status
       setTimeout(fetchProgress, 2000);
@@ -200,7 +202,7 @@ export const AdminWorkflowExecution: React.FC = () => {
 
     } catch (err) {
       console.error('❌ Signature submission error:', err);
-      setError(err instanceof Error ? err.message : 'Signature submission failed');
+      setError(err instanceof Error ? err.message : t('wfExec.errSignatureSubmission'));
     } finally {
       setIsSubmittingData(false);
     }
@@ -226,7 +228,7 @@ export const AdminWorkflowExecution: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to submit assertion review');
+          throw new Error(t('wfExec.errSubmitAssertion'));
         }
 
         const result = await response.json();
@@ -254,12 +256,12 @@ export const AdminWorkflowExecution: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to submit entity selections');
+          throw new Error(t('wfExec.errSubmitEntity'));
         }
 
         const result = await response.json();
         if (result.success) {
-          setSubmissionSuccess(result.message || 'Entity selections submitted successfully');
+          setSubmissionSuccess(result.message || t('wfExec.entitySuccess'));
           // Refresh progress to get updated state
           setTimeout(() => {
             fetchProgress();
@@ -283,12 +285,12 @@ export const AdminWorkflowExecution: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to submit catalog selections');
+          throw new Error(t('wfExec.errSubmitCatalog'));
         }
 
         const result = await response.json();
         if (result.success) {
-          setSubmissionSuccess(result.message || 'Catalog selections submitted successfully');
+          setSubmissionSuccess(result.message || t('wfExec.catalogSuccess'));
           // Refresh progress to get updated state
           setTimeout(() => {
             fetchProgress();
@@ -324,12 +326,12 @@ export const AdminWorkflowExecution: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to submit workflow data');
+          throw new Error(t('wfExec.errSubmitData'));
         }
 
         const result = await response.json();
         if (result.success) {
-          setSubmissionSuccess(result.message || 'Data submitted successfully');
+          setSubmissionSuccess(result.message || t('wfExec.dataSuccess'));
           // Refresh progress to get updated state
           setTimeout(() => {
             fetchProgress();
@@ -338,7 +340,7 @@ export const AdminWorkflowExecution: React.FC = () => {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit data');
+      setError(err instanceof Error ? err.message : t('wfExec.errSubmitDataGeneric'));
     } finally {
       setIsSubmittingData(false);
     }
@@ -357,17 +359,17 @@ export const AdminWorkflowExecution: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to start workflow');
+        throw new Error(t('wfExec.errStart'));
       }
 
       const result = await response.json();
-      setSubmissionSuccess('Admin workflow started successfully');
+      setSubmissionSuccess(t('wfExec.startSuccess'));
       setTimeout(() => {
         fetchProgress();
         setSubmissionSuccess(null);
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start workflow');
+      setError(err instanceof Error ? err.message : t('wfExec.errStart'));
     }
   };
 
@@ -375,10 +377,10 @@ export const AdminWorkflowExecution: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="error">
-          <Typography variant="h6">Invalid Instance ID</Typography>
-          <Typography>The workflow instance ID provided is not valid.</Typography>
+          <Typography variant="h6">{t('wfExec.invalidInstanceId')}</Typography>
+          <Typography>{t('wfExec.invalidInstanceIdDesc')}</Typography>
           <Button onClick={() => navigate('/instance-assignments')} sx={{ mt: 2 }}>
-            Back to Assignments
+            {t('wfExec.backToAssignments')}
           </Button>
         </Alert>
       </Box>
@@ -389,7 +391,7 @@ export const AdminWorkflowExecution: React.FC = () => {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
         <CircularProgress />
-        <Typography ml={2}>Loading admin workflow...</Typography>
+        <Typography ml={2}>{t('wfExec.loadingAdmin')}</Typography>
       </Box>
     );
   }
@@ -398,10 +400,10 @@ export const AdminWorkflowExecution: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="error">
-          <Typography variant="h6">Loading Error</Typography>
+          <Typography variant="h6">{t('wfExec.loadingError')}</Typography>
           <Typography>{error}</Typography>
           <Button onClick={handleRefresh} sx={{ mt: 2 }}>
-            Retry
+            {t('wfExec.retry')}
           </Button>
         </Alert>
       </Box>
@@ -412,10 +414,10 @@ export const AdminWorkflowExecution: React.FC = () => {
     return (
       <Box p={3}>
         <Alert severity="warning">
-          <Typography variant="h6">Workflow Instance Not Found</Typography>
-          <Typography>No admin workflow found with this instance ID.</Typography>
+          <Typography variant="h6">{t('wfExec.instanceNotFound')}</Typography>
+          <Typography>{t('wfExec.instanceNotFoundDesc')}</Typography>
           <Button onClick={() => navigate('/instance-assignments')} sx={{ mt: 2 }}>
-            Back to Assignments
+            {t('wfExec.backToAssignments')}
           </Button>
         </Alert>
       </Box>
@@ -427,13 +429,13 @@ export const AdminWorkflowExecution: React.FC = () => {
       {/* Header */}
       <Box display="flex" alignItems="center" justifyContent="between" mb={3}>
         <Box display="flex" alignItems="center" gap={2}>
-          <Tooltip title="Back to Assignments">
+          <Tooltip title={t('wfExec.backToAssignments')}>
             <IconButton onClick={() => navigate('/instance-assignments')}>
               <BackIcon />
             </IconButton>
           </Tooltip>
           <Box>
-            <Typography variant="h4">Admin Workflow Execution</Typography>
+            <Typography variant="h4">{t('wfExec.title')}</Typography>
             <Typography variant="subtitle1" color="text.secondary">
               {progress.workflow_name} - {instanceId.slice(0, 8)}...
             </Typography>
@@ -447,7 +449,7 @@ export const AdminWorkflowExecution: React.FC = () => {
             onClick={handleRefresh}
             disabled={isLoading}
           >
-            {isLoading ? 'Refreshing...' : 'Refresh'}
+            {isLoading ? t('wfExec.refreshing') : t('refresh')}
           </Button>
 
           {(progress.status === 'waiting_for_start' || progress.status === 'pending_assignment') && (
@@ -457,7 +459,7 @@ export const AdminWorkflowExecution: React.FC = () => {
               startIcon={<PlayIcon />}
               onClick={handleStartWorkflow}
             >
-              Start Admin Workflow
+              {t('wfExec.startAdmin')}
             </Button>
           )}
         </Box>
@@ -469,7 +471,7 @@ export const AdminWorkflowExecution: React.FC = () => {
           <Grid container spacing={3}>
             <Grid item xs={12} md={8}>
               <Typography variant="h6" gutterBottom>
-                Workflow Status
+                {t('wfExec.workflowStatus')}
               </Typography>
               <Box display="flex" alignItems="center" gap={2} mb={2}>
                 <Chip
@@ -478,7 +480,7 @@ export const AdminWorkflowExecution: React.FC = () => {
                   variant="filled"
                 />
                 <Typography variant="body2" color="text.secondary">
-                  Progress: {progress.progress_percentage.toFixed(0)}% complete
+                  {t('wfExec.progressComplete', { percent: progress.progress_percentage.toFixed(0) })}
                 </Typography>
               </Box>
 
@@ -489,31 +491,31 @@ export const AdminWorkflowExecution: React.FC = () => {
               />
 
               <Typography variant="body2" color="text.secondary">
-                {progress.completed_steps} of {progress.total_steps} steps completed
+                {t('wfExec.stepsCompleted', { completed: progress.completed_steps, total: progress.total_steps })}
               </Typography>
             </Grid>
 
             <Grid item xs={12} md={4}>
               <Typography variant="subtitle2" gutterBottom>
-                Instance Details
+                {t('wfExec.instanceDetails')}
               </Typography>
               <List dense>
                 <ListItem>
                   <ListItemText
-                    primary="Started"
+                    primary={t('wfExec.started')}
                     secondary={new Date(progress.created_at).toLocaleString()}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
-                    primary="Last Updated"
+                    primary={t('wfExec.lastUpdated')}
                     secondary={lastUpdated.toLocaleTimeString()}
                   />
                 </ListItem>
                 {progress.current_step && (
                   <ListItem>
                     <ListItemText
-                      primary="Current Step"
+                      primary={t('wfExec.currentStep')}
                       secondary={progress.current_step}
                     />
                   </ListItem>
@@ -531,19 +533,19 @@ export const AdminWorkflowExecution: React.FC = () => {
           <CardContent>
             <Alert severity="warning" sx={{ mb: 2 }}>
               <Typography variant="h6">
-                Admin Action Required
+                {t('wfExec.adminActionRequired')}
               </Typography>
               <Typography>
-                The workflow is waiting for admin input to continue processing.
+                {t('wfExec.adminActionRequiredDesc')}
               </Typography>
             </Alert>
 
             {submissionSuccess ? (
               <Alert severity="success">
-                <Typography variant="h6">Data Submitted Successfully</Typography>
+                <Typography variant="h6">{t('wfExec.dataSubmitted')}</Typography>
                 <Typography>{submissionSuccess}</Typography>
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  The workflow will continue processing automatically.
+                  {t('wfExec.dataSubmittedDesc')}
                 </Typography>
               </Alert>
             ) : isDigitalSignature ? (
@@ -590,8 +592,8 @@ export const AdminWorkflowExecution: React.FC = () => {
               />
             ) : (
               <AdminDataCollectionForm
-                title={progress.input_form.title || 'Provide Required Information'}
-                description={progress.input_form.description || 'Please provide the requested information to continue the workflow.'}
+                title={progress.input_form.title || t('wfExec.provideInfo')}
+                description={progress.input_form.description || t('wfExec.provideInfoDesc')}
                 sections={progress.input_form.sections}
                 fields={progress.input_form.fields?.map((field: any) => ({
                   id: field.name,
@@ -608,7 +610,7 @@ export const AdminWorkflowExecution: React.FC = () => {
                 }))}
                 onSubmit={handleDataSubmission}
                 isSubmitting={isSubmittingData}
-                submitButtonText="Submit Admin Data"
+                submitButtonText={t('wfExec.submitAdminData')}
               />
             )}
           </CardContent>
@@ -619,7 +621,7 @@ export const AdminWorkflowExecution: React.FC = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Step Progress
+            {t('wfExec.stepProgress')}
           </Typography>
 
           <Stepper orientation="vertical">
@@ -647,13 +649,13 @@ export const AdminWorkflowExecution: React.FC = () => {
 
                     {step.started_at && (
                       <Typography variant="caption" color="text.secondary">
-                        Started: {new Date(step.started_at).toLocaleString()}
+                        {t('wfExec.startedAt', { date: new Date(step.started_at).toLocaleString() })}
                       </Typography>
                     )}
 
                     {step.completed_at && (
                       <Typography variant="caption" color="text.secondary">
-                        Completed: {new Date(step.completed_at).toLocaleString()}
+                        {t('wfExec.completedAt', { date: new Date(step.completed_at).toLocaleString() })}
                       </Typography>
                     )}
                   </Box>
@@ -669,14 +671,14 @@ export const AdminWorkflowExecution: React.FC = () => {
         <Card sx={{ mt: 3 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Current Processing
+              {t('wfExec.currentProcessing')}
             </Typography>
             <Alert severity="info">
               <Typography variant="subtitle1">
-                Now Processing: {progress.current_step}
+                {t('wfExec.nowProcessing', { step: progress.current_step })}
               </Typography>
               <Typography variant="body2">
-                The admin workflow is currently executing this step automatically.
+                {t('wfExec.nowProcessingDesc')}
               </Typography>
             </Alert>
           </CardContent>

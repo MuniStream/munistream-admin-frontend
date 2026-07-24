@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import { api } from '../services/api';
 import DOMPurify from 'dompurify';
@@ -56,6 +57,7 @@ export const ThemeTemplateEngine: React.FC<TemplateEngineProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const { themeConfig } = useTheme();
+  const { t } = useTranslation();
 
   // Template cache to avoid repeated requests
   const templateCache = React.useRef<Map<string, string>>(new Map());
@@ -79,7 +81,7 @@ export const ThemeTemplateEngine: React.FC<TemplateEngineProps> = ({
 
       return content;
     } catch (err) {
-      throw new Error(`Template loading failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      throw new Error(t('themeEngine.loadFailed', { error: err instanceof Error ? err.message : t('themeEngine.unknownError') }));
     }
   };
 
@@ -527,7 +529,7 @@ export const ThemeTemplateEngine: React.FC<TemplateEngineProps> = ({
    */
   useEffect(() => {
     if (!templateName || !theme) {
-      setError('Template name or theme not provided');
+      setError(t('themeEngine.noTemplateOrTheme'));
       setLoading(false);
       return;
     }
@@ -545,7 +547,7 @@ export const ThemeTemplateEngine: React.FC<TemplateEngineProps> = ({
         setTemplateContent(sanitized);
         onLoad?.(sanitized);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load template';
+        const errorMessage = err instanceof Error ? err.message : t('themeEngine.loadFailedShort');
         setError(errorMessage);
         onError?.(errorMessage);
       } finally {
@@ -610,7 +612,7 @@ export const ThemeTemplateEngine: React.FC<TemplateEngineProps> = ({
           backgroundColor: `${theme?.colors?.error || '#f44336'}20`,
           color: theme?.colors?.error || '#f44336',
         }}>
-          <strong>Template Error:</strong> {error}
+          <strong>{t('themeEngine.errorLabel')}</strong> {error}
         </div>
       </div>
     );

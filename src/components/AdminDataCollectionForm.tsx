@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Card,
@@ -97,8 +98,9 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
   onSubmit,
   onCancel,
   isSubmitting = false,
-  submitButtonText = 'Submit Information'
+  submitButtonText
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
@@ -135,31 +137,31 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
 
   const validateField = (field: AdminFormField, value: any): string => {
     if (field.required && (!value || value.toString().trim() === '')) {
-      return `${field.label} is required`;
+      return t('dataForm.required', { label: field.label });
     }
 
     if (value && field.validation) {
       const { pattern, minLength, maxLength, min, max } = field.validation;
 
       if (pattern && !new RegExp(pattern).test(value)) {
-        return `${field.label} format is invalid`;
+        return t('dataForm.formatInvalid', { label: field.label });
       }
 
       if (minLength && value.length < minLength) {
-        return `${field.label} must be at least ${minLength} characters`;
+        return t('dataForm.minLength', { label: field.label, count: minLength });
       }
 
       if (maxLength && value.length > maxLength) {
-        return `${field.label} must be no more than ${maxLength} characters`;
+        return t('dataForm.maxLength', { label: field.label, count: maxLength });
       }
 
       if (field.type === 'number') {
         const numValue = parseFloat(value);
         if (min !== undefined && numValue < min) {
-          return `${field.label} must be at least ${min}`;
+          return t('dataForm.minValue', { label: field.label, min });
         }
         if (max !== undefined && numValue > max) {
-          return `${field.label} must be no more than ${max}`;
+          return t('dataForm.maxValue', { label: field.label, max });
         }
       }
     }
@@ -229,21 +231,21 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
               {entityData.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Type: {entityData.entity_type}
+              {t('dataForm.type', { value: entityData.entity_type })}
             </Typography>
             {entityData.data.document_type && (
               <Typography variant="caption" color="text.secondary">
-                Document: {entityData.data.document_type}
+                {t('dataForm.document', { value: entityData.data.document_type })}
               </Typography>
             )}
             {entityData.data.upload_date && (
               <Typography variant="caption" color="text.secondary" display="block">
-                Uploaded: {new Date(entityData.data.upload_date).toLocaleDateString()}
+                {t('dataForm.uploaded', { date: new Date(entityData.data.upload_date).toLocaleDateString() })}
               </Typography>
             )}
             {entityData.data.file_size && (
               <Typography variant="caption" color="text.secondary" display="block">
-                Size: {Math.round(entityData.data.file_size / 1024)} KB
+                {t('dataForm.sizeKb', { size: Math.round(entityData.data.file_size / 1024) })}
               </Typography>
             )}
           </Box>
@@ -284,12 +286,12 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
 
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {isMultiSelect
-                ? `Selected: ${selectedValues.length} / ${field.max_count || 'unlimited'}`
-                : `Selected: ${selectedValues.length > 0 ? '1' : '0'} / 1`
+                ? t('dataForm.selectedCount', { count: selectedValues.length, max: field.max_count || t('dataForm.unlimited') })
+                : t('dataForm.selectedCount', { count: selectedValues.length > 0 ? 1 : 0, max: 1 })
               }
               {field.min_count && field.min_count > 0 && (
                 <span style={{ color: 'red', marginLeft: 8 }}>
-                  (Minimum: {field.min_count})
+                  {t('dataForm.minimum', { count: field.min_count })}
                 </span>
               )}
             </Typography>
@@ -297,10 +299,10 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
             {entityOptions.length === 0 ? (
               <Alert severity="info" sx={{ my: 2 }}>
                 <Typography variant="subtitle2">
-                  No {field.entity_type} entities available
+                  {t('dataForm.noEntities', { type: field.entity_type })}
                 </Typography>
                 <Typography variant="body2">
-                  You need to upload {field.entity_type} documents first before you can select them.
+                  {t('dataForm.uploadFirst', { type: field.entity_type })}
                 </Typography>
               </Alert>
             ) : (
@@ -385,7 +387,7 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
                 fullWidth
                 sx={{ mb: 1 }}
               >
-                Upload {field.label}
+                {t('dataForm.upload', { label: field.label })}
               </Button>
             </label>
 
@@ -418,7 +420,7 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
               </Paper>
             ) : (
               <Typography variant="caption" color="text.secondary" display="block">
-                Supported formats: PDF, JPG, PNG, DOC (max 10MB)
+                {t('dataForm.supportedFormats')}
               </Typography>
             )}
 
@@ -522,7 +524,7 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
                 onClick={onCancel}
                 disabled={isSubmitting}
               >
-                Cancel
+                {t('cancel')}
               </Button>
             )}
             <Button
@@ -530,7 +532,7 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
               variant="contained"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Submitting...' : submitButtonText}
+              {isSubmitting ? t('dataForm.submitting') : (submitButtonText || t('dataForm.submitInfo'))}
             </Button>
           </Box>
         </Box>

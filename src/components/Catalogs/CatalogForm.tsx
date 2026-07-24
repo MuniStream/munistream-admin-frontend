@@ -32,6 +32,7 @@ import {
   Visibility as PreviewIcon
 } from '@mui/icons-material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { catalogService, type CreateCatalogRequest, type UpdateCatalogRequest, type Catalog, type ColumnSchema, type PermissionRule } from '../../services/catalogService';
 
 interface CatalogFormProps {
@@ -47,6 +48,7 @@ export const CatalogForm: React.FC<CatalogFormProps> = ({
   mode,
   catalog
 }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   // Form state
@@ -482,7 +484,7 @@ export const CatalogForm: React.FC<CatalogFormProps> = ({
                           }
                         }))}
                         disabled={isReadOnly || !!formData.source_config.uploaded_file_id}
-                        placeholder="https://example.com/data.csv or /path/to/file.xlsx"
+                        placeholder={t('catalog.filePlaceholder')}
                         helperText={formData.source_config.uploaded_file_id ? "Archivo subido activo - borra el archivo para usar URL" : "URL o ruta del archivo"}
                       />
                     </Grid>

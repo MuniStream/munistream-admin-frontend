@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Chip, Switch, FormControlLabel } from '@mui/material';
 import { CheckCircle, Cancel } from '@mui/icons-material';
 import type { DetectedField } from '../../../utils/entityFieldDetector';
@@ -15,6 +16,7 @@ export const BooleanViewer: React.FC<BooleanViewerProps> = ({
   fieldValue,
   options = {}
 }) => {
+  const { t } = useTranslation();
   const displayStyle = options.style || 'chip'; // 'chip', 'switch', 'icon'
 
   switch (displayStyle) {
@@ -22,7 +24,7 @@ export const BooleanViewer: React.FC<BooleanViewerProps> = ({
       return (
         <FormControlLabel
           control={<Switch checked={fieldValue} disabled />}
-          label={fieldValue ? 'Yes' : 'No'}
+          label={fieldValue ? t('entViz.yes') : t('entViz.no')}
         />
       );
 
@@ -34,14 +36,14 @@ export const BooleanViewer: React.FC<BooleanViewerProps> = ({
           ) : (
             <Cancel color="error" />
           )}
-          <span>{fieldValue ? 'Yes' : 'No'}</span>
+          <span>{fieldValue ? t('entViz.yes') : t('entViz.no')}</span>
         </Box>
       );
 
     default: // chip
       return (
         <Chip
-          label={fieldValue ? 'Yes' : 'No'}
+          label={fieldValue ? t('entViz.yes') : t('entViz.no')}
           color={fieldValue ? 'success' : 'default'}
           variant="outlined"
           size="small"

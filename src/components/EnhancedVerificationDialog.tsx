@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
@@ -77,6 +78,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
   onClose,
   onVerificationComplete
 }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [analysisData, setAnalysisData] = useState<VerificationAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -171,7 +173,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="h6">
-            Enhanced Document Verification - {document.filename}
+            {t('verifyDialog.title', { filename: document.filename })}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Chip label={document.document_type} color="primary" />
@@ -198,14 +200,14 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
           {/* Analysis Results */}
           <Grid size={{ xs: 12, lg: 6 }}>
             <Typography variant="h6" gutterBottom>
-              AI Verification Analysis
+              {t('verifyDialog.aiAnalysis')}
             </Typography>
 
             {isAnalyzing ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4 }}>
                 <CircularProgress size={48} />
                 <Typography variant="body2" sx={{ mt: 2 }}>
-                  Analyzing document with AI...
+                  {t('verifyDialog.analyzingDoc')}
                 </Typography>
                 <LinearProgress sx={{ width: '100%', mt: 1 }} />
               </Box>
@@ -216,7 +218,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                       <AssessmentIcon sx={{ mr: 1 }} />
-                      <Typography variant="h6">Overall Verification Score</Typography>
+                      <Typography variant="h6">{t('verifyDialog.overallScore')}</Typography>
                     </Box>
                     
                     <Box sx={{ mb: 2 }}>
@@ -227,18 +229,18 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                         sx={{ height: 8, borderRadius: 4 }}
                       />
                       <Typography variant="body2" sx={{ mt: 1 }}>
-                        {(analysisData.overall_verification_score * 100).toFixed(1)}% confidence
+                        {t('verifyDialog.confidencePct', { value: (analysisData.overall_verification_score * 100).toFixed(1) })}
                       </Typography>
                     </Box>
 
-                    <Chip 
-                      label={`Recommendation: ${formatFieldName(analysisData.verification_decision)}`}
+                    <Chip
+                      label={t('verifyDialog.recommendation', { value: formatFieldName(analysisData.verification_decision) })}
                       color={getDecisionColor(analysisData.verification_decision)}
                       sx={{ mb: 1 }}
                     />
-                    
+
                     <Typography variant="caption" display="block">
-                      Processing time: {analysisData.processing_time_ms}ms
+                      {t('verifyDialog.processingTime', { ms: analysisData.processing_time_ms })}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -247,12 +249,12 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                 <Accordion defaultExpanded>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <SpeedIcon sx={{ mr: 1 }} />
-                    <Typography>Detailed Scores</Typography>
+                    <Typography>{t('verifyDialog.detailedScores')}</Typography>
                   </AccordionSummary>
                   <AccordionDetails>
                     <Grid container spacing={2}>
                       <Grid size={6}>
-                        <Typography variant="body2" gutterBottom>Confidence</Typography>
+                        <Typography variant="body2" gutterBottom>{t('verifyDialog.confidence')}</Typography>
                         <LinearProgress
                           variant="determinate"
                           value={analysisData.confidence_score * 100}
@@ -264,7 +266,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                       </Grid>
                       
                       <Grid size={6}>
-                        <Typography variant="body2" gutterBottom>Quality</Typography>
+                        <Typography variant="body2" gutterBottom>{t('verifyDialog.quality')}</Typography>
                         <LinearProgress
                           variant="determinate"
                           value={analysisData.quality_score * 100}
@@ -276,7 +278,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                       </Grid>
                       
                       <Grid size={6}>
-                        <Typography variant="body2" gutterBottom>Authenticity</Typography>
+                        <Typography variant="body2" gutterBottom>{t('verifyDialog.authenticity')}</Typography>
                         <LinearProgress
                           variant="determinate"
                           value={analysisData.authenticity_score * 100}
@@ -288,7 +290,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                       </Grid>
                       
                       <Grid size={6}>
-                        <Typography variant="body2" gutterBottom>Fraud Risk</Typography>
+                        <Typography variant="body2" gutterBottom>{t('verifyDialog.fraudRisk')}</Typography>
                         <LinearProgress
                           variant="determinate"
                           value={analysisData.fraud_detection_score * 100}
@@ -307,7 +309,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                   <Accordion>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <ShieldIcon sx={{ mr: 1 }} />
-                      <Typography>Security Features</Typography>
+                      <Typography>{t('verifyDialog.securityFeatures')}</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                       <List dense>
@@ -318,7 +320,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                             </ListItemIcon>
                             <ListItemText 
                               primary={formatFieldName(feature)}
-                              secondary={present ? "Present" : "Not detected"}
+                              secondary={present ? t('verifyDialog.present') : t('verifyDialog.notDetected')}
                             />
                           </ListItem>
                         ))}
@@ -332,7 +334,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                   <Accordion>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <VisibilityIcon sx={{ mr: 1 }} />
-                      <Typography>Extracted Data</Typography>
+                      <Typography>{t('verifyDialog.extractedData')}</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                       <List dense>
@@ -354,11 +356,11 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                   <Accordion>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <BugIcon sx={{ mr: 1 }} />
-                      <Typography>Fraud Indicators</Typography>
+                      <Typography>{t('verifyDialog.fraudIndicators')}</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                       <Alert severity="warning" sx={{ mb: 2 }}>
-                        {analysisData.fraud_indicators.length} potential fraud indicator(s) detected
+                        {t('verifyDialog.fraudDetected', { count: analysisData.fraud_indicators.length })}
                       </Alert>
                       {analysisData.fraud_indicators.map((indicator, index) => (
                         <Chip 
@@ -377,7 +379,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                   <Accordion>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <AIIcon sx={{ mr: 1 }} />
-                      <Typography>AI Recommendations</Typography>
+                      <Typography>{t('verifyDialog.aiRecommendations')}</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
                       <List dense>
@@ -396,7 +398,7 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
               </Box>
             ) : (
               <Alert severity="info">
-                Click "Analyze" to perform AI verification analysis
+                {t('verifyDialog.clickAnalyze')}
               </Alert>
             )}
           </Grid>
@@ -405,19 +407,19 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
           <Grid size={{ xs: 12 }}>
             <Divider sx={{ my: 2 }} />
             <Typography variant="h6" gutterBottom>
-              Verification Decision
+              {t('verifyDialog.decision')}
             </Typography>
             
             <Grid container spacing={2} alignItems="center">
               <Grid size={{ xs: 12, sm: 3 }}>
                 <FormControl fullWidth>
-                  <InputLabel>Decision</InputLabel>
+                  <InputLabel>{t('verifyDialog.decisionLabel')}</InputLabel>
                   <Select
                     value={verificationDecision}
                     onChange={(e) => setVerificationDecision(e.target.value as 'approve' | 'reject')}
                   >
-                    <MenuItem value="approve">Approve</MenuItem>
-                    <MenuItem value="reject">Reject</MenuItem>
+                    <MenuItem value="approve">{t('verifyDialog.approve')}</MenuItem>
+                    <MenuItem value="reject">{t('verifyDialog.reject')}</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -427,10 +429,10 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
                   fullWidth
                   multiline
                   rows={2}
-                  label="Verification Notes"
+                  label={t('verifyDialog.notes')}
                   value={verificationNotes}
                   onChange={(e) => setVerificationNotes(e.target.value)}
-                  placeholder="Add any notes about your verification decision..."
+                  placeholder={t('verifyDialog.notesPlaceholder')}
                 />
               </Grid>
             </Grid>
@@ -440,17 +442,17 @@ const EnhancedVerificationDialog: React.FC<EnhancedVerificationDialogProps> = ({
 
       <DialogActions>
         <Button onClick={onClose}>
-          Cancel
+          {t('cancel')}
         </Button>
         <Button onClick={performAnalysis} disabled={isAnalyzing}>
-          {isAnalyzing ? 'Analyzing...' : 'Re-analyze'}
+          {isAnalyzing ? t('verifyDialog.analyzing') : t('verifyDialog.reanalyze')}
         </Button>
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           onClick={handleVerification}
           disabled={!verificationDecision || isProcessing}
         >
-          {isProcessing ? 'Processing...' : 'Submit Verification'}
+          {isProcessing ? t('verifyDialog.processing') : t('verifyDialog.submit')}
         </Button>
       </DialogActions>
     </Dialog>

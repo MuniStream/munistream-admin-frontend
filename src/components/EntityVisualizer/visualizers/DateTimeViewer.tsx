@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Chip } from '@mui/material';
 import { Event, Schedule } from '@mui/icons-material';
 import { FieldType, type DetectedField } from '../../../utils/entityFieldDetector';
@@ -16,6 +17,7 @@ export const DateTimeViewer: React.FC<DateTimeViewerProps> = ({
   detectedField,
   options = {}
 }) => {
+  const { t } = useTranslation();
   const parseDate = (value: string): Date | null => {
     try {
       return new Date(value);
@@ -47,18 +49,18 @@ export const DateTimeViewer: React.FC<DateTimeViewerProps> = ({
     const diffInMs = now.getTime() - date.getTime();
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-    if (diffInDays === 0) return 'Today';
-    if (diffInDays === 1) return 'Yesterday';
-    if (diffInDays === -1) return 'Tomorrow';
-    if (diffInDays > 0) return `${diffInDays} days ago`;
-    return `In ${Math.abs(diffInDays)} days`;
+    if (diffInDays === 0) return t('entViz.today');
+    if (diffInDays === 1) return t('entViz.yesterday');
+    if (diffInDays === -1) return t('entViz.tomorrow');
+    if (diffInDays > 0) return t('entViz.daysAgo', { count: diffInDays });
+    return t('entViz.inDays', { count: Math.abs(diffInDays) });
   };
 
   const date = parseDate(fieldValue);
   if (!date || isNaN(date.getTime())) {
     return (
       <Typography variant="body2" color="text.secondary">
-        Invalid date: {fieldValue}
+        {t('entViz.invalidDate', { value: fieldValue })}
       </Typography>
     );
   }

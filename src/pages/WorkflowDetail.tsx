@@ -30,6 +30,7 @@ import {
   Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import workflowService from '@/services/workflowService';
 import WorkflowDiagram from '@/components/WorkflowDiagram';
 import WorkflowNotificationsTab from '@/components/notifications/WorkflowNotificationsTab';
@@ -50,6 +51,7 @@ function TabPanel({ children, value, index }: TabPanelProps) {
 }
 
 function WorkflowDetail() {
+  const { t } = useTranslation();
   const { workflowId } = useParams<{ workflowId: string }>();
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
@@ -115,7 +117,7 @@ function WorkflowDetail() {
       <Box>
         <LinearProgress />
         <Box display="flex" justifyContent="center" alignItems="center" height="400px">
-          <Typography>Loading workflow details...</Typography>
+          <Typography>{t('wfDetail.loadingDetails')}</Typography>
         </Box>
       </Box>
     );
@@ -125,10 +127,10 @@ function WorkflowDetail() {
     return (
       <Box textAlign="center" py={8}>
         <Typography variant="h6" color="text.secondary">
-          Workflow not found
+          {t('wfDetail.notFound')}
         </Typography>
         <Button onClick={() => navigate('/workflows')} sx={{ mt: 2 }}>
-          Back to Workflows
+          {t('wfDetail.backToWorkflows')}
         </Button>
       </Box>
     );
@@ -157,7 +159,7 @@ function WorkflowDetail() {
             console.log('Start workflow:', workflowId);
           }}
         >
-          Start New Instance
+          {t('wfDetail.startNewInstance')}
         </Button>
       </Box>
 
@@ -170,7 +172,7 @@ function WorkflowDetail() {
                 {workflowDetails.step_count || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Total Steps
+                {t('wfDetail.totalSteps')}
               </Typography>
             </CardContent>
           </Card>
@@ -182,7 +184,7 @@ function WorkflowDetail() {
                 {instances?.instances?.filter(i => i.status === 'completed').length || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Completed
+                {t('wfDetail.completed')}
               </Typography>
             </CardContent>
           </Card>
@@ -194,7 +196,7 @@ function WorkflowDetail() {
                 {instances?.instances?.filter(i => i.status === 'running').length || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Active Now
+                {t('wfDetail.activeNow')}
               </Typography>
             </CardContent>
           </Card>
@@ -206,7 +208,7 @@ function WorkflowDetail() {
                 {bottlenecks?.overall_efficiency ? `${(bottlenecks.overall_efficiency * 100).toFixed(1)}%` : 'N/A'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Efficiency
+                {t('wfDetail.efficiency')}
               </Typography>
             </CardContent>
           </Card>
@@ -216,10 +218,10 @@ function WorkflowDetail() {
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
         <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label="Workflow Diagram" />
-          <Tab label="Step Performance" />
-          <Tab label="Active Instances" />
-          <Tab label="Bottleneck Analysis" />
+          <Tab label={t('wfDetail.tabDiagram')} />
+          <Tab label={t('wfDetail.tabStepPerformance')} />
+          <Tab label={t('wfDetail.tabActiveInstances')} />
+          <Tab label={t('wfDetail.tabBottleneck')} />
           {canManageIntegrations && <Tab label="Notificaciones" />}
         </Tabs>
 
@@ -232,12 +234,12 @@ function WorkflowDetail() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Step</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell align="right">Avg Time (ms)</TableCell>
-                  <TableCell align="right">Success Rate</TableCell>
-                  <TableCell align="right">Executions</TableCell>
-                  <TableCell>Status</TableCell>
+                  <TableCell>{t('wfDetail.colStep')}</TableCell>
+                  <TableCell>{t('wfDetail.colType')}</TableCell>
+                  <TableCell align="right">{t('wfDetail.colAvgTime')}</TableCell>
+                  <TableCell align="right">{t('wfDetail.colSuccessRate')}</TableCell>
+                  <TableCell align="right">{t('wfDetail.colExecutions')}</TableCell>
+                  <TableCell>{t('status')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -245,7 +247,7 @@ function WorkflowDetail() {
                   <TableRow key={metric.step_id}>
                     <TableCell>{metric.step_id}</TableCell>
                     <TableCell>
-                      <Chip size="small" label="Action" variant="outlined" />
+                      <Chip size="small" label={t('wfDetail.chipAction')} variant="outlined" />
                     </TableCell>
                     <TableCell align="right">
                       {metric.avg_execution_time_ms?.toFixed(0) || 'N/A'}
@@ -258,9 +260,9 @@ function WorkflowDetail() {
                     </TableCell>
                     <TableCell>
                       {metric.bottleneck_score > 0.7 ? (
-                        <Chip label="Bottleneck" color="error" size="small" />
+                        <Chip label={t('wfDetail.chipBottleneck')} color="error" size="small" />
                       ) : (
-                        <Chip label="Normal" color="success" size="small" />
+                        <Chip label={t('wfDetail.chipNormal')} color="success" size="small" />
                       )}
                     </TableCell>
                   </TableRow>
@@ -275,12 +277,12 @@ function WorkflowDetail() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Instance ID</TableCell>
-                  <TableCell>Citizen</TableCell>
-                  <TableCell>Current Step</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Created</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell>{t('wfDetail.colInstanceId')}</TableCell>
+                  <TableCell>{t('wfDetail.colCitizen')}</TableCell>
+                  <TableCell>{t('wfDetail.colCurrentStep')}</TableCell>
+                  <TableCell>{t('status')}</TableCell>
+                  <TableCell>{t('wfDetail.colCreated')}</TableCell>
+                  <TableCell>{t('actions')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -345,11 +347,11 @@ function WorkflowDetail() {
                       </Box>
                       
                       <Typography variant="body2" color="text.secondary" mb={1}>
-                        Avg wait time: {(bottleneck.avg_wait_time_ms / 1000).toFixed(1)}s
+                        {t('wfDetail.avgWaitTime', { seconds: (bottleneck.avg_wait_time_ms / 1000).toFixed(1) })}
                       </Typography>
-                      
+
                       <Typography variant="subtitle2" gutterBottom>
-                        Recommendations:
+                        {t('wfDetail.recommendations')}
                       </Typography>
                       <Box component="ul" sx={{ pl: 2, m: 0 }}>
                         {bottleneck.recommendations.map((rec, index) => (
@@ -366,7 +368,7 @@ function WorkflowDetail() {
           ) : (
             <Box textAlign="center" py={4}>
               <Typography variant="h6" color="text.secondary">
-                No bottleneck analysis available
+                {t('wfDetail.noBottleneck')}
               </Typography>
             </Box>
           )}

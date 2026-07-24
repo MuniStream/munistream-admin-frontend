@@ -32,7 +32,7 @@ import {
   Cancel as RejectIcon
 } from '@mui/icons-material';
 import { EntityViewer } from './EntityViewer';
-import { useI18n } from '../contexts/I18nContext';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -72,7 +72,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
   loading,
   error
 }) => {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [validationDecision, setValidationDecision] = useState<string>('');
   const [validationComments, setValidationComments] = useState<string>('');
 
@@ -227,7 +227,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                               <strong>Archivo:</strong> {file.filename}
                             </Typography>
                             <Typography variant="body2">
-                              <strong>Origen:</strong> {file.source_task || 'Unknown'}
+                              <strong>Origen:</strong> {file.source_task || t('ctxval.unknown')}
                             </Typography>
                             {file.size && (
                               <Typography variant="body2">
@@ -306,7 +306,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                               <strong>Archivo:</strong> {files.filename}
                             </Typography>
                             <Typography variant="body2">
-                              <strong>Origen:</strong> {files.source_task || 'Unknown'}
+                              <strong>Origen:</strong> {files.source_task || t('ctxval.unknown')}
                             </Typography>
                             {files.size && (
                               <Typography variant="body2">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +17,7 @@ function ProtectedRoute({
   requiredRole, 
   requiredRoles 
 }: ProtectedRouteProps) {
+  const { t } = useTranslation();
   const location = useLocation();
   const { isAuthenticated, loading, hasPermission, hasRole, hasAnyRole } = useAuth();
 
@@ -31,7 +33,7 @@ function ProtectedRoute({
       >
         <CircularProgress size={48} />
         <Typography variant="body1" sx={{ mt: 2 }}>
-          Loading...
+          {t('loading')}
         </Typography>
       </Box>
     );
@@ -60,16 +62,16 @@ function ProtectedRoute({
         minHeight="100vh"
       >
         <Typography variant="h5" color="error" gutterBottom>
-          Access Denied
+          {t('misc.accessDenied')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Admin privileges required.
+          {t('misc.adminRequired')}
         </Typography>
         <Typography variant="body2" sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-          Debug: Required permission '{requiredPermission}' not found.<br/>
-          hasPermission result: {String(hasPermission(requiredPermission))}<br/>
-          User authenticated: {String(isAuthenticated)}<br/>
-          Loading: {String(loading)}
+          {t('misc.debugPermissionNotFound', { permission: requiredPermission })}<br/>
+          {t('misc.debugHasPermission', { value: String(hasPermission(requiredPermission)) })}<br/>
+          {t('misc.debugAuthenticated', { value: String(isAuthenticated) })}<br/>
+          {t('misc.debugLoading', { value: String(loading) })}
         </Typography>
       </Box>
     );
@@ -86,10 +88,10 @@ function ProtectedRoute({
         minHeight="100vh"
       >
         <Typography variant="h5" color="error" gutterBottom>
-          Access Denied
+          {t('misc.accessDenied')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          This page requires {requiredRole} role.
+          {t('misc.requiresRole', { role: requiredRole })}
         </Typography>
       </Box>
     );
@@ -106,10 +108,10 @@ function ProtectedRoute({
         minHeight="100vh"
       >
         <Typography variant="h5" color="error" gutterBottom>
-          Access Denied
+          {t('misc.accessDenied')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          This page requires one of these roles: {requiredRoles.join(', ')}.
+          {t('misc.requiresRoles', { roles: requiredRoles.join(', ') })}
         </Typography>
       </Box>
     );

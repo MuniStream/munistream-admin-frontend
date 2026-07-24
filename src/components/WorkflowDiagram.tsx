@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 interface WorkflowDiagramProps {
   workflowData: any;
@@ -73,6 +74,7 @@ function generateMermaidDiagram(workflowData: any, instanceData?: any): string {
 }
 
 function WorkflowDiagram({ workflowData, instanceData }: WorkflowDiagramProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,7 +115,7 @@ function WorkflowDiagram({ workflowData, instanceData }: WorkflowDiagramProps) {
         }
       } catch (err) {
         if (!cancelled) {
-          setError('Error rendering workflow diagram');
+          setError(t('wfDiagram.renderError'));
         }
       }
     };
@@ -130,7 +132,7 @@ function WorkflowDiagram({ workflowData, instanceData }: WorkflowDiagramProps) {
   if (!workflowData) {
     return (
       <Paper sx={{ p: 3, textAlign: 'center' }}>
-        <Typography>No workflow data available</Typography>
+        <Typography>{t('wfDiagram.noData')}</Typography>
       </Paper>
     );
   }

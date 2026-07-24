@@ -16,7 +16,7 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { useI18n } from '../contexts/I18nContext';
+import { useTranslation } from 'react-i18next';
 
 export interface AssertionResult {
   id: string;
@@ -79,7 +79,7 @@ export const AdminAssertionReview: React.FC<AdminAssertionReviewProps> = ({
   loading = false,
   error,
 }) => {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const initialDecisions: Record<string, DecisionState> = {};
   assertions.forEach((a) => {
     initialDecisions[a.id] = {

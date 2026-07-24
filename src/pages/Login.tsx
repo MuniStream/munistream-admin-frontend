@@ -9,9 +9,11 @@ import {
   Container,
 } from '@mui/material';
 import { Login as LoginIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 
 function Login() {
+  const { t } = useTranslation();
   const { login, isAuthenticated, loading } = useAuth();
 
   // Redirect if already authenticated
@@ -77,7 +79,7 @@ function Login() {
             </Typography>
 
             <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-              Secure authentication powered by Keycloak
+              {t('login.securedByKeycloak')}
             </Typography>
 
             <Button
@@ -88,17 +90,17 @@ function Login() {
               startIcon={<LoginIcon />}
               sx={{ mt: 2 }}
             >
-              Sign In with Keycloak
+              {t('login.signInWithKeycloak')}
             </Button>
 
             <Typography variant="caption" color="text.secondary" align="center" sx={{ mt: 3 }}>
-              You will be redirected to the secure authentication portal
+              {t('login.redirectNotice')}
             </Typography>
           </Box>
         </Paper>
 
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
-          MuniStream v2.0 - Administrative Portal
+          {t('login.footer')}
         </Typography>
       </Box>
     </Container>

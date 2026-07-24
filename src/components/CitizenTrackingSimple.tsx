@@ -32,10 +32,10 @@ import {
   FilterList as FilterListIcon
 } from '@mui/icons-material';
 import { workflowService } from '../services/workflowService';
-import { useI18n } from '../contexts/I18nContext';
+import { useTranslation } from 'react-i18next';
 
 const CitizenTrackingSimple: React.FC = () => {
-  const { t } = useI18n();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [workflowFilter, setWorkflowFilter] = useState('');

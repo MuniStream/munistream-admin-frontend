@@ -46,6 +46,7 @@ import {
   Warning as WarningIcon,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import workflowService from '@/services/workflowService';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -71,6 +72,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const CitizenValidation: React.FC = () => {
+  const { t } = useTranslation();
   // Mock snackbar for now
   const enqueueSnackbar = (message: string, options?: any) => {
     console.log('Snackbar:', message, options);
@@ -108,7 +110,7 @@ const CitizenValidation: React.FC = () => {
     }) => workflowService.validateCitizenData(instanceId, decision, comments),
     onSuccess: (data) => {
       enqueueSnackbar(
-        `Citizen data ${data.decision}d successfully`,
+        t('cval.dataValidatedSuccess'),
         { variant: 'success' }
       );
       queryClient.invalidateQueries({ queryKey: ['citizen-validations'] });
@@ -119,7 +121,7 @@ const CitizenValidation: React.FC = () => {
     },
     onError: (error: any) => {
       enqueueSnackbar(
-        error.response?.data?.detail || 'Failed to validate citizen data',
+        error.response?.data?.detail || t('cval.failedValidate'),
         { variant: 'error' }
       );
     },
@@ -156,7 +158,7 @@ const CitizenValidation: React.FC = () => {
 
   const renderCitizenDataValue = (value: any): React.ReactNode => {
     if (value === null || value === undefined) {
-      return <Typography variant="body2" color="text.secondary">Not provided</Typography>;
+      return <Typography variant="body2" color="text.secondary">{t('cval.notProvided')}</Typography>;
     }
     if (typeof value === 'object') {
       return (
@@ -180,10 +182,10 @@ const CitizenValidation: React.FC = () => {
       {/* Inline Page Header */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Citizen Data Validation
+          {t('cval.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Review and validate citizen submitted data
+          {t('cval.subtitle')}
         </Typography>
       </Box>
 
@@ -199,7 +201,7 @@ const CitizenValidation: React.FC = () => {
               <Card>
                 <CardContent>
                   <Typography color="textSecondary" gutterBottom>
-                    Awaiting Validation
+                    {t('cval.awaitingValidation')}
                   </Typography>
                   <Typography variant="h4">
                     {validations?.filter(v => v.status === 'awaiting_input').length || 0}
@@ -211,7 +213,7 @@ const CitizenValidation: React.FC = () => {
               <Card>
                 <CardContent>
                   <Typography color="textSecondary" gutterBottom>
-                    Total Pending
+                    {t('cval.totalPending')}
                   </Typography>
                   <Typography variant="h4">
                     {validations?.length || 0}
@@ -227,9 +229,9 @@ const CitizenValidation: React.FC = () => {
               onChange={(_, newValue) => setTabValue(newValue)}
               sx={{ borderBottom: 1, borderColor: 'divider' }}
             >
-              <Tab label={`Pending Validations (${validations?.length || 0})`} />
-              <Tab 
-                label="Instance Details" 
+              <Tab label={t('cval.pendingValidations', { count: validations?.length || 0 })} />
+              <Tab
+                label={t('cval.instanceDetails')}
                 disabled={!selectedInstance}
               />
             </Tabs>
@@ -239,12 +241,12 @@ const CitizenValidation: React.FC = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Workflow</TableCell>
-                      <TableCell>Citizen ID</TableCell>
-                      <TableCell>Current Step</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Submitted</TableCell>
-                      <TableCell>Actions</TableCell>
+                      <TableCell>{t('workflow')}</TableCell>
+                      <TableCell>{t('cval.citizenId')}</TableCell>
+                      <TableCell>{t('cval.currentStep')}</TableCell>
+                      <TableCell>{t('status')}</TableCell>
+                      <TableCell>{t('cval.submitted')}</TableCell>
+                      <TableCell>{t('actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -287,7 +289,7 @@ const CitizenValidation: React.FC = () => {
                             })}
                           </TableCell>
                           <TableCell>
-                            <Tooltip title="View Details">
+                            <Tooltip title={t('viewDetails')}>
                               <IconButton
                                 size="small"
                                 onClick={() => {
@@ -298,7 +300,7 @@ const CitizenValidation: React.FC = () => {
                                 <ViewIcon />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Approve">
+                            <Tooltip title={t('cval.approve')}>
                               <IconButton
                                 size="small"
                                 color="success"
@@ -308,7 +310,7 @@ const CitizenValidation: React.FC = () => {
                                 <ApproveIcon />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Reject">
+                            <Tooltip title={t('cval.reject')}>
                               <IconButton
                                 size="small"
                                 color="error"
@@ -324,7 +326,7 @@ const CitizenValidation: React.FC = () => {
                       <TableRow>
                         <TableCell colSpan={6} align="center">
                           <Typography variant="body2" color="text.secondary" sx={{ py: 3 }}>
-                            No citizen submissions awaiting validation
+                            {t('cval.noSubmissions')}
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -348,13 +350,13 @@ const CitizenValidation: React.FC = () => {
                         <CardContent>
                           <Typography variant="h6" gutterBottom>
                             <AssignmentIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                            Instance Overview
+                            {t('cval.instanceOverview')}
                           </Typography>
                           <Divider sx={{ my: 2 }} />
                           <Grid container spacing={2}>
                             <Grid xs={12} sm={6}>
                               <Typography variant="body2" color="text.secondary">
-                                Workflow
+                                {t('workflow')}
                               </Typography>
                               <Typography variant="body1" fontWeight="medium">
                                 {citizenData.workflow_name}
@@ -362,7 +364,7 @@ const CitizenValidation: React.FC = () => {
                             </Grid>
                             <Grid xs={12} sm={6}>
                               <Typography variant="body2" color="text.secondary">
-                                Citizen ID
+                                {t('cval.citizenId')}
                               </Typography>
                               <Typography variant="body1" fontWeight="medium">
                                 {citizenData.citizen_id}
@@ -370,7 +372,7 @@ const CitizenValidation: React.FC = () => {
                             </Grid>
                             <Grid xs={12} sm={6}>
                               <Typography variant="body2" color="text.secondary">
-                                Status
+                                {t('status')}
                               </Typography>
                               <Chip
                                 label={citizenData.status}
@@ -380,7 +382,7 @@ const CitizenValidation: React.FC = () => {
                             </Grid>
                             <Grid xs={12} sm={6}>
                               <Typography variant="body2" color="text.secondary">
-                                Created
+                                {t('created')}
                               </Typography>
                               <Typography variant="body1">
                                 {new Date(citizenData.created_at).toLocaleString()}
@@ -395,7 +397,7 @@ const CitizenValidation: React.FC = () => {
                         <CardContent>
                           <Typography variant="h6" gutterBottom>
                             <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                            Citizen Submitted Data
+                            {t('cval.citizenSubmittedData')}
                           </Typography>
                           <Divider sx={{ my: 2 }} />
                           {Object.keys(citizenData.citizen_data).length > 0 ? (
@@ -403,7 +405,7 @@ const CitizenValidation: React.FC = () => {
                               <Accordion key={stepId} defaultExpanded>
                                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                   <Typography variant="subtitle1">
-                                    Step: {stepId}
+                                    {t('cval.step', { step: stepId })}
                                   </Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
@@ -422,7 +424,7 @@ const CitizenValidation: React.FC = () => {
                             ))
                           ) : (
                             <Alert severity="warning">
-                              No citizen data has been submitted yet
+                              {t('cval.noDataSubmitted')}
                             </Alert>
                           )}
                         </CardContent>
@@ -515,7 +517,7 @@ const CitizenValidation: React.FC = () => {
                       </Box>
                     </Box>
                   ) : (
-                    <Alert severity="error">Failed to load citizen data</Alert>
+                    <Alert severity="error">{t('cval.failedValidate')}</Alert>
                   )}
                 </>
               )}
