@@ -38,6 +38,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import workflowService from '@/services/workflowService';
 import WorkflowDiagram from '@/components/WorkflowDiagram';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SortField = 'name' | 'step_count' | 'status';
 type SortDir = 'asc' | 'desc';
@@ -57,6 +58,8 @@ function WorkflowsDashboard() {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { hasPermission } = useAuth();
+  const canViewAnalytics = hasPermission('admin_system');
 
   const { data: workflows, isLoading } = useQuery({
     queryKey: ['workflows'],
@@ -340,17 +343,19 @@ function WorkflowsDashboard() {
                           </IconButton>
                         </span>
                       </Tooltip>
-                      <Tooltip title="Analíticas">
-                        <span>
-                          <IconButton
-                            size="small"
-                            onClick={() => navigate(`/analytics?workflow=${workflow.workflow_id}`)}
-                            disabled={!isActive}
-                          >
-                            <AnalyticsIcon fontSize="small" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
+                      {canViewAnalytics && (
+                        <Tooltip title="Analíticas">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => navigate(`/analytics?workflow=${workflow.workflow_id}`)}
+                              disabled={!isActive}
+                            >
+                              <AnalyticsIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>

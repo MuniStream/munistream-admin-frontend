@@ -3,6 +3,7 @@ import DashboardLayout from '@/layouts/DashboardLayout';
 import DashboardEnhanced from '@/pages/DashboardEnhanced';
 import WorkflowsDashboard from '@/pages/WorkflowsDashboard';
 import WorkflowDetail from '@/pages/WorkflowDetail';
+import AnalyticsPage from '@/pages/AnalyticsPage';
 import InstanceTracking from '@/pages/InstanceTracking';
 import InstanceDetail from '@/pages/InstanceDetail';
 import CitizenValidation from '@/pages/CitizenValidation';
@@ -57,6 +58,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute requiredPermission="view_workflows">
               <WorkflowDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="analytics"
+          element={
+            <ProtectedRoute requiredPermission="admin_system">
+              <AnalyticsPage />
             </ProtectedRoute>
           }
         />
