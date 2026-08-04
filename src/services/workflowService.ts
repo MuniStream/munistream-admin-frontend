@@ -2,7 +2,8 @@ import type {
   Workflow,
   WorkflowInstance,
   PerformanceMetrics,
-  BottleneckAnalysis
+  BottleneckAnalysis,
+  WorkflowAnalytics
 } from '@/types/workflow';
 
 const API_BASE_URL = `${import.meta.env.VITE_API_URL}${import.meta.env.VITE_API_BASE_URL}`;
@@ -17,11 +18,12 @@ const getAuthHeaders = () => {
 };
 
 // Re-export types for convenience
-export type { 
-  Workflow, 
-  WorkflowInstance, 
-  PerformanceMetrics, 
-  BottleneckAnalysis 
+export type {
+  Workflow,
+  WorkflowInstance,
+  PerformanceMetrics,
+  BottleneckAnalysis,
+  WorkflowAnalytics
 } from '@/types/workflow';
 
 export const workflowService = {
@@ -110,6 +112,30 @@ export const workflowService = {
 
     const data = await response.json();
     return data.metrics;
+  },
+
+  // Get consolidated per-workflow analytics (KPIs, bottlenecks, status, volume)
+  async getWorkflowAnalytics(
+    workflowId: string,
+    params?: { days?: number; stuckThresholdHours?: number }
+  ): Promise<WorkflowAnalytics> {
+    const query = new URLSearchParams();
+    if (params?.days != null) query.set('days', String(params.days));
+    if (params?.stuckThresholdHours != null) query.set('stuck_threshold_hours', String(params.stuckThresholdHours));
+    const qs = query.toString();
+    const response = await fetch(
+      `${API_BASE_URL}/performance/workflows/${workflowId}/analytics${qs ? `?${qs}` : ''}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch workflow analytics');
+    }
+
+    return await response.json();
   },
 
   // Get bottleneck analysis

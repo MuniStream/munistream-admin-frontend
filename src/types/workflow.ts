@@ -83,3 +83,46 @@ export interface BottleneckAnalysis {
   total_processing_time_ms: number;
   estimated_time_savings_ms: number;
 }
+
+// Consolidated per-workflow analytics (mirror of the backend
+// WorkflowAnalyticsResponse at /performance/workflows/{id}/analytics)
+export interface EfficiencyKPIs {
+  total_instances: number;
+  active_instances: number;
+  completed_instances: number;
+  failed_instances: number;
+  completion_rate: number;
+  avg_duration_seconds: number | null;
+  median_duration_seconds: number | null;
+  overall_efficiency: number;
+}
+
+export interface StepBottleneck {
+  step_id: string;
+  step_name: string;
+  avg_duration_seconds: number | null;
+  p95_duration_seconds: number | null;
+  execution_count: number;
+  currently_stuck_count: number;
+  severity: 'none' | 'low' | 'medium' | 'high';
+}
+
+export interface StatusCount {
+  status: string;
+  count: number;
+}
+
+export interface VolumePoint {
+  date: string;
+  started: number;
+  completed: number;
+}
+
+export interface WorkflowAnalytics {
+  workflow_id: string;
+  generated_at: string;
+  kpis: EfficiencyKPIs;
+  bottlenecks: StepBottleneck[];
+  status_distribution: StatusCount[];
+  volume_over_time: VolumePoint[];
+}
