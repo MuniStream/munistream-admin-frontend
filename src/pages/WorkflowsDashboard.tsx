@@ -33,6 +33,9 @@ import {
   Schema as DiagramIcon,
   Analytics as AnalyticsIcon,
   Search as SearchIcon,
+  Edit as EditIcon,
+  Add as AddIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -50,6 +53,18 @@ function WorkflowsDashboard() {
   const [sudoError, setSudoError] = useState<string | null>(null);
   const [diagramDialogOpen, setDiagramDialogOpen] = useState(false);
   const [diagramWorkflowId, setDiagramWorkflowId] = useState<string | null>(null);
+
+  // Editor de metadatos (requisitos, costo, plazo) por workflow.
+  const [metaOpen, setMetaOpen] = useState(false);
+  const [metaWf, setMetaWf] = useState<any>(null);
+  const [metaReqs, setMetaReqs] = useState<string[]>([]);
+  const [metaNewReq, setMetaNewReq] = useState('');
+  const [metaCost, setMetaCost] = useState('');
+  const [metaDuration, setMetaDuration] = useState('');
+  const [metaCustom, setMetaCustom] = useState<Array<{ label: string; value: string }>>([]);
+  const [metaNewLabel, setMetaNewLabel] = useState('');
+  const [metaNewValue, setMetaNewValue] = useState('');
+  const [metaError, setMetaError] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -84,6 +99,39 @@ function WorkflowsDashboard() {
       queryClient.invalidateQueries({ queryKey: ['workflows'] });
     },
   });
+
+  const metaMutation = useMutation({
+    mutationFn: ({ workflowId, metadata }: { workflowId: string; metadata: Record<string, any> }) =>
+      workflowService.updateWorkflow(workflowId, { metadata }),
+    onSuccess: () => {
+      setMetaOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['workflows'] });
+    },
+    onError: (error: Error) => setMetaError(error.message),
+  });
+
+  const handleOpenMeta = (workflow: any) => {
+    const md = workflow.metadata || {};
+    setMetaWf(workflow);
+    setMetaReqs(Array.isArray(md.requirements) ? md.requirements : []);
+    setMetaCost(md.cost != null ? String(md.cost) : '');
+    setMetaDuration(md.estimatedTime || md.estimated_duration || '');
+    setMetaCustom(Array.isArray(md.customFields) ? md.customFields : []);
+    setMetaNewReq('');
+    setMetaNewLabel('');
+    setMetaNewValue('');
+    setMetaError(null);
+    setMetaOpen(true);
+  };
+
+  const handleSaveMeta = () => {
+    const metadata: Record<string, any> = { ...(metaWf?.metadata || {}) };
+    metadata.requirements = metaReqs;
+    metadata.cost = metaCost.trim() === '' ? null : Number(metaCost);
+    metadata.estimatedTime = metaDuration.trim() || null;
+    metadata.customFields = metaCustom;
+    metaMutation.mutate({ workflowId: metaWf.workflow_id, metadata });
+  };
 
   const sudoMutation = useMutation({
     mutationFn: ({ workflowId, userId }: { workflowId: string; userId: string }) =>
@@ -321,6 +369,16 @@ function WorkflowsDashboard() {
                           </IconButton>
                         </span>
                       </Tooltip>
+                      <Tooltip title="Editar metadatos">
+                        <span>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenMeta(workflow)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                       <Tooltip title="Ver Diagrama">
                         <span>
                           <IconButton
@@ -377,6 +435,71 @@ function WorkflowsDashboard() {
       </TableContainer>
 
       {/* Sudo Dialog */}
+      <Dialog open={metaOpen} onClose={() => setMetaOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Editar metadatos — {metaWf?.name || metaWf?.workflow_id}</DialogTitle>
+        <DialogContent>
+          {metaError && <Alert severity="error" sx={{ mb: 2 }}>{metaError}</Alert>}
+          <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>Requisitos / documentos necesarios</Typography>
+          <Typography variant="caption" color="text.secondary">Se muestran al ciudadano antes de iniciar el trámite.</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, my: 1 }}>
+            {metaReqs.map((r, i) => (
+              <Chip key={i} label={r} onDelete={() => setMetaReqs(metaReqs.filter((_, j) => j !== i))} />
+            ))}
+            {metaReqs.length === 0 && <Typography variant="body2" color="text.secondary">Sin requisitos definidos.</Typography>}
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <TextField
+              size="small" fullWidth placeholder="Agregar requisito (p.ej. Comprobante de pago de derechos)"
+              value={metaNewReq}
+              onChange={(e) => setMetaNewReq(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && metaNewReq.trim()) { setMetaReqs([...metaReqs, metaNewReq.trim()]); setMetaNewReq(''); } }}
+            />
+            <Button
+              variant="outlined" startIcon={<AddIcon />}
+              disabled={!metaNewReq.trim()}
+              onClick={() => { setMetaReqs([...metaReqs, metaNewReq.trim()]); setMetaNewReq(''); }}
+            >Agregar</Button>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              label="Costo" type="number" size="small" fullWidth
+              value={metaCost} onChange={(e) => setMetaCost(e.target.value)}
+              InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment>, endAdornment: <InputAdornment position="end">MXN</InputAdornment> }}
+              helperText="Vacío = Sin costo"
+            />
+            <TextField
+              label="Tiempo / plazo estimado" size="small" fullWidth
+              value={metaDuration} onChange={(e) => setMetaDuration(e.target.value)}
+              placeholder="21 días hábiles"
+            />
+          </Box>
+
+          <Typography variant="subtitle2" sx={{ mt: 3, mb: 0.5 }}>Campos personalizados</Typography>
+          <Typography variant="caption" color="text.secondary">Pares clave/valor adicionales que se muestran al ciudadano (p.ej. Fundamento legal, Vigencia).</Typography>
+          {metaCustom.map((f, i) => (
+            <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center', my: 1 }}>
+              <TextField size="small" label="Clave" value={f.label}
+                onChange={(e) => setMetaCustom(metaCustom.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} sx={{ flex: 1 }} />
+              <TextField size="small" label="Valor" value={f.value}
+                onChange={(e) => setMetaCustom(metaCustom.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} sx={{ flex: 2 }} />
+              <IconButton size="small" onClick={() => setMetaCustom(metaCustom.filter((_, j) => j !== i))}><CloseIcon fontSize="small" /></IconButton>
+            </Box>
+          ))}
+          <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+            <TextField size="small" label="Clave" placeholder="Fundamento legal" value={metaNewLabel} onChange={(e) => setMetaNewLabel(e.target.value)} sx={{ flex: 1 }} />
+            <TextField size="small" label="Valor" placeholder="Art. 40 LGPAS" value={metaNewValue} onChange={(e) => setMetaNewValue(e.target.value)} sx={{ flex: 2 }} />
+            <Button variant="outlined" startIcon={<AddIcon />} disabled={!metaNewLabel.trim()}
+              onClick={() => { setMetaCustom([...metaCustom, { label: metaNewLabel.trim(), value: metaNewValue.trim() }]); setMetaNewLabel(''); setMetaNewValue(''); }}>Agregar</Button>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMetaOpen(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSaveMeta} disabled={metaMutation.isPending}>
+            {metaMutation.isPending ? 'Guardando…' : 'Guardar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog open={sudoDialogOpen} onClose={() => setSudoDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Ejecutar Trámite a Nombre de Usuario</DialogTitle>
         <DialogContent>
