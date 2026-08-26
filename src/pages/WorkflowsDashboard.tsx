@@ -61,6 +61,9 @@ function WorkflowsDashboard() {
   const [metaNewReq, setMetaNewReq] = useState('');
   const [metaCost, setMetaCost] = useState('');
   const [metaDuration, setMetaDuration] = useState('');
+  const [metaCustom, setMetaCustom] = useState<Array<{ label: string; value: string }>>([]);
+  const [metaNewLabel, setMetaNewLabel] = useState('');
+  const [metaNewValue, setMetaNewValue] = useState('');
   const [metaError, setMetaError] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
@@ -113,7 +116,10 @@ function WorkflowsDashboard() {
     setMetaReqs(Array.isArray(md.requirements) ? md.requirements : []);
     setMetaCost(md.cost != null ? String(md.cost) : '');
     setMetaDuration(md.estimatedTime || md.estimated_duration || '');
+    setMetaCustom(Array.isArray(md.customFields) ? md.customFields : []);
     setMetaNewReq('');
+    setMetaNewLabel('');
+    setMetaNewValue('');
     setMetaError(null);
     setMetaOpen(true);
   };
@@ -123,6 +129,7 @@ function WorkflowsDashboard() {
     metadata.requirements = metaReqs;
     metadata.cost = metaCost.trim() === '' ? null : Number(metaCost);
     metadata.estimatedTime = metaDuration.trim() || null;
+    metadata.customFields = metaCustom;
     metaMutation.mutate({ workflowId: metaWf.workflow_id, metadata });
   };
 
@@ -465,6 +472,24 @@ function WorkflowsDashboard() {
               value={metaDuration} onChange={(e) => setMetaDuration(e.target.value)}
               placeholder="21 días hábiles"
             />
+          </Box>
+
+          <Typography variant="subtitle2" sx={{ mt: 3, mb: 0.5 }}>Campos personalizados</Typography>
+          <Typography variant="caption" color="text.secondary">Pares clave/valor adicionales que se muestran al ciudadano (p.ej. Fundamento legal, Vigencia).</Typography>
+          {metaCustom.map((f, i) => (
+            <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'center', my: 1 }}>
+              <TextField size="small" label="Clave" value={f.label}
+                onChange={(e) => setMetaCustom(metaCustom.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} sx={{ flex: 1 }} />
+              <TextField size="small" label="Valor" value={f.value}
+                onChange={(e) => setMetaCustom(metaCustom.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} sx={{ flex: 2 }} />
+              <IconButton size="small" onClick={() => setMetaCustom(metaCustom.filter((_, j) => j !== i))}><CloseIcon fontSize="small" /></IconButton>
+            </Box>
+          ))}
+          <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+            <TextField size="small" label="Clave" placeholder="Fundamento legal" value={metaNewLabel} onChange={(e) => setMetaNewLabel(e.target.value)} sx={{ flex: 1 }} />
+            <TextField size="small" label="Valor" placeholder="Art. 40 LGPAS" value={metaNewValue} onChange={(e) => setMetaNewValue(e.target.value)} sx={{ flex: 2 }} />
+            <Button variant="outlined" startIcon={<AddIcon />} disabled={!metaNewLabel.trim()}
+              onClick={() => { setMetaCustom([...metaCustom, { label: metaNewLabel.trim(), value: metaNewValue.trim() }]); setMetaNewLabel(''); setMetaNewValue(''); }}>Agregar</Button>
           </Box>
         </DialogContent>
         <DialogActions>
