@@ -66,6 +66,9 @@ export default function InstanceDetail() {
       : items;
   }, [hayAccionPendiente, t]);
 
+  // Mientras no se sepa si hay acción pendiente no se elige pestaña: si no,
+  // el cuerpo pinta el expediente y salta a Acción un instante después.
+  const decidiendoTab = tab === null && track.isLoading;
   const tabActiva = tab ?? (hayAccionPendiente ? 'action' : 'dossier');
 
   // El panel lateral vive en la URL: así se puede compartir el enlace a una
@@ -123,6 +126,7 @@ export default function InstanceDetail() {
       <InstanceStickyHeader
         instance={detail.data.instance}
         progress={track.data}
+        origin={detail.data.origin}
         citizen={detail.data.citizen}
         entities={entidades}
         totalEntities={wallet.data?.total ?? 0}
@@ -138,7 +142,13 @@ export default function InstanceDetail() {
       />
 
       <Box sx={{ px: { xs: 1.5, sm: 3 }, py: 3 }}>
-        {tabActiva === 'action' && instanceId && (
+        {decidiendoTab && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress size={28} />
+          </Box>
+        )}
+
+        {!decidiendoTab && tabActiva === 'action' && instanceId && (
           <InstanceActionPanel
             instanceId={instanceId}
             progress={track.data}
@@ -146,16 +156,16 @@ export default function InstanceDetail() {
           />
         )}
 
-        {tabActiva === 'dossier' && <InstanceContextPanel context={detail.data.context} />}
+        {!decidiendoTab && tabActiva === 'dossier' && <InstanceContextPanel context={detail.data.context} />}
 
-        {tabActiva === 'attachments' && instanceId && (
+        {!decidiendoTab && tabActiva === 'attachments' && instanceId && (
           <InstanceAttachmentsPanel
             instanceId={instanceId}
             attachments={detail.data.attachments}
           />
         )}
 
-        {tabActiva === 'timeline' && <InstanceTimeline progress={track.data} />}
+        {!decidiendoTab && tabActiva === 'timeline' && <InstanceTimeline progress={track.data} />}
       </Box>
 
       <EntityDetailDrawer

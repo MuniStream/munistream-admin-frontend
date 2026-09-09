@@ -463,5 +463,6 @@
   "instDetail.entityDocumentTitle": "Documento de {{name}}",
   "instDetail.entityDocumentExpand": "Ampliar",
   "instDetail.print": "Imprimir",
-  "instDetail.downloadPdf": "Descargar PDF"
+  "instDetail.downloadPdf": "Descargar PDF",
+  "instDetail.validatingTramite": "Validando el trámite:"
 }

@@ -463,5 +463,6 @@
   "instDetail.entityDocumentTitle": "Document for {{name}}",
   "instDetail.entityDocumentExpand": "Expand",
   "instDetail.print": "Print",
-  "instDetail.downloadPdf": "Download PDF"
+  "instDetail.downloadPdf": "Download PDF",
+  "instDetail.validatingTramite": "Validating instance:"
 }

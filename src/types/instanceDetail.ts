@@ -73,9 +73,18 @@ export interface DossierContext {
   general: Record<string, unknown>;
 }
 
+/** Trámite del que nace esta instancia, cuando es una validación de otro. */
+export interface DossierOrigin {
+  parent_instance_id: string | null;
+  parent_workflow_id: string | null;
+  parent_workflow_name: string | null;
+  parent_task_id: string | null;
+}
+
 export interface InstanceAdminDetail {
   instance: DossierInstance;
   citizen: DossierCitizen;
+  origin: DossierOrigin | null;
   context: DossierContext;
   attachments: DossierAttachment[];
   counts: { attachments: number };

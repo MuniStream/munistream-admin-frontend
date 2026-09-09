@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Chip, Divider, IconButton, Tab, Tabs, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Divider, IconButton, Link, Tab, Tabs, Tooltip, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useTranslation } from 'react-i18next';
 import CitizenIdentityBlock from './CitizenIdentityBlock';
 import EntityWalletStrip from './EntityWalletStrip';
-import type { DossierInstance, DossierCitizen, WalletEntity } from '@/types/instanceDetail';
+import { useNavigate } from 'react-router-dom';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import type { DossierInstance, DossierCitizen, DossierOrigin, WalletEntity } from '@/types/instanceDetail';
 
 interface Props {
   instance?: DossierInstance;
+  origin?: DossierOrigin | null;
   /** Avance del trámite, del endpoint de seguimiento. */
   progress?: { completed_steps?: number; total_steps?: number; progress_percentage?: number };
   citizen?: DossierCitizen;
@@ -49,10 +52,11 @@ const ESTADO_COLOR: Record<string, 'default' | 'success' | 'warning' | 'error' |
  * precedentes de los que fiarse.
  */
 export default function InstanceStickyHeader({
-  instance, progress, citizen, entities, totalEntities, walletLoading, selectedEntityId,
+  instance, progress, origin, citizen, entities, totalEntities, walletLoading, selectedEntityId,
   tab, tabs, onTabChange, onOpenEntity, onPrefetchEntity, onBack, onRefresh,
 }: Props) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [compact, setCompact] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -101,9 +105,42 @@ export default function InstanceStickyHeader({
             </IconButton>
           </Tooltip>
 
-          {citizen && <CitizenIdentityBlock citizen={citizen} compact={compact} />}
+          <AssignmentIcon color="action" fontSize={compact ? 'small' : 'medium'} />
 
-          <Box sx={{ flex: 1 }} />
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography
+              data-testid="instance-workflow-name"
+              variant={compact ? 'subtitle2' : 'h6'}
+              noWrap
+              sx={{ fontWeight: 600 }}
+              title={instance?.workflow_name}
+            >
+              {instance?.workflow_name}
+            </Typography>
+
+            {/* En una validación administrativa lo que identifica el trabajo
+                es el trámite del ciudadano, no el nombre del flujo de
+                validación: sin esto, dos validaciones de trámites distintos
+                tienen exactamente el mismo encabezado. */}
+            {origin?.parent_workflow_name && (
+              <Typography variant="caption" color="text.secondary" noWrap component="div">
+                {t('instDetail.validatingTramite')}{' '}
+                {origin.parent_instance_id ? (
+                  <Link
+                    component="button"
+                    type="button"
+                    variant="caption"
+                    onClick={() => navigate(`/instances/${origin.parent_instance_id}`)}
+                    sx={{ verticalAlign: 'baseline' }}
+                  >
+                    {origin.parent_workflow_name}
+                  </Link>
+                ) : (
+                  origin.parent_workflow_name
+                )}
+              </Typography>
+            )}
+          </Box>
 
           {instance && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -127,11 +164,6 @@ export default function InstanceStickyHeader({
                 </Typography>
               ) : null}
 
-              {!compact && (
-                <Typography variant="body2" color="text.secondary" noWrap>
-                  {instance.workflow_name}
-                </Typography>
-              )}
               <Tooltip title={t('instDetail.refresh')}>
                 <IconButton size="small" onClick={onRefresh} aria-label={t('instDetail.refresh')}>
                   <RefreshIcon fontSize="small" />
@@ -140,6 +172,12 @@ export default function InstanceStickyHeader({
             </Box>
           )}
         </Box>
+
+        {citizen && (
+          <Box sx={{ mt: compact ? 0.25 : 1 }}>
+            <CitizenIdentityBlock citizen={citizen} compact={compact} />
+          </Box>
+        )}
 
         <Box sx={{ mt: compact ? 0.75 : 1.5 }}>
           <EntityWalletStrip

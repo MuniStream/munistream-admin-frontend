@@ -31,6 +31,7 @@ export default function CitizenIdentityBlock({ citizen, compact }: Props) {
       <Box sx={{ minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography
+            data-testid="citizen-name"
             variant={compact ? 'subtitle1' : 'h6'}
             noWrap
             sx={{ fontWeight: 600 }}
