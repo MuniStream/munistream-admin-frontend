@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, CircularProgress, Alert, Button } from '@mui/material';
 import { Download, PictureAsPdf } from '@mui/icons-material';
+import { NEUTRAL } from '@/theme/tokens';
 
 interface EntityViewerProps {
   entityId: string;
@@ -109,7 +110,7 @@ export const EntityViewer: React.FC<EntityViewerProps> = ({
           borderRadius: 1,
           overflow: 'hidden',
           mb: 1,
-          backgroundColor: '#f5f5f5'
+          backgroundColor: `${NEUTRAL.sunken}`
         }}
       >
         <iframe

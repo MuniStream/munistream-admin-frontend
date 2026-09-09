@@ -40,8 +40,10 @@ import {
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
   Send as SendIcon,
+  AccountBalance as AccountBalanceIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { PageChromeProvider, usePageChrome } from './PageChromeContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 const drawerWidth = 240;
@@ -49,8 +51,8 @@ const drawerWidth = 240;
 const menuItems = [
   { text: 'dashboard', path: '/dashboard', icon: <DashboardIcon /> }, // Always show dashboard
   { text: 'workflows', path: '/workflows', icon: <WorkflowIcon />, permission: 'view_workflows' },
-  { text: 'citizenTracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
-  { text: 'instanceAssignments', path: '/instance-assignments', icon: <AssignmentIcon />, permission: 'view_instances' },
+  { text: 'nav.myInbox', path: '/my-inbox', icon: <AssignmentIcon />, permission: 'view_instances' },
+  { text: 'nav.tramites', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
   { text: 'nav.catalogs', path: '/catalogs', icon: <CatalogIcon />, permission: 'admin_system' },
   { text: 'nav.profileFields', path: '/profile-fields', icon: <PersonIcon />, permission: 'admin_system' },
   { text: 'divider' }, // Visual separator for admin section
@@ -67,7 +69,7 @@ const menuItems = [
   { text: 'nav.keycloakStats', path: '/admin/keycloak', icon: <SecurityIcon />, permission: 'admin_system' },
 ];
 
-function DashboardLayout() {
+function DashboardLayoutInner() {
   const { t } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -102,6 +104,8 @@ function DashboardLayout() {
     setAnchorEl(null);
   };
 
+  const { chrome } = usePageChrome();
+
   const handleLogout = async () => {
     await logout();
     handleProfileMenuClose();
@@ -109,9 +113,13 @@ function DashboardLayout() {
 
   const drawer = (
     <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
-          🏛️ MuniStream
+      <Toolbar sx={{ gap: 1 }}>
+        {/* La marca vive aquí y solo aquí: por eso la barra superior puede
+            dedicarse al título de la sección. El emoji que había se veía como
+            un cuerpo extraño junto a los veinte iconos del menú. */}
+        <AccountBalanceIcon color="primary" />
+        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
+          {t('nav.brand')}
         </Typography>
       </Toolbar>
       <Divider />
@@ -193,21 +201,12 @@ function DashboardLayout() {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          // MUI v7 pinta la barra con `background-color: var(--AppBar-background)`
-          // y esa variable no llega a definirse con este tema, así que la barra
-          // quedaba transparente y el contenido se veía pasar por debajo al
-          // hacer scroll. Se fija el color explícitamente, que además es el que
-          // el propio tema declara para la cabecera.
-          '--AppBar-background': (theme) => theme.palette.primary.main,
-          '--AppBar-color': (theme) => theme.palette.primary.contrastText,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
         }}
       >
         <Toolbar>
           <IconButton
             color="inherit"
-            aria-label="open drawer"
+            aria-label={t('nav.openMenu')}
             edge="start"
             onClick={handleDrawerToggle}
             sx={{ mr: 2, display: { sm: 'none' } }}
@@ -215,11 +214,25 @@ function DashboardLayout() {
             <MenuIcon />
           </IconButton>
           
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {t('nav.appTitle')}
-          </Typography>
+          {/* El título de la sección, que antes repetía cada página debajo. */}
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography variant="h6" noWrap component="h1">
+              {chrome.title}
+            </Typography>
+            {chrome.subtitle && (
+              <Typography variant="caption" color="text.secondary" noWrap component="div">
+                {chrome.subtitle}
+              </Typography>
+            )}
+          </Box>
 
-          <IconButton color="inherit" sx={{ mr: 1 }}>
+          {chrome.actions && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
+              {chrome.actions}
+            </Box>
+          )}
+
+          <IconButton color="inherit" aria-label={t('nav.notifications')} sx={{ mr: 1 }}>
             <Badge badgeContent={3} color="error">
               <NotificationIcon />
             </Badge>
@@ -243,7 +256,7 @@ function DashboardLayout() {
             
             <IconButton
               edge="end"
-              aria-label="account of current user"
+              aria-label={t('nav.account')}
               aria-controls="primary-search-account-menu"
               aria-haspopup="true"
               onClick={handleProfileMenuOpen}
@@ -298,7 +311,7 @@ function DashboardLayout() {
       <Box
         component="nav"
         sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
+        aria-label={t('nav.sections')}
       >
         <Drawer
           variant="temporary"
@@ -332,12 +345,23 @@ function DashboardLayout() {
           flexGrow: 1,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           maxWidth: '100%',
-          mt: 8,
+          // Del token, no de un múltiplo suelto: la cabecera pegajosa del
+          // expediente se ancla a esta misma altura.
+          mt: { xs: 'var(--ms-appbar-h-xs)', sm: 'var(--ms-appbar-h)' },
         }}
       >
         <Outlet />
       </Box>
     </Box>
+  );
+}
+
+/** El proveedor envuelve al layout: la barra lee lo que declara cada página. */
+function DashboardLayout() {
+  return (
+    <PageChromeProvider>
+      <DashboardLayoutInner />
+    </PageChromeProvider>
   );
 }
 

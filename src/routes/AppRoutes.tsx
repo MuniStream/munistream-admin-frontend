@@ -4,9 +4,9 @@ import DashboardEnhanced from '@/pages/DashboardEnhanced';
 import WorkflowsDashboard from '@/pages/WorkflowsDashboard';
 import WorkflowDetail from '@/pages/WorkflowDetail';
 import AnalyticsPage from '@/pages/AnalyticsPage';
-import InstanceTracking from '@/pages/InstanceTracking';
+import TramitesPage from '@/pages/TramitesPage';
+import MyInboxPage from '@/pages/MyInboxPage';
 import InstanceDetail from '@/pages/InstanceDetail';
-import InstanceAssignmentPage from '@/pages/InstanceAssignmentPage';
 import KeycloakStats from '@/pages/admin/KeycloakStats';
 import CatalogsPage from '@/pages/CatalogsPage';
 import ProfileFieldsPage from '@/pages/ProfileFieldsPage';
@@ -79,7 +79,7 @@ function AppRoutes() {
           path="instances"
           element={
             <ProtectedRoute requiredPermission="view_instances">
-              <InstanceTracking />
+              <TramitesPage />
             </ProtectedRoute>
           }
         />
@@ -94,10 +94,10 @@ function AppRoutes() {
         />
         
         <Route
-          path="instance-assignments"
+          path="my-inbox"
           element={
             <ProtectedRoute requiredPermission="view_instances">
-              <InstanceAssignmentPage />
+              <MyInboxPage />
             </ProtectedRoute>
           }
         />

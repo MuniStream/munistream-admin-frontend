@@ -29,6 +29,8 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../../contexts/AuthContext'
 import keycloakService from '../../services/keycloak'
+import PageContainer from '@/components/ui/PageContainer';
+import { useTranslation } from 'react-i18next';
 
 interface KeycloakStats {
   users: {
@@ -56,6 +58,7 @@ interface KeycloakStats {
 }
 
 const KeycloakStats: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth()
   const [stats, setStats] = useState<KeycloakStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -132,7 +135,7 @@ const KeycloakStats: React.FC = () => {
   }
 
   return (
-    <Box sx={{ width: '100%', height: '100%' }}>
+    <PageContainer title={t('nav.keycloakStats')} fullWidth surface={false}>
       <Paper sx={{ p: 3, width: '100%', minWidth: 0 }}>
         {/* Header */}
         <Box display="flex" alignItems="center" gap={2} mb={3}>
@@ -371,7 +374,7 @@ const KeycloakStats: React.FC = () => {
           </>
         ) : null}
       </Paper>
-    </Box>
+    </PageContainer>
   )
 }
 

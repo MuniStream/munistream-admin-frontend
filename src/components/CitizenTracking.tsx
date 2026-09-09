@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PageContainer from '@/components/ui/PageContainer';
 import {
   Box,
   Card,
@@ -302,10 +303,7 @@ export const CitizenTracking: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        📊 {t('citizenTracking')}
-      </Typography>
+    <PageContainer title={t('citizenTracking')}>
       <Typography variant="subtitle1" color="text.secondary" gutterBottom>
         Monitorea todas las solicitudes y trámites ciudadanos en tiempo real
       </Typography>
@@ -739,7 +737,7 @@ export const CitizenTracking: React.FC = () => {
           <Button onClick={() => setDetailsOpen(false)}>{t('close')}</Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </PageContainer>
   );
 };
 

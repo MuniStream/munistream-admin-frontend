@@ -681,7 +681,7 @@ export const DigitalSignatureForm: React.FC<DigitalSignatureFormProps> = ({
                 size="small"
                 onClick={removeCertificate}
                 disabled={loading}
-              >
+               aria-label={t('a11y.delete')}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>
@@ -738,7 +738,7 @@ export const DigitalSignatureForm: React.FC<DigitalSignatureFormProps> = ({
                 size="small"
                 onClick={removePrivateKey}
                 disabled={loading}
-              >
+               aria-label={t('a11y.delete')}>
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Box>

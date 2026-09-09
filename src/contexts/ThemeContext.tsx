@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { ThemeProvider as MuiThemeProvider, createTheme, Theme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { INSTITUCIONAL, RADIO } from '../theme/tokens';
+import {
+  buildComponents,
+  buildPalette,
+  cssVariables,
+  shadows,
+  typography,
+} from '../theme/designSystem';
 
 interface ThemeColors {
   primary_main: string;
@@ -74,13 +82,13 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-// Default theme fallback
+// Tema de respaldo: guinda y dorado del Manual de Identidad Gráfica del
+// Gobierno de México. Antes era el azul de Material, que es de donde salía el
+// azul del admin en los tenants sin tema propio.
 const defaultThemeConfig: ThemeConfig = {
   colors: {
-    primary_main: '#1976d2',
-    secondary_main: '#dc004e',
-    background_default: '#ffffff',
-    background_paper: '#f5f5f5',
+    primary_main: INSTITUCIONAL.guinda,
+    secondary_main: INSTITUCIONAL.dorado,
   },
 };
 
@@ -159,58 +167,57 @@ function applyThemeSideEffects(config: ThemeConfig) {
       favicon.href = `/themes/assets/${config.assets.favicon}`;
     }
   }
+
+  // Variables CSS para lo que no pasa por MUI: el CSS suelto y, sobre todo, la
+  // altura de la barra, de la que cuelga la cabecera pegajosa del expediente.
+  const raiz = document.documentElement;
+  const vars = cssVariables(config.colors?.primary_main || INSTITUCIONAL.guinda);
+  Object.entries(vars).forEach(([nombre, valor]) => raiz.style.setProperty(nombre, valor));
+}
+
+/**
+ * Claves que un tema de tenant puede declarar. Cualquier otra se ignora.
+ *
+ * Antes se propagaba `components:` crudo a `createTheme`. Sonaba flexible pero
+ * no lo era: los temas declaran `sidebar:`, `header:`, `data_table:`… y MUI
+ * espera `MuiDrawer`, `MuiAppBar`, `MuiTable`, así que **ningún override se
+ * aplicó jamás**. Además, propagar sin filtrar deja que un tema rompa la
+ * aplicación entera —o el contraste— sin que nadie lo revise.
+ *
+ * El contrato nuevo es deliberadamente estrecho: el organismo aporta su acento y
+ * sus imágenes, y el resto del cromo lo fija el sistema de diseño. Si el tenant
+ * pudiera seguir pintando el menú lateral, la decisión de tener una herramienta
+ * neutra duraría hasta la próxima edición de un YAML.
+ */
+const CLAVES_SOPORTADAS = new Set(['metadata', 'colors', 'assets']);
+const COLORES_SOPORTADOS = new Set(['primary_main', 'secondary_main']);
+
+function avisarClavesIgnoradas(config: ThemeConfig): void {
+  const sobrantes = Object.keys(config).filter((k) => !CLAVES_SOPORTADAS.has(k));
+  const coloresSobrantes = Object.keys(config.colors || {}).filter((k) => !COLORES_SOPORTADOS.has(k));
+  if (sobrantes.length || coloresSobrantes.length) {
+    // En voz alta y no en silencio: hasta ahora estas claves se descartaban sin
+    // decir nada, y los tenants creían estar personalizando algo.
+    console.warn(
+      '[theme] claves ignoradas por el contrato del admin:',
+      [...sobrantes, ...coloresSobrantes.map((c) => `colors.${c}`)].join(', '),
+    );
+  }
 }
 
 function createMuiTheme(config: ThemeConfig): Theme {
-  const { colors, typography, spacing, borders, components } = config;
+  avisarClavesIgnoradas(config);
+
+  const accent = config.colors?.primary_main || INSTITUCIONAL.guinda;
+  const secondary = config.colors?.secondary_main;
 
   return createTheme({
-    palette: {
-      primary: {
-        main: colors.primary_main,
-        light: colors.primary_light,
-        dark: colors.primary_dark,
-        contrastText: colors.primary_contrast_text,
-      },
-      secondary: colors.secondary_main ? {
-        main: colors.secondary_main,
-        light: colors.secondary_light,
-        dark: colors.secondary_dark,
-        contrastText: colors.secondary_contrast_text,
-      } : undefined,
-      background: {
-        default: colors.background_default || '#ffffff',
-        paper: colors.background_paper || '#f5f5f5',
-      },
-      text: {
-        primary: colors.text_primary || '#000000',
-        secondary: colors.text_secondary || '#666666',
-        disabled: colors.text_disabled || '#999999',
-      },
-      ...(colors.error && { error: { main: colors.error } }),
-      ...(colors.warning && { warning: { main: colors.warning } }),
-      ...(colors.info && { info: { main: colors.info } }),
-      ...(colors.success && { success: { main: colors.success } }),
-    },
-    typography: typography ? {
-      fontFamily: typography.font_family,
-      fontSize: typography.font_size_base,
-      fontWeightLight: typography.font_weight_light,
-      fontWeightRegular: typography.font_weight_regular,
-      fontWeightMedium: typography.font_weight_medium,
-      fontWeightBold: typography.font_weight_bold,
-      h1: typography.font_family_headings ? { fontFamily: typography.font_family_headings } : undefined,
-      h2: typography.font_family_headings ? { fontFamily: typography.font_family_headings } : undefined,
-      h3: typography.font_family_headings ? { fontFamily: typography.font_family_headings } : undefined,
-      h4: typography.font_family_headings ? { fontFamily: typography.font_family_headings } : undefined,
-      h5: typography.font_family_headings ? { fontFamily: typography.font_family_headings } : undefined,
-      h6: typography.font_family_headings ? { fontFamily: typography.font_family_headings } : undefined,
-    } : undefined,
-    spacing: spacing?.unit,
-    shape: borders ? {
-      borderRadius: borders.radius_md || 4,
-    } : undefined,
-    components: components || {},
+    palette: buildPalette(accent, secondary),
+    typography,
+    shadows,
+    spacing: 8,
+    shape: { borderRadius: RADIO.base },
+    components: buildComponents(accent),
   });
 }
 
