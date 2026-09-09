@@ -35,6 +35,7 @@ import workflowService from '@/services/workflowService';
 import WorkflowDiagram from '@/components/WorkflowDiagram';
 import WorkflowNotificationsTab from '@/components/notifications/WorkflowNotificationsTab';
 import { useAuth } from '@/contexts/AuthContext';
+import PageContainer from '@/components/ui/PageContainer';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -137,20 +138,16 @@ function WorkflowDetail() {
   }
 
   return (
-    <Box>
-      {/* Header */}
-      <Box display="flex" alignItems="center" gap={2} mb={3}>
-        <IconButton onClick={() => navigate('/workflows')}>
+    <PageContainer
+      title={workflowDetails.name}
+      subtitle={workflowDetails.description}
+      actions={
+        <IconButton onClick={() => navigate('/workflows')} aria-label={t('instDetail.back')}>
           <ArrowBackIcon />
         </IconButton>
-        <Box flexGrow={1}>
-          <Typography variant="h4" component="h1">
-            {workflowDetails.name}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {workflowDetails.description}
-          </Typography>
-        </Box>
+      }
+    >
+      <Box display="flex" alignItems="center" gap={2} mb={3}>
         <Button
           variant="contained"
           startIcon={<PlayIcon />}
@@ -380,7 +377,7 @@ function WorkflowDetail() {
           </TabPanel>
         )}
       </Paper>
-    </Box>
+    </PageContainer>
   );
 }
 

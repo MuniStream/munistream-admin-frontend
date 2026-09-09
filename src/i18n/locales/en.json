@@ -476,5 +476,9 @@
   "inbox.colTramite": "Instance and citizen",
   "inbox.colAssigned": "Assigned",
   "inbox.colProgress": "Progress",
-  "inbox.colAction": "Action"
+  "inbox.colAction": "Action",
+  "nav.brand": "MuniStream",
+  "nav.sections": "Sections",
+  "nav.openMenu": "Open menu",
+  "nav.account": "Account"
 }

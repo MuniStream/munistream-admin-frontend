@@ -23,6 +23,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RestoreIcon from '@mui/icons-material/Restore';
 import ProfileFieldForm from '../components/ProfileFieldForm';
+import PageContainer from '@/components/ui/PageContainer';
 import profileFieldsService, {
   type CreateProfileFieldPayload,
   type ProfileField,
@@ -111,7 +112,7 @@ export default function ProfileFieldsPage() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <PageContainer title={t('nav.profileFields')}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -220,6 +221,6 @@ export default function ProfileFieldsPage() {
         onClose={() => setFormOpen(false)}
         onSubmit={handleSubmit}
       />
-    </Box>
+    </PageContainer>
   );
 }

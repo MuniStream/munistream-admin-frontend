@@ -476,5 +476,9 @@
   "inbox.colTramite": "Trámite y ciudadano",
   "inbox.colAssigned": "Asignado",
   "inbox.colProgress": "Progreso",
-  "inbox.colAction": "Acción"
+  "inbox.colAction": "Acción",
+  "nav.brand": "MuniStream",
+  "nav.sections": "Secciones",
+  "nav.openMenu": "Abrir el menú",
+  "nav.account": "Cuenta"
 }

@@ -27,6 +27,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import PageContainer from '@/components/ui/PageContainer';
 import {
   notificationsService,
   type NotificationChannel,
@@ -125,7 +126,7 @@ export default function NotificationTemplates() {
   });
 
   return (
-    <Box sx={{ p: 3 }}>
+    <PageContainer title="Plantillas de notificación">
       <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
         <Typography variant="h4">Plantillas de notificación</Typography>
         <Button startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
@@ -290,6 +291,6 @@ export default function NotificationTemplates() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </PageContainer>
   );
 }

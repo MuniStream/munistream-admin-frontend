@@ -39,6 +39,7 @@ import { useNavigate } from 'react-router-dom';
 import workflowService from '@/services/workflowService';
 import WorkflowDiagram from '@/components/WorkflowDiagram';
 import { useAuth } from '@/contexts/AuthContext';
+import PageContainer from '@/components/ui/PageContainer';
 
 type SortField = 'name' | 'step_count' | 'status';
 type SortDir = 'asc' | 'desc';
@@ -193,10 +194,7 @@ function WorkflowsDashboard() {
   }
 
   return (
-    <Box>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Gestión de Trámites
-      </Typography>
+    <PageContainer title={t('nav.workflows')}>
 
       {/* Filters */}
       <Box display="flex" gap={2} mb={2}>
@@ -435,7 +433,7 @@ function WorkflowsDashboard() {
           )}
         </DialogActions>
       </Dialog>
-    </Box>
+    </PageContainer>
   );
 }
 

@@ -29,6 +29,7 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '../../contexts/AuthContext'
 import keycloakService from '../../services/keycloak'
+import PageContainer from '@/components/ui/PageContainer';
 
 interface KeycloakStats {
   users: {
@@ -132,7 +133,7 @@ const KeycloakStats: React.FC = () => {
   }
 
   return (
-    <Box sx={{ width: '100%', height: '100%' }}>
+    <PageContainer title={t('nav.keycloakStats')} fullWidth>
       <Paper sx={{ p: 3, width: '100%', minWidth: 0 }}>
         {/* Header */}
         <Box display="flex" alignItems="center" gap={2} mb={3}>
@@ -371,7 +372,7 @@ const KeycloakStats: React.FC = () => {
           </>
         ) : null}
       </Paper>
-    </Box>
+    </PageContainer>
   )
 }
 
