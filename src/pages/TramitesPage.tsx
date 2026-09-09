@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import api from '@/services/api';
 import PageContainer from '@/components/ui/PageContainer';
 import TramiteList, { type TramiteRow } from '@/components/tramites/TramiteList';
+import AssignDialog from '@/components/tramites/AssignDialog';
 
 const ESTADOS = ['running', 'paused', 'completed', 'failed', 'cancelled'];
 
@@ -22,6 +23,7 @@ export default function TramitesPage() {
   const [estado, setEstado] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [seleccion, setSeleccion] = useState<string[]>([]);
+  const [asignando, setAsignando] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['tramites', page, rowsPerPage, estado, busqueda],
@@ -43,7 +45,7 @@ export default function TramitesPage() {
       title={t('nav.tramites')}
       actions={
         seleccion.length > 0 ? (
-          <Button size="small" variant="contained">
+          <Button size="small" variant="contained" onClick={() => setAsignando(true)}>
             {t('tramites.assignSelected', { count: seleccion.length })}
           </Button>
         ) : undefined
@@ -92,6 +94,13 @@ export default function TramitesPage() {
           onSelectedChange={setSeleccion}
           emptyMessage={t('tramites.empty')}
         />
+
+      <AssignDialog
+        open={asignando}
+        instanceIds={seleccion}
+        onClose={() => setAsignando(false)}
+        onDone={() => { setAsignando(false); setSeleccion([]); }}
+      />
     </PageContainer>
   );
 }

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import {
-  Box, Checkbox, Chip, CircularProgress, IconButton, LinearProgress, Table, TableBody,
+  Box, Checkbox, IconButton, LinearProgress, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, TablePagination, Tooltip, Typography,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -9,6 +9,9 @@ import EmailIcon from '@mui/icons-material/Email';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatApiDate, timeAgo } from '@/utils/dates';
+import StatusChip from '@/components/ui/StatusChip';
+import EmptyState from '@/components/ui/EmptyState';
+import LoadingState from '@/components/ui/LoadingState';
 
 /**
  * Forma común de una fila, la devuelvan las asignaciones o el listado general.
@@ -27,6 +30,8 @@ export interface TramiteRow {
   status: string;
   workflow_status?: string | null;
   assigned_at?: string | null;
+  /** Quién lo tiene asignado, por su nombre. */
+  assigned_to_name?: string | null;
   created_at?: string | null;
   completion_percentage?: number;
 }
@@ -80,23 +85,9 @@ export default function TramiteList({
 
   const estadoDe = (r: TramiteRow) => r.workflow_status || r.status;
 
-  if (loading && rows.length === 0) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  if (loading && rows.length === 0) return <LoadingState variant="skeleton" rows={6} />;
 
-  if (rows.length === 0) {
-    return (
-      <Box sx={{ py: 6, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          {emptyMessage || t('inbox.empty')}
-        </Typography>
-      </Box>
-    );
-  }
+  if (rows.length === 0) return <EmptyState description={emptyMessage || t('inbox.empty')} />;
 
   return (
     <>
@@ -114,7 +105,8 @@ export default function TramiteList({
                   />
                 </TableCell>
               )}
-              <TableCell sx={{ width: '52%' }}>{t('inbox.colTramite')}</TableCell>
+              <TableCell sx={{ width: '42%' }}>{t('inbox.colTramite')}</TableCell>
+              <TableCell>{t('tramites.colAssignee')}</TableCell>
               <TableCell align="center">{t('status')}</TableCell>
               <TableCell align="center">{t('inbox.colAssigned')}</TableCell>
               <TableCell align="center">{t('inbox.colProgress')}</TableCell>
@@ -162,13 +154,19 @@ export default function TramiteList({
                     </Box>
                   </TableCell>
 
+                  <TableCell>
+                    {/* Sin esto no se ve si algo está en manos de alguien. */}
+                    {r.assigned_to_name ? (
+                      <Typography variant="body2" noWrap>{r.assigned_to_name}</Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.disabled" noWrap>
+                        {t('tramites.unassigned')}
+                      </Typography>
+                    )}
+                  </TableCell>
+
                   <TableCell align="center">
-                    <Chip
-                      label={t(`analytics.status.${estado}`, {
-                        defaultValue: estado.replace(/_/g, ' '),
-                      })}
-                      size="small"
-                    />
+                    <StatusChip status={estado} />
                   </TableCell>
 
                   <TableCell align="center">
