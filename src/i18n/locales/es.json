@@ -480,5 +480,17 @@
   "nav.brand": "MuniStream",
   "nav.sections": "Secciones",
   "nav.openMenu": "Abrir el menú",
-  "nav.account": "Cuenta"
+  "nav.account": "Cuenta",
+  "nav.tramites": "Trámites",
+  "nav.myInbox": "Mi bandeja",
+  "tramites.selectAll": "Seleccionar todo",
+  "tramites.selectedCount": "{{count}} seleccionados",
+  "tramites.assignSelected": "Asignar {{count}}",
+  "tramites.searchPlaceholder": "Buscar por identificador",
+  "tramites.empty": "No hay trámites que coincidan.",
+  "tramites.open": "Abrir el expediente",
+  "tramites.start": "Iniciar",
+  "tramites.perPage": "Por página",
+  "inbox.empty": "No tienes trámites asignados.",
+  "dash.seeAll": "Ver los {{total}}"
 }

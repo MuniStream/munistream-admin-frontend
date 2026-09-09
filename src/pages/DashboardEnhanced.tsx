@@ -38,7 +38,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import PageContainer from '@/components/ui/PageContainer';
-import InboxSection from '@/components/dashboard/InboxSection';
+import DashboardInbox from '@/components/dashboard/DashboardInbox';
 import {
   LineChart,
   Line,
@@ -170,10 +170,12 @@ function DashboardEnhanced() {
           </Typography>
         ) : undefined
       }
+      surface={false}
     >
 
-      {/* Inbox Section - Most prominent part */}
-      <InboxSection />
+      {/* La misma lista que Mi bandeja, en resumen: mismo componente, no una
+          tercera implementación. */}
+      <DashboardInbox />
 
       <Grid container spacing={3}>
         {/* Key Metrics Cards */}

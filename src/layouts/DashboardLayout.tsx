@@ -51,8 +51,8 @@ const drawerWidth = 240;
 const menuItems = [
   { text: 'dashboard', path: '/dashboard', icon: <DashboardIcon /> }, // Always show dashboard
   { text: 'workflows', path: '/workflows', icon: <WorkflowIcon />, permission: 'view_workflows' },
-  { text: 'citizenTracking', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
-  { text: 'instanceAssignments', path: '/instance-assignments', icon: <AssignmentIcon />, permission: 'view_instances' },
+  { text: 'nav.myInbox', path: '/my-inbox', icon: <AssignmentIcon />, permission: 'view_instances' },
+  { text: 'nav.tramites', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
   { text: 'nav.catalogs', path: '/catalogs', icon: <CatalogIcon />, permission: 'admin_system' },
   { text: 'nav.profileFields', path: '/profile-fields', icon: <PersonIcon />, permission: 'admin_system' },
   { text: 'divider' }, // Visual separator for admin section
