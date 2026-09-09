@@ -3,10 +3,41 @@
 set -e
 
 TENANT_ID="${VITE_TENANT_ID:-${VITE_TENANT}}"
-THEME_SOURCE_DIR="/app/plugins/${TENANT_ID}/themes/admin"
 THEME_TARGET_DIR="/app/public/themes"
 
 echo "🎨 Loading admin theme for tenant: $TENANT_ID"
+
+# ---------------------------------------------------------------------------
+# Resolución del tema, en cascada.
+#
+# Antes se miraba solo themes/admin y, al no encontrarlo, se escribía un tema
+# azul de Material. Como casi ningún tenant tiene themes/admin, el azul del
+# panel de administración no era la decisión de nadie: era este fallback. Y los
+# organismos que sí tenían definida su identidad —en themes/default o en
+# themes/citizen— la veían ignorada.
+#
+# Ahora se busca en cascada y se toma el primero que exista. El acento vale
+# igual venga de donde venga: es el color del organismo.
+# ---------------------------------------------------------------------------
+THEME_SOURCE_DIR=""
+THEME_SOURCE_ORIGEN=""
+for candidato in admin default citizen; do
+    ruta="/app/plugins/${TENANT_ID}/themes/${candidato}"
+    if [ -f "$ruta/theme.yaml" ]; then
+        THEME_SOURCE_DIR="$ruta"
+        THEME_SOURCE_ORIGEN="themes/${candidato}"
+        break
+    fi
+done
+
+if [ -n "$THEME_SOURCE_ORIGEN" ]; then
+    # Se registra de dónde salió: hasta ahora no había forma de saber por qué un
+    # tenant aparecía con el tema equivocado.
+    echo "🎨 Acento resuelto desde ${THEME_SOURCE_ORIGEN}"
+else
+    THEME_SOURCE_DIR="/app/plugins/${TENANT_ID}/themes/admin"
+    echo "🎨 Sin tema propio; se usa el de la plataforma"
+fi
 
 # ---------------------------------------------------------------------------
 # Inyectar el tema resuelto dentro de index.html.
@@ -66,36 +97,14 @@ if [ ! -d "$THEME_SOURCE_DIR" ]; then
     cat > "$THEME_TARGET_DIR/theme-config.json" << 'EOF'
 {
   "metadata": {
-    "name": "Default Admin Theme",
+    "name": "Tema de plataforma",
     "organization": "MuniStream",
     "tenant_id": "default",
     "frontend_type": "admin"
   },
   "colors": {
-    "primary_main": "#1976d2",
-    "secondary_main": "#dc004e",
-    "background_default": "#f5f5f7",
-    "background_paper": "#ffffff",
-    "text_primary": "#000000",
-    "text_secondary": "#666666"
-  },
-  "typography": {
-    "font_family": "\"Inter\", \"Roboto\", \"Helvetica\", \"Arial\", sans-serif"
-  },
-  "header": {
-    "height": 64,
-    "backgroundColor": "#1976d2",
-    "textColor": "#ffffff",
-    "logoSize": {
-      "desktop": { "width": 150, "height": 40 },
-      "mobile": { "width": 120, "height": 32 }
-    }
-  },
-  "templates": {
-    "enabled": false,
-    "components": {},
-    "layouts": {},
-    "variables": {}
+    "primary_main": "#9F2241",
+    "secondary_main": "#BC955C"
   }
 }
 EOF
