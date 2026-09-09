@@ -32,9 +32,45 @@ import {
   Cancel as RejectIcon
 } from '@mui/icons-material';
 import { EntityViewer } from './EntityViewer';
+import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+/**
+ * Descarga un archivo del contexto de la instancia.
+ *
+ * La ruta de descarga dejó de estar abierta: antes bastaba conocer la llave de
+ * S3 para bajar cualquier objeto del bucket. Ahora se pide primero un permiso
+ * de vida corta, que el backend sólo emite para llaves que pertenecen a esta
+ * instancia y a quien puede verla.
+ */
+async function downloadInstanceFile(instanceId: string, s3Key: string, filename: string) {
+  const { data: grantData } = await api.post(`/instances/${instanceId}/files/grant`, {
+    s3_keys: [s3Key],
+  });
+  const grant = (grantData?.grants || []).find((g: any) => g.s3_key === s3Key);
+  if (!grant) throw new Error('El archivo no pertenece a esta instancia');
+
+  const { data: blob } = await api.get(
+    `/files/download/${s3Key}?t=${encodeURIComponent(grant.token)}`,
+    { responseType: 'blob' },
+  );
+
+  const url = window.URL.createObjectURL(blob);
+  try {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } finally {
+    window.URL.revokeObjectURL(url);
+  }
+}
+
+
 
 interface ContextValidationDisplayProps {
   instanceId: string;
@@ -246,26 +282,13 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                             )}
 
                             {/* Download Button - Use proxy download like EntityViewer */}
-                            {(file.download_url || file.url) && (
+                            {file.s3_key && (
                               <Button
                                 variant="outlined"
                                 size="small"
                                 onClick={async () => {
                                   try {
-                                    const downloadUrl = file.download_url || file.url;
-                                    const response = await fetch(`${API_URL}${downloadUrl}`);
-                                    if (!response.ok) {
-                                      throw new Error('Error al descargar archivo');
-                                    }
-                                    const blob = await response.blob();
-                                    const url = window.URL.createObjectURL(blob);
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.download = file.filename;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    window.URL.revokeObjectURL(url);
+                                    await downloadInstanceFile(instanceId, file.s3_key, file.filename);
                                   } catch (err) {
                                     console.error('Error downloading file:', err);
                                   }
@@ -325,26 +348,13 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                             )}
 
                             {/* Download Button - Use proxy download like EntityViewer */}
-                            {(files.download_url || files.url) && (
+                            {files.s3_key && (
                               <Button
                                 variant="outlined"
                                 size="small"
                                 onClick={async () => {
                                   try {
-                                    const downloadUrl = files.download_url || files.url;
-                                    const response = await fetch(`${API_URL}${downloadUrl}`);
-                                    if (!response.ok) {
-                                      throw new Error('Error al descargar archivo');
-                                    }
-                                    const blob = await response.blob();
-                                    const url = window.URL.createObjectURL(blob);
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.download = files.filename;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    window.URL.revokeObjectURL(url);
+                                    await downloadInstanceFile(instanceId, files.s3_key, files.filename);
                                   } catch (err) {
                                     console.error('Error downloading file:', err);
                                   }

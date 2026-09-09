@@ -234,7 +234,7 @@ const InstanceAssignment: React.FC = () => {
 
     const handleStartWorkflow = async (instance: WorkflowInstance) => {
         // Navigate to the admin workflow execution page
-        navigate(`/admin-workflow/${instance.instance_id}`);
+        navigate(`/instances/${instance.instance_id}`);
     };
 
     const handleQuickStart = async (instance: WorkflowInstance) => {

@@ -405,13 +405,13 @@ function DashboardEnhanced() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #ddd' }}>
-                    <th style={{ padding: '12px', textAlign: 'left' }}>Workflow</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>Total</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>Active</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>Completed</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>Failed</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>Success Rate</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>Avg Time</th>
+                    <th style={{ padding: '12px', textAlign: 'left' }}>{t('dash.colWorkflow')}</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colTotal')}</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colActive')}</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colCompleted')}</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colFailed')}</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colSuccessRate')}</th>
+                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colAvgTime')}</th>
                   </tr>
                 </thead>
                 <tbody>

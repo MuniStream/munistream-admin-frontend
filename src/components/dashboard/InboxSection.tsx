@@ -35,6 +35,8 @@ import {
   Search as SearchIcon
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { formatApiDate, timeAgo } from '../../utils/dates';
 import workflowService from '@/services/workflowService';
 
 interface InboxSectionProps {
@@ -45,6 +47,7 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
   refreshInterval = 30000
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [startingInstances, setStartingInstances] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -116,7 +119,7 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
     } else {
       // View only (keeping this for now)
       console.log('👁️ Viewing workflow instance:', instance.instance_id);
-      navigate(`/admin-workflow/${instance.instance_id}`);
+      navigate(`/instances/${instance.instance_id}`);
     }
   };
 
@@ -162,30 +165,7 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
     });
   };
 
-  const getTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
 
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMinutes < 60) {
-      return `${diffMinutes}m`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h`;
-    } else {
-      return `${diffDays}d`;
-    }
-  };
-
-  const formatShortDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit'
-    });
-  };
 
   const assignments = assignedData?.assignments || [];
   const totalCount = assignedData?.total || 0;
@@ -292,11 +272,11 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: '60%' }}>Workflow & Ciudadano</TableCell>
-                <TableCell align="center">Estado</TableCell>
-                <TableCell align="center">Asignado</TableCell>
-                <TableCell align="center">Progreso</TableCell>
-                <TableCell align="center">Acción</TableCell>
+                <TableCell sx={{ width: '60%' }}>{t('inbox.colTramite')}</TableCell>
+                <TableCell align="center">{t('status')}</TableCell>
+                <TableCell align="center">{t('inbox.colAssigned')}</TableCell>
+                <TableCell align="center">{t('inbox.colProgress')}</TableCell>
+                <TableCell align="center">{t('inbox.colAction')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -317,9 +297,19 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
                   >
                     <TableCell sx={{ width: '60%' }}>
                       <Box>
+                        {/* El trámite del ciudadano va primero. Todas las
+                            validaciones administrativas comparten el mismo
+                            workflow_name, así que encabezar con él dejaba
+                            todas las filas de la bandeja idénticas. */}
                         <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 0.5 }}>
-                          {assignment.workflow_name}
+                          {assignment.parent_workflow_name || assignment.workflow_name}
                         </Typography>
+
+                        {assignment.parent_workflow_name && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                            {assignment.workflow_name}
+                          </Typography>
+                        )}
 
                         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 0.5 }}>
                           {assignment.citizen_email ? (
@@ -331,7 +321,7 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
                             </>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
-                              Sin ciudadano
+                              {t('inbox.noCitizen')}
                             </Typography>
                           )}
                         </Box>
@@ -344,7 +334,9 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
 
                     <TableCell align="center">
                       <Chip
-                        label={(assignment.workflow_status || assignment.status).replace('_', ' ').toUpperCase()}
+                        label={t(`analytics.status.${assignment.workflow_status || assignment.status}`, {
+                          defaultValue: (assignment.workflow_status || assignment.status).replace(/_/g, ' '),
+                        })}
                         color={getStatusColor(assignment.workflow_status || assignment.status)}
                         size="small"
                       />
@@ -353,10 +345,10 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
                     <TableCell align="center">
                       <Box>
                         <Typography variant="body2" fontWeight="medium">
-                          {getTimeAgo(assignment.assigned_at || assignment.created_at)}
+                          {timeAgo(assignment.assigned_at || assignment.created_at)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {formatShortDate(assignment.assigned_at || assignment.created_at)}
+                          {formatApiDate(assignment.assigned_at || assignment.created_at, { day: '2-digit', month: '2-digit' })}
                         </Typography>
                       </Box>
                     </TableCell>

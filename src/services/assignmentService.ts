@@ -13,6 +13,8 @@ export interface AssignmentResponse {
   assigned_by?: string;
   parent_instance_id?: string;
   parent_workflow_id?: string;
+  /** Trámite de origen: lo que de verdad identifica una validación. */
+  parent_workflow_name?: string;
   priority?: number;
   created_at: string;
   updated_at: string;
