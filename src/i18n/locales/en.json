@@ -464,5 +464,13 @@
   "instDetail.entityDocumentExpand": "Expand",
   "instDetail.print": "Print",
   "instDetail.downloadPdf": "Download PDF",
-  "instDetail.validatingTramite": "Validating instance:"
+  "instDetail.validatingTramite": "Validating instance:",
+  "dash.colWorkflow": "Workflow",
+  "dash.colTotal": "Total",
+  "dash.colActive": "Active",
+  "dash.colCompleted": "Completed",
+  "dash.colFailed": "Failed",
+  "dash.colSuccessRate": "Success rate",
+  "dash.colAvgTime": "Avg. time",
+  "inbox.noCitizen": "No citizen"
 }

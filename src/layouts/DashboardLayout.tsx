@@ -193,6 +193,15 @@ function DashboardLayout() {
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
+          // MUI v7 pinta la barra con `background-color: var(--AppBar-background)`
+          // y esa variable no llega a definirse con este tema, así que la barra
+          // quedaba transparente y el contenido se veía pasar por debajo al
+          // hacer scroll. Se fija el color explícitamente, que además es el que
+          // el propio tema declara para la cabecera.
+          '--AppBar-background': (theme) => theme.palette.primary.main,
+          '--AppBar-color': (theme) => theme.palette.primary.contrastText,
+          bgcolor: 'primary.main',
+          color: 'primary.contrastText',
         }}
       >
         <Toolbar>

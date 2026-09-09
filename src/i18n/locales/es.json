@@ -464,5 +464,13 @@
   "instDetail.entityDocumentExpand": "Ampliar",
   "instDetail.print": "Imprimir",
   "instDetail.downloadPdf": "Descargar PDF",
-  "instDetail.validatingTramite": "Validando el trámite:"
+  "instDetail.validatingTramite": "Validando el trámite:",
+  "dash.colWorkflow": "Trámite",
+  "dash.colTotal": "Total",
+  "dash.colActive": "Activos",
+  "dash.colCompleted": "Completados",
+  "dash.colFailed": "Fallidos",
+  "dash.colSuccessRate": "Tasa de éxito",
+  "dash.colAvgTime": "Tiempo medio",
+  "inbox.noCitizen": "Sin ciudadano"
 }
