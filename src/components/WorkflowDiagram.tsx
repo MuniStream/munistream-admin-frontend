@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { ESTADO, NEUTRAL } from '@/theme/tokens';
 
 interface WorkflowDiagramProps {
   workflowData: any;
@@ -58,16 +59,19 @@ function generateMermaidDiagram(workflowData: any, instanceData?: any): string {
 
   diagram += edges.join('\n') + '\n';
 
+  // Los colores del diagrama salen del sistema, no de la paleta de Material:
+  // antes eran veintisiete valores sueltos que un cambio de tema no alcanzaba,
+  // así que el diagrama seguía siendo azul mientras el resto ya no lo era.
   diagram += `
-  classDef actionNode fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
-  classDef conditionalNode fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
-  classDef approvalNode fill:#e8f5e8,stroke:#4caf50,stroke-width:2px,color:#000
-  classDef terminalNode fill:#ffebee,stroke:#f44336,stroke-width:2px,color:#000
-  classDef integrationNode fill:#e0f2f1,stroke:#00695c,stroke-width:2px,color:#000
-  classDef defaultNode fill:#f5f5f5,stroke:#757575,stroke-width:2px,color:#000
-  classDef completedNode fill:#c8e6c9,stroke:#4caf50,stroke-width:3px,color:#000
-  classDef inProgressNode fill:#fff9c4,stroke:#ff9800,stroke-width:3px,color:#000
-  classDef failedNode fill:#ffcdd2,stroke:#f44336,stroke-width:3px,color:#000
+  classDef actionNode fill:${ESTADO.info.soft},stroke:${ESTADO.info.main},stroke-width:2px,color:${NEUTRAL.text}
+  classDef conditionalNode fill:${ESTADO.warning.soft},stroke:${ESTADO.warning.main},stroke-width:2px,color:${NEUTRAL.text}
+  classDef approvalNode fill:${ESTADO.success.soft},stroke:${ESTADO.success.main},stroke-width:2px,color:${NEUTRAL.text}
+  classDef terminalNode fill:${ESTADO.error.soft},stroke:${ESTADO.error.main},stroke-width:2px,color:${NEUTRAL.text}
+  classDef integrationNode fill:${ESTADO.neutral.soft},stroke:${ESTADO.neutral.main},stroke-width:2px,color:${NEUTRAL.text}
+  classDef defaultNode fill:${NEUTRAL.sunken},stroke:${NEUTRAL.borderStrong},stroke-width:2px,color:${NEUTRAL.text}
+  classDef completedNode fill:${ESTADO.success.soft},stroke:${ESTADO.success.main},stroke-width:3px,color:${NEUTRAL.text}
+  classDef inProgressNode fill:${ESTADO.warning.soft},stroke:${ESTADO.warning.main},stroke-width:3px,color:${NEUTRAL.text}
+  classDef failedNode fill:${ESTADO.error.soft},stroke:${ESTADO.error.main},stroke-width:3px,color:${NEUTRAL.text}
 `;
 
   return diagram;

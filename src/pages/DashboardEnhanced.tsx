@@ -1,6 +1,12 @@
 // Enhanced Dashboard with comprehensive metrics and visualizations
 import { useState, useEffect } from 'react';
 import {
+  TableRow,
+  TableHead,
+  TableContainer,
+  TableCell,
+  TableBody,
+  Table,
   Grid,
   Paper,
   Typography,
@@ -38,6 +44,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import PageContainer from '@/components/ui/PageContainer';
+import StatCard from '@/components/ui/StatCard';
+import { CHART_PALETTE } from '@/theme/tokens';
 import DashboardInbox from '@/components/dashboard/DashboardInbox';
 import {
   LineChart,
@@ -56,63 +64,7 @@ import {
 } from 'recharts';
 import adminService from '@/services/adminService';
 
-interface StatsCardProps {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-  subtitle?: string;
-  trend?: number;
-  loading?: boolean;
-}
-
-function StatsCard({ title, value, icon, color, subtitle, trend, loading }: StatsCardProps) {
-  return (
-    <Card sx={{ height: '100%' }}>
-      <CardContent>
-        {loading ? (
-          <Box display="flex" alignItems="center" justifyContent="center" height={100}>
-            <CircularProgress size={30} />
-          </Box>
-        ) : (
-          <>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Typography variant="h4" component="div" color={color}>
-                  {value}
-                </Typography>
-                <Typography variant="h6" color="text.secondary">
-                  {title}
-                </Typography>
-                {subtitle && (
-                  <Typography variant="body2" color="text.secondary">
-                    {subtitle}
-                  </Typography>
-                )}
-              </Box>
-              <Box color={color}>
-                {icon}
-              </Box>
-            </Box>
-            {trend !== undefined && (
-              <Box mt={1}>
-                <Chip
-                  icon={trend > 0 ? <TrendingUpIcon /> : trend < 0 ? <TrendingDownIcon /> : <></>}
-                  label={`${trend > 0 ? '+' : ''}${trend.toFixed(1)}%`}
-                  size="small"
-                  color={trend > 0 ? 'success' : trend < 0 ? 'error' : 'default'}
-                  variant="outlined"
-                />
-              </Box>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+const COLORS = CHART_PALETTE;
 
 function DashboardEnhanced() {
   const { t } = useTranslation();
@@ -180,45 +132,44 @@ function DashboardEnhanced() {
       <Grid container spacing={3}>
         {/* Key Metrics Cards */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatsCard
-            title={t('dash.activeCitizens')}
+          <StatCard
+            label={t('dash.activeCitizens')}
             value={systemMetrics?.total_active_citizens || 0}
             icon={<PeopleIcon sx={{ fontSize: 40 }} />}
-            color="primary.main"
-            subtitle={t('dash.uniqueUsers')}
+            sublabel={t('dash.uniqueUsers')}
             loading={isLoading}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatsCard
-            title={t('dash.totalInstances')}
+          <StatCard
+            label={t('dash.totalInstances')}
             value={systemMetrics?.total_workflow_instances || 0}
             icon={<WorkflowIcon sx={{ fontSize: 40 }} />}
-            color="info.main"
-            subtitle={t('dash.createdToday', { count: systemMetrics?.instances_created_today || 0 })}
+            tone="info"
+            sublabel={t('dash.createdToday', { count: systemMetrics?.instances_created_today || 0 })}
             loading={isLoading}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatsCard
-            title={t('dash.pendingItems')}
+          <StatCard
+            label={t('dash.pendingItems')}
             value={pendingItems?.total_pending || 0}
             icon={<AssignmentIcon sx={{ fontSize: 40 }} />}
-            color="warning.main"
-            subtitle={t('dash.highPriority', { count: pendingItems?.pending_by_priority?.high || 0 })}
+            tone="warning"
+            sublabel={t('dash.highPriority', { count: pendingItems?.pending_by_priority?.high || 0 })}
             loading={isLoading}
           />
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatsCard
-            title={t('dash.successRate')}
+          <StatCard
+            label={t('dash.successRate')}
             value={`${performanceMetrics?.success_rate?.toFixed(1) || 0}%`}
             icon={<CheckCircleIcon sx={{ fontSize: 40 }} />}
-            color="success.main"
-            subtitle={t('dash.avgTime', { hours: performanceMetrics?.average_processing_time_hours?.toFixed(1) || 0 })}
+            tone="success"
+            sublabel={t('dash.avgTime', { hours: performanceMetrics?.average_processing_time_hours?.toFixed(1) || 0 })}
             loading={isLoading}
           />
         </Grid>
@@ -240,7 +191,7 @@ function DashboardEnhanced() {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="#8884d8"
+                    stroke={CHART_PALETTE[0]}
                     strokeWidth={2}
                     name={t('dash.instancesCreated')}
                   />
@@ -270,7 +221,7 @@ function DashboardEnhanced() {
                     labelLine={false}
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
-                    fill="#8884d8"
+                    fill={CHART_PALETTE[0]}
                     dataKey="value"
                   >
                     {pieData.map((_, index) => (
@@ -321,7 +272,7 @@ function DashboardEnhanced() {
                       return null;
                     }}
                   />
-                  <Bar dataKey="instances" fill="#8884d8" />
+                  <Bar dataKey="instances" fill={CHART_PALETTE[0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -401,79 +352,59 @@ function DashboardEnhanced() {
         <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Workflow Performance
+              {t('dash.workflowPerformance')}
             </Typography>
-            <Box sx={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #ddd' }}>
-                    <th style={{ padding: '12px', textAlign: 'left' }}>{t('dash.colWorkflow')}</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colTotal')}</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colActive')}</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colCompleted')}</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colFailed')}</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colSuccessRate')}</th>
-                    <th style={{ padding: '12px', textAlign: 'center' }}>{t('dash.colAvgTime')}</th>
-                  </tr>
-                </thead>
-                <tbody>
+            {/* Tabla del sistema, no HTML con estilos en línea: así hereda la
+                tipografía, la densidad, el hover y los bordes como el resto. */}
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{t('dash.colWorkflow')}</TableCell>
+                    <TableCell align="center">{t('dash.colTotal')}</TableCell>
+                    <TableCell align="center">{t('dash.colActive')}</TableCell>
+                    <TableCell align="center">{t('dash.colCompleted')}</TableCell>
+                    <TableCell align="center">{t('dash.colFailed')}</TableCell>
+                    <TableCell align="center">{t('dash.colSuccessRate')}</TableCell>
+                    <TableCell align="center">{t('dash.colAvgTime')}</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {workflowMetrics.slice(0, 5).map((workflow) => (
-                    <tr key={workflow.workflow_id} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '12px' }}>
-                        <Typography variant="body2" fontWeight="bold">
+                    <TableRow key={workflow.workflow_id} hover>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={600}>
                           {workflow.workflow_name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {workflow.workflow_id}
                         </Typography>
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        {workflow.total_instances}
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <Chip
-                          label={workflow.active_instances}
-                          size="small"
-                          color={workflow.active_instances > 0 ? 'primary' : 'default'}
-                        />
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <Chip
-                          label={workflow.completed_instances}
-                          size="small"
-                          color="success"
-                          variant="outlined"
-                        />
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <Chip
-                          label={workflow.failed_instances}
-                          size="small"
-                          color={workflow.failed_instances > 0 ? 'error' : 'default'}
-                          variant="outlined"
-                        />
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                      </TableCell>
+                      <TableCell align="center">{workflow.total_instances}</TableCell>
+                      <TableCell align="center">{workflow.active_instances}</TableCell>
+                      <TableCell align="center">{workflow.completed_instances}</TableCell>
+                      <TableCell align="center">{workflow.failed_instances}</TableCell>
+                      <TableCell align="center">
                         <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
                           <LinearProgress
                             variant="determinate"
                             value={workflow.success_rate}
-                            sx={{ width: 60, height: 6, borderRadius: 3 }}
+                            sx={{ width: 60 }}
                             color={workflow.success_rate >= 80 ? 'success' : workflow.success_rate >= 50 ? 'warning' : 'error'}
                           />
                           <Typography variant="body2">
                             {workflow.success_rate.toFixed(1)}%
                           </Typography>
                         </Box>
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                      </TableCell>
+                      <TableCell align="center">
                         {workflow.average_processing_time_hours.toFixed(1)}h
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </Box>
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Paper>
         </Grid>
       </Grid>

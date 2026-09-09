@@ -504,5 +504,8 @@
   "tramites.assignConfirm": "Asignar",
   "tramites.assignDone": "Asignados {{count}} trámites",
   "tramites.assignError": "No se pudieron asignar todos los trámites.",
-  "tramites.currentLoad": "{{count}} en curso"
+  "tramites.currentLoad": "{{count}} en curso",
+  "dash.workflowPerformance": "Rendimiento por trámite",
+  "a11y.refresh": "Actualizar",
+  "a11y.delete": "Eliminar"
 }
