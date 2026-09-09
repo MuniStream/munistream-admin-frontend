@@ -472,5 +472,9 @@
   "dash.colFailed": "Fallidos",
   "dash.colSuccessRate": "Tasa de éxito",
   "dash.colAvgTime": "Tiempo medio",
-  "inbox.noCitizen": "Sin ciudadano"
+  "inbox.noCitizen": "Sin ciudadano",
+  "inbox.colTramite": "Trámite y ciudadano",
+  "inbox.colAssigned": "Asignado",
+  "inbox.colProgress": "Progreso",
+  "inbox.colAction": "Acción"
 }

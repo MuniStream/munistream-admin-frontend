@@ -472,5 +472,9 @@
   "dash.colFailed": "Failed",
   "dash.colSuccessRate": "Success rate",
   "dash.colAvgTime": "Avg. time",
-  "inbox.noCitizen": "No citizen"
+  "inbox.noCitizen": "No citizen",
+  "inbox.colTramite": "Instance and citizen",
+  "inbox.colAssigned": "Assigned",
+  "inbox.colProgress": "Progress",
+  "inbox.colAction": "Action"
 }
