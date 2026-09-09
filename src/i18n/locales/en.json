@@ -504,5 +504,8 @@
   "tramites.assignConfirm": "Assign",
   "tramites.assignDone": "{{count}} instances assigned",
   "tramites.assignError": "Some instances could not be assigned.",
-  "tramites.currentLoad": "{{count}} in progress"
+  "tramites.currentLoad": "{{count}} in progress",
+  "dash.workflowPerformance": "Performance by workflow",
+  "a11y.refresh": "Refresh",
+  "a11y.delete": "Delete"
 }

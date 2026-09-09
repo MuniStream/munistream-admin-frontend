@@ -34,6 +34,7 @@ import {
 import { EntityViewer } from './EntityViewer';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
+import { NEUTRAL } from '@/theme/tokens';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -250,7 +251,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                                   maxWidth: '150px',
                                   maxHeight: '150px',
                                   objectFit: 'contain',
-                                  border: '1px solid #ddd',
+                                  border: `1px solid ${NEUTRAL.border}`,
                                   borderRadius: '4px'
                                 }}
                               />
@@ -316,7 +317,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                                   maxWidth: '150px',
                                   maxHeight: '150px',
                                   objectFit: 'contain',
-                                  border: '1px solid #ddd',
+                                  border: `1px solid ${NEUTRAL.border}`,
                                   borderRadius: '4px'
                                 }}
                               />

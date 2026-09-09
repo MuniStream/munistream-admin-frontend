@@ -50,8 +50,12 @@ import {
 import workflowService from '@/services/workflowService';
 import type { StepBottleneck } from '@/types/workflow';
 import PageContainer from '@/components/ui/PageContainer';
+import StatCard from '@/components/ui/StatCard';
+import { CHART_PALETTE } from '@/theme/tokens';
 
-const CHART_COLORS = ['#1976d2', '#2e7d32', '#ed6c02', '#9c27b0', '#d32f2f', '#0288d1', '#7b1fa2', '#f57c00'];
+// Antes era una copia a mano de la paleta de Material, que arrancaba en azul y
+// no guardaba relación con la del panel.
+const CHART_COLORS = CHART_PALETTE;
 
 const SEVERITY_COLOR: Record<string, 'default' | 'info' | 'warning' | 'error'> = {
   none: 'default',
@@ -66,14 +70,6 @@ function formatDuration(seconds: number | null | undefined): string {
   if (seconds < 3600) return `${(seconds / 60).toFixed(1)} min`;
   if (seconds < 86400) return `${(seconds / 3600).toFixed(1)} h`;
   return `${(seconds / 86400).toFixed(1)} d`;
-}
-
-interface KpiCardProps {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-  subtitle?: string;
 }
 
 function KpiCard({ title, value, icon, color, subtitle }: KpiCardProps) {
@@ -183,39 +179,38 @@ function AnalyticsPage() {
       {/* KPIs */}
       <Grid container spacing={3} mb={1}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <KpiCard
-            title={t('analytics.totalInstances')}
+          <StatCard
+            label={t('analytics.totalInstances')}
             value={kpis.total_instances}
             icon={<AssessmentIcon fontSize="large" />}
-            color="primary.main"
-            subtitle={t('analytics.activeNow', { count: kpis.active_instances })}
+            sublabel={t('analytics.activeNow', { count: kpis.active_instances })}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <KpiCard
-            title={t('analytics.completionRate')}
+          <StatCard
+            label={t('analytics.completionRate')}
             value={`${kpis.completion_rate.toFixed(1)}%`}
             icon={<CheckCircleIcon fontSize="large" />}
-            color="success.main"
-            subtitle={t('analytics.completedInstances', { count: kpis.completed_instances })}
+            tone="success"
+            sublabel={t('analytics.completedInstances', { count: kpis.completed_instances })}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <KpiCard
-            title={t('analytics.avgDuration')}
+          <StatCard
+            label={t('analytics.avgDuration')}
             value={formatDuration(kpis.avg_duration_seconds)}
             icon={<SpeedIcon fontSize="large" />}
-            color="info.main"
-            subtitle={t('analytics.medianDuration', { value: formatDuration(kpis.median_duration_seconds) })}
+            tone="info"
+            sublabel={t('analytics.medianDuration', { value: formatDuration(kpis.median_duration_seconds) })}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <KpiCard
-            title={t('analytics.overallEfficiency')}
+          <StatCard
+            label={t('analytics.overallEfficiency')}
             value={`${kpis.overall_efficiency.toFixed(1)}%`}
             icon={<PlayIcon fontSize="large" />}
             color={kpis.failed_instances > 0 ? 'warning.main' : 'success.main'}
-            subtitle={t('analytics.failedInstances', { count: kpis.failed_instances })}
+            sublabel={t('analytics.failedInstances', { count: kpis.failed_instances })}
           />
         </Grid>
       </Grid>
@@ -248,7 +243,7 @@ function AnalyticsPage() {
                       return null;
                     }}
                   />
-                  <Bar dataKey="seconds" fill="#ed6c02" />
+                  <Bar dataKey="seconds" fill={CHART_PALETTE[4]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -366,7 +361,7 @@ function AnalyticsPage() {
                     type="monotone"
                     dataKey="started"
                     name={t('analytics.started')}
-                    stroke="#1976d2"
+                    stroke={CHART_PALETTE[1]}
                     strokeWidth={2}
                     dot={false}
                   />
@@ -374,7 +369,7 @@ function AnalyticsPage() {
                     type="monotone"
                     dataKey="completed"
                     name={t('analytics.completed')}
-                    stroke="#2e7d32"
+                    stroke={CHART_PALETTE[3]}
                     strokeWidth={2}
                     dot={false}
                   />

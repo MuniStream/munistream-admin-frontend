@@ -350,7 +350,7 @@ export const AdminCatalogSelector: React.FC<AdminCatalogSelectorProps> = ({
             )}
 
             <Tooltip title="Actualizar datos">
-              <IconButton onClick={fetchData} disabled={loading}>
+              <IconButton onClick={fetchData} disabled={loading} aria-label={t('a11y.refresh')}>
                 <RefreshIcon />
               </IconButton>
             </Tooltip>

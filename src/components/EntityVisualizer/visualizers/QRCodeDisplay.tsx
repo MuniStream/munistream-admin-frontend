@@ -4,6 +4,7 @@ import { Box, Typography, Paper, IconButton, CircularProgress } from '@mui/mater
 import { GetApp, ContentCopy } from '@mui/icons-material';
 import { QRCodeSVG } from 'qrcode.react';
 import type { DetectedField } from '../../../utils/entityFieldDetector';
+import { NEUTRAL } from '@/theme/tokens';
 
 interface QRCodeDisplayProps {
   entity: any;
@@ -110,7 +111,7 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
           level="M"
           includeMargin={true}
           style={{
-            border: '1px solid #ddd',
+            border: `1px solid ${NEUTRAL.border}`,
             borderRadius: '4px'
           }}
         />
