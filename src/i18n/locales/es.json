@@ -492,5 +492,17 @@
   "tramites.start": "Iniciar",
   "tramites.perPage": "Por página",
   "inbox.empty": "No tienes trámites asignados.",
-  "dash.seeAll": "Ver los {{total}}"
+  "dash.seeAll": "Ver los {{total}}",
+  "empty.title": "Todavía no hay nada aquí",
+  "empty.filteredTitle": "Sin resultados",
+  "empty.filteredHelp": "Ningún elemento coincide con los filtros aplicados.",
+  "empty.clearFilters": "Limpiar los filtros",
+  "tramites.colAssignee": "Asignado a",
+  "tramites.unassigned": "Sin asignar",
+  "tramites.assignTitle": "Asignar trámites",
+  "tramites.assignTo": "Asignar al equipo",
+  "tramites.assignConfirm": "Asignar",
+  "tramites.assignDone": "Asignados {{count}} trámites",
+  "tramites.assignError": "No se pudieron asignar todos los trámites.",
+  "tramites.currentLoad": "{{count}} en curso"
 }

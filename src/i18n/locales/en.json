@@ -492,5 +492,17 @@
   "tramites.start": "Start",
   "tramites.perPage": "Per page",
   "inbox.empty": "You have no assigned instances.",
-  "dash.seeAll": "See all {{total}}"
+  "dash.seeAll": "See all {{total}}",
+  "empty.title": "Nothing here yet",
+  "empty.filteredTitle": "No results",
+  "empty.filteredHelp": "No items match the current filters.",
+  "empty.clearFilters": "Clear filters",
+  "tramites.colAssignee": "Assigned to",
+  "tramites.unassigned": "Unassigned",
+  "tramites.assignTitle": "Assign instances",
+  "tramites.assignTo": "Assign to team",
+  "tramites.assignConfirm": "Assign",
+  "tramites.assignDone": "{{count}} instances assigned",
+  "tramites.assignError": "Some instances could not be assigned.",
+  "tramites.currentLoad": "{{count}} in progress"
 }
