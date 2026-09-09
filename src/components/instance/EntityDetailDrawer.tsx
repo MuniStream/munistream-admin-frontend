@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import {
-  Alert, Box, Chip, CircularProgress, Divider, Drawer, IconButton, Typography,
+  Alert, Box, Chip, CircularProgress, Dialog, DialogContent, DialogTitle,
+  Divider, Drawer, IconButton, Tab, Tabs, Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { useTranslation } from 'react-i18next';
 import { useCitizenEntity } from '@/hooks/useInstanceDetail';
+import EntityDocumentView from './EntityDocumentView';
 import { isBlobDescriptor, isRedacted, isTruncated } from '@/types/instanceDetail';
 import type { WalletEntity } from '@/types/instanceDetail';
 
@@ -61,6 +64,8 @@ function ValorCampo({ value }: { value: unknown }) {
  */
 export default function EntityDetailDrawer({ instanceId, entityId, summary, onClose }: Props) {
   const { t } = useTranslation();
+  const [tab, setTab] = useState<'document' | 'data'>('document');
+  const [ampliado, setAmpliado] = useState(false);
   const { data, isLoading, error } = useCitizenEntity(instanceId, entityId);
 
   const titulo = data?.name || summary?.name || t('instDetail.entityDrawerTitle');
@@ -74,7 +79,7 @@ export default function EntityDetailDrawer({ instanceId, entityId, summary, onCl
       onClose={onClose}
       slotProps={{ backdrop: { invisible: true } }}
       ModalProps={{ disableScrollLock: true, keepMounted: false }}
-      PaperProps={{ sx: { width: 'clamp(320px, 38vw, 640px)' } }}
+      PaperProps={{ sx: { width: 'clamp(340px, 44vw, 760px)' } }}
     >
       <Box sx={{ p: 2, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -91,34 +96,75 @@ export default function EntityDetailDrawer({ instanceId, entityId, summary, onCl
         </IconButton>
       </Box>
 
+      {/* El documento va primero: para revisar se mira la credencial o el
+          acuse, y los campos sueltos son el respaldo. */}
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ px: 1, minHeight: 40 }}>
+        <Tab value="document" label={t('instDetail.entityTabDocument')} sx={{ minHeight: 40 }} />
+        <Tab value="data" label={t('instDetail.entityTabData')} sx={{ minHeight: 40 }} />
+      </Tabs>
+
       <Divider />
 
       <Box sx={{ p: 2, overflowY: 'auto' }}>
-        {isLoading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress size={28} />
-          </Box>
+        {tab === 'document' && instanceId && entityId && (
+          <EntityDocumentView
+            instanceId={instanceId}
+            entityId={entityId}
+            entityName={titulo}
+            onExpand={() => setAmpliado(true)}
+          />
         )}
 
-        {error && <Alert severity="error">{t('instDetail.loadError')}</Alert>}
-
-        {data && (
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 35%) minmax(0, 1fr)', gap: 1 }}>
-            {Object.entries(data.data).map(([campo, valor]) => (
-              <Box key={campo} sx={{ display: 'contents' }}>
-                <Typography variant="caption" color="text.secondary" sx={{ pt: 0.25 }}>
-                  {campo}
-                </Typography>
-                <ValorCampo value={valor} />
+        {tab === 'data' && (
+          <>
+            {isLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress size={28} />
               </Box>
-            ))}
-          </Box>
-        )}
+            )}
 
-        {data && Object.keys(data.data).length === 0 && (
-          <Typography variant="body2" color="text.secondary">{t('instDetail.contextEmpty')}</Typography>
+            {error && <Alert severity="error">{t('instDetail.loadError')}</Alert>}
+
+            {data && Object.keys(data.data).length > 0 && (
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(120px, 35%) minmax(0, 1fr)', gap: 1 }}>
+                {Object.entries(data.data).map(([campo, valor]) => (
+                  <Box key={campo} sx={{ display: 'contents' }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ pt: 0.25 }}>
+                      {campo}
+                    </Typography>
+                    <ValorCampo value={valor} />
+                  </Box>
+                ))}
+              </Box>
+            )}
+
+            {data && Object.keys(data.data).length === 0 && (
+              <Typography variant="body2" color="text.secondary">{t('instDetail.contextEmpty')}</Typography>
+            )}
+          </>
         )}
       </Box>
+
+      {/* El panel es estrecho a propósito, para no tapar el trámite. Cuando el
+          documento hay que leerlo de verdad, se amplía. */}
+      <Dialog open={ampliado} onClose={() => setAmpliado(false)} maxWidth="lg" fullWidth>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="subtitle1" noWrap sx={{ flex: 1 }}>{titulo}</Typography>
+          <IconButton onClick={() => setAmpliado(false)} aria-label={t('instDetail.close')}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {instanceId && entityId && (
+            <EntityDocumentView
+              instanceId={instanceId}
+              entityId={entityId}
+              entityName={titulo}
+              height="75vh"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Drawer>
   );
 }

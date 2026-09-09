@@ -456,5 +456,12 @@
   "instDetail.catalogDesc": "Select the required catalog items to continue.",
   "instDetail.assertionTitle": "Data verification",
   "instDetail.assertionDesc": "Review and confirm the verification results.",
-  "instDetail.headerLabel": "Dossier header"
+  "instDetail.headerLabel": "Dossier header",
+  "instDetail.entityTabDocument": "Document",
+  "instDetail.entityTabData": "Data",
+  "instDetail.entityNoDocument": "This entity has no configured document. Its fields are in the Data tab.",
+  "instDetail.entityDocumentTitle": "Document for {{name}}",
+  "instDetail.entityDocumentExpand": "Expand",
+  "instDetail.print": "Print",
+  "instDetail.downloadPdf": "Download PDF"
 }

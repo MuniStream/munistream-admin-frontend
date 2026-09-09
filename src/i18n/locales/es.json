@@ -456,5 +456,12 @@
   "instDetail.catalogDesc": "Seleccione los elementos necesarios del catálogo para continuar.",
   "instDetail.assertionTitle": "Verificación de datos",
   "instDetail.assertionDesc": "Revise y confirme los resultados de verificación.",
-  "instDetail.headerLabel": "Encabezado del expediente"
+  "instDetail.headerLabel": "Encabezado del expediente",
+  "instDetail.entityTabDocument": "Documento",
+  "instDetail.entityTabData": "Datos",
+  "instDetail.entityNoDocument": "Esta entidad no tiene un documento configurado. Sus datos están en la pestaña Datos.",
+  "instDetail.entityDocumentTitle": "Documento de {{name}}",
+  "instDetail.entityDocumentExpand": "Ampliar",
+  "instDetail.print": "Imprimir",
+  "instDetail.downloadPdf": "Descargar PDF"
 }

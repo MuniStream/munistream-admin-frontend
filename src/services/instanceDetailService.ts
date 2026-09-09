@@ -37,6 +37,32 @@ export const instanceDetailService = {
   },
 
   /**
+   * Documento renderizado de una entidad: la misma representación que ve el
+   * ciudadano (acuse, credencial, certificado), con el visualizador que la
+   * propia entidad declara.
+   *
+   * Se devuelve como texto para pintarlo con `srcDoc` en un iframe, en vez de
+   * apuntar el iframe al endpoint: así la petición lleva el token de sesión,
+   * que un `src` no puede llevar.
+   */
+  async getEntityDocumentHtml(instanceId: string, entityId: string): Promise<string> {
+    const { data } = await api.get(
+      `/instances/${instanceId}/entities/${entityId}/document`,
+      { params: { format: 'html' }, responseType: 'text' },
+    );
+    return data;
+  },
+
+  /** El mismo documento en PDF, para descargar. */
+  async fetchEntityDocumentPdf(instanceId: string, entityId: string): Promise<Blob> {
+    const { data } = await api.get(
+      `/instances/${instanceId}/entities/${entityId}/document`,
+      { params: { format: 'pdf' }, responseType: 'blob' },
+    );
+    return data;
+  },
+
+  /**
    * Descarga un adjunto como Blob.
    *
    * Va por axios y no por un `<a href>` porque el endpoint exige el token de
