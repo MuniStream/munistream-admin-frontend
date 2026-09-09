@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
-import { Box } from '@mui/material';
+import { Box, Card } from '@mui/material';
 import { usePageChrome } from '@/layouts/PageChromeContext';
 import { CHROME } from '@/theme/tokens';
 
@@ -13,6 +13,11 @@ interface Props {
   fullWidth?: boolean;
   /** Para pantallas que gestionan su propio encabezado pegajoso. */
   disableGutters?: boolean;
+  /**
+   * El contenido va dentro de una tarjeta, que es lo que da a cada pantalla su
+   * marco y la separa del fondo. Se desactiva en las que ya traen el suyo.
+   */
+  surface?: boolean;
   children: ReactNode;
 }
 
@@ -34,6 +39,7 @@ export default function PageContainer({
   actions,
   fullWidth = false,
   disableGutters = false,
+  surface = true,
   children,
 }: Props) {
   const { setChrome } = usePageChrome();
@@ -52,7 +58,13 @@ export default function PageContainer({
         width: '100%',
       }}
     >
-      {children}
+      {/* La tabla ancha se desplaza dentro del marco; sin esto empuja la
+          página entera y recorta la última columna. */}
+      {surface && !disableGutters ? (
+        <Card sx={{ overflowX: 'auto' }}>{children}</Card>
+      ) : (
+        children
+      )}
     </Box>
   );
 }

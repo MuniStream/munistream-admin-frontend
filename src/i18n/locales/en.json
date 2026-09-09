@@ -480,5 +480,17 @@
   "nav.brand": "MuniStream",
   "nav.sections": "Sections",
   "nav.openMenu": "Open menu",
-  "nav.account": "Account"
+  "nav.account": "Account",
+  "nav.tramites": "Instances",
+  "nav.myInbox": "My inbox",
+  "tramites.selectAll": "Select all",
+  "tramites.selectedCount": "{{count}} selected",
+  "tramites.assignSelected": "Assign {{count}}",
+  "tramites.searchPlaceholder": "Search by identifier",
+  "tramites.empty": "No matching instances.",
+  "tramites.open": "Open dossier",
+  "tramites.start": "Start",
+  "tramites.perPage": "Per page",
+  "inbox.empty": "You have no assigned instances.",
+  "dash.seeAll": "See all {{total}}"
 }

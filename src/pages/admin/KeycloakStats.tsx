@@ -30,6 +30,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext'
 import keycloakService from '../../services/keycloak'
 import PageContainer from '@/components/ui/PageContainer';
+import { useTranslation } from 'react-i18next';
 
 interface KeycloakStats {
   users: {
@@ -57,6 +58,7 @@ interface KeycloakStats {
 }
 
 const KeycloakStats: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth()
   const [stats, setStats] = useState<KeycloakStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -133,7 +135,7 @@ const KeycloakStats: React.FC = () => {
   }
 
   return (
-    <PageContainer title={t('nav.keycloakStats')} fullWidth>
+    <PageContainer title={t('nav.keycloakStats')} fullWidth surface={false}>
       <Paper sx={{ p: 3, width: '100%', minWidth: 0 }}>
         {/* Header */}
         <Box display="flex" alignItems="center" gap={2} mb={3}>

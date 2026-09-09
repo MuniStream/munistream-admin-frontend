@@ -28,8 +28,10 @@ import profileFieldsService, {
   type CreateProfileFieldPayload,
   type ProfileField,
 } from '../services/profileFieldsService';
+import { useTranslation } from 'react-i18next';
 
 export default function ProfileFieldsPage() {
+  const { t } = useTranslation();
   const [fields, setFields] = useState<ProfileField[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
