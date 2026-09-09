@@ -116,7 +116,7 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
     } else {
       // View only (keeping this for now)
       console.log('👁️ Viewing workflow instance:', instance.instance_id);
-      navigate(`/admin-workflow/${instance.instance_id}`);
+      navigate(`/instances/${instance.instance_id}`);
     }
   };
 

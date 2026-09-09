@@ -92,7 +92,7 @@ function WorkflowsDashboard() {
       setSudoDialogOpen(false);
       setSudoUserId('');
       setSudoError(null);
-      navigate(`/admin-workflow/${data.instance_id}`);
+      navigate(`/instances/${data.instance_id}`);
     },
     onError: (error: Error) => {
       setSudoError(error.message);

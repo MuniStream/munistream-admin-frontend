@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import DashboardEnhanced from '@/pages/DashboardEnhanced';
 import WorkflowsDashboard from '@/pages/WorkflowsDashboard';
@@ -6,9 +6,7 @@ import WorkflowDetail from '@/pages/WorkflowDetail';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import InstanceTracking from '@/pages/InstanceTracking';
 import InstanceDetail from '@/pages/InstanceDetail';
-import CitizenValidation from '@/pages/CitizenValidation';
 import InstanceAssignmentPage from '@/pages/InstanceAssignmentPage';
-import { AdminWorkflowExecution } from '@/pages/AdminWorkflowExecution';
 import KeycloakStats from '@/pages/admin/KeycloakStats';
 import CatalogsPage from '@/pages/CatalogsPage';
 import ProfileFieldsPage from '@/pages/ProfileFieldsPage';
@@ -17,6 +15,12 @@ import NotificationTemplates from '@/pages/admin/NotificationTemplates';
 import NotificationDeliveries from '@/pages/admin/NotificationDeliveries';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
+
+/** Redirige la ruta antigua del expediente a la nueva, conservando el id. */
+function RedirectToInstance() {
+  const { instanceId } = useParams();
+  return <Navigate to={`/instances/${instanceId}`} replace />;
+}
 
 function AppRoutes() {
   return (
@@ -98,22 +102,11 @@ function AppRoutes() {
           }
         />
 
+        {/* Ruta anterior del expediente. Se conserva como redirección porque
+            hay marcadores guardados y el arnés E2E la tiene cableada. */}
         <Route
           path="admin-workflow/:instanceId"
-          element={
-            <ProtectedRoute requiredPermission="view_instances">
-              <AdminWorkflowExecution />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="citizen-validation"
-          element={
-            <ProtectedRoute requiredPermission="manage_instances">
-              <CitizenValidation />
-            </ProtectedRoute>
-          }
+          element={<RedirectToInstance />}
         />
 
         <Route

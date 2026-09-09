@@ -20,18 +20,15 @@
   "status": "Status",
   "refresh": "Refresh",
   "all": "All",
-
   "dashboard": "Dashboard",
   "workflows": "Workflows",
   "instances": "Instances",
   "citizenTracking": "Citizen Tracking",
-  "citizenValidation": "Citizen Validation",
   "adminInbox": "Admin Inbox",
   "documents": "Documents",
   "analytics": "Analytics",
   "categories": "Categories",
   "instanceAssignments": "Instance Assignments",
-
   "searchInstanceId": "Search by Instance ID",
   "instanceIdPlaceholder": "bc616c73 or complete ID",
   "workflow": "Workflow",
@@ -48,7 +45,6 @@
   "page": "Page",
   "of": "of",
   "total": "total",
-
   "statusPending": "Pending",
   "statusRunning": "Running",
   "statusAwaitingInput": "Awaiting Input",
@@ -57,7 +53,6 @@
   "statusFailed": "Failed",
   "statusCancelled": "Cancelled",
   "statusPaused": "Paused",
-
   "filterByWorkflow": "Filter by Workflow",
   "filterByUser": "User / Citizen",
   "filterByStatus": "Filter by Status",
@@ -65,11 +60,9 @@
   "createdTo": "Created To",
   "dateFilters": "Date Filters",
   "filterTip": "Tip: use specific filters for faster searches",
-
   "noRequestsFound": "No requests found with applied filters",
   "noRequestsAvailable": "No requests available",
   "loadingRequests": "Loading requests...",
-
   "categoryManagement": "Category Management",
   "createCategory": "Create Category",
   "editCategory": "Edit Category",
@@ -78,7 +71,6 @@
   "categoryColor": "Color",
   "categoryIcon": "Icon",
   "assignedWorkflows": "Assigned Workflows",
-
   "instance_assignments": "Instance Assignments",
   "my_assignments": "My Assignments",
   "team_assignments": "Team Assignments",
@@ -108,14 +100,12 @@
   "citizen": "Citizen",
   "team": "Team",
   "members": "members",
-
   "userIdPlaceholder": "User ID",
   "requiresCitizenInfo": "Requires Citizen Info",
   "critical": "Critical",
   "override": "Override",
   "validationComments": "Validation Comments",
   "privateKeyPassword": "Private key password",
-
   "team_administration": "Team Administration",
   "create_team": "Create Team",
   "edit_team": "Edit Team",
@@ -139,7 +129,6 @@
   "approver": "Approver",
   "active": "Active",
   "inactive": "Inactive",
-
   "user_administration": "User Administration",
   "search_users": "Search users",
   "all_roles": "All Roles",
@@ -153,7 +142,6 @@
   "username": "Username",
   "teams": "Teams",
   "last_login": "Last Login",
-
   "nav.appTitle": "MuniStream Admin Dashboard",
   "nav.profile": "Profile",
   "nav.settings": "Settings",
@@ -165,12 +153,10 @@
   "nav.configuration": "Configuration",
   "nav.templates": "Templates",
   "nav.deliveries": "Deliveries",
-
   "login.securedByKeycloak": "Secure authentication powered by Keycloak",
   "login.signInWithKeycloak": "Sign In with Keycloak",
   "login.redirectNotice": "You will be redirected to the secure authentication portal",
   "login.footer": "MuniStream v2.0 · Administrative Portal",
-
   "dash.title": "System Dashboard",
   "dash.errorLoading": "Error loading dashboard data: {{message}}",
   "dash.retry": "Retry",
@@ -190,27 +176,6 @@
   "dash.weeklyActivity": "Weekly Activity",
   "dash.instancesCreated": "Instances Created",
   "dash.noActivityData": "No activity data available",
-
-  "cval.title": "Citizen Validation",
-  "cval.subtitle": "Review and validate data submitted by citizens",
-  "cval.awaitingValidation": "Awaiting validation",
-  "cval.totalPending": "Total pending",
-  "cval.pendingValidations": "Pending validations ({{count}})",
-  "cval.instanceDetails": "Instance Details",
-  "cval.citizenId": "Citizen ID",
-  "cval.currentStep": "Current Step",
-  "cval.submitted": "Submitted",
-  "cval.approve": "Approve",
-  "cval.reject": "Reject",
-  "cval.noSubmissions": "No submissions",
-  "cval.instanceOverview": "Instance Overview",
-  "cval.citizenSubmittedData": "Citizen-submitted data",
-  "cval.step": "Step {{step}}",
-  "cval.noDataSubmitted": "No data submitted",
-  "cval.notProvided": "Not provided",
-  "cval.failedValidate": "Failed to validate citizen data",
-  "cval.dataValidatedSuccess": "Citizen data validated successfully",
-
   "wfDetail.loadingDetails": "Loading workflow details...",
   "wfDetail.notFound": "Workflow not found",
   "wfDetail.backToWorkflows": "Back to Workflows",
@@ -238,10 +203,8 @@
   "wfDetail.avgWaitTime": "Avg wait time: {{seconds}}s",
   "wfDetail.recommendations": "Recommendations",
   "wfDetail.noBottleneck": "No bottleneck detected",
-
   "wfDiagram.noData": "No diagram data available",
   "wfDiagram.renderError": "Error rendering workflow diagram",
-
   "wfExec.title": "Workflow Execution (Admin)",
   "wfExec.instanceDetails": "Instance Details",
   "wfExec.workflowStatus": "Workflow Status",
@@ -288,7 +251,6 @@
   "wfExec.errSubmitData": "Failed to submit workflow data",
   "wfExec.errSubmitDataGeneric": "Failed to submit data",
   "wfExec.errStart": "Failed to start workflow",
-
   "entViz.structuredData": "Structured Data",
   "entViz.copy": "Copy",
   "entViz.copied": "Copied!",
@@ -329,7 +291,6 @@
   "entViz.analyzingField": "Analyzing...",
   "entViz.analyzeFailed": "Failed to analyze field",
   "entViz.noData": "No data",
-
   "verifyDialog.title": "Document Verification: {{filename}}",
   "verifyDialog.aiAnalysis": "AI Analysis",
   "verifyDialog.aiRecommendations": "AI Recommendations",
@@ -360,11 +321,9 @@
   "verifyDialog.recommendation": "Recommendation: {{value}}",
   "verifyDialog.securityFeatures": "Security Features",
   "verifyDialog.submit": "Submit Verification",
-
   "catalog.filePlaceholder": "https://example.com/data.csv or /path/to/file.xlsx",
   "catalog.errorLoadSchema": "Failed to load catalog schema",
   "catalog.errorLoadData": "Failed to load catalog data",
-
   "dataForm.required": "{{label}} is required",
   "dataForm.formatInvalid": "{{label}} has an invalid format",
   "dataForm.minLength": "{{label}} must be at least {{count}} characters",
@@ -384,17 +343,13 @@
   "dataForm.submitting": "Submitting...",
   "dataForm.submitInfo": "Submit Information",
   "dataForm.unlimited": "unlimited",
-
   "ctxval.unknown": "Unknown",
-
   "sign.missingMaterials": "Missing required signing materials",
-
   "themeEngine.loadFailed": "Template loading failed: {{error}}",
   "themeEngine.unknownError": "Unknown error",
   "themeEngine.noTemplateOrTheme": "Template name or theme not provided",
   "themeEngine.loadFailedShort": "Failed to load template",
   "themeEngine.errorLabel": "Error:",
-
   "misc.accessDenied": "Access denied",
   "misc.adminRequired": "Administrator privileges are required",
   "misc.requiresRole": "Requires role: {{role}}",
@@ -403,7 +358,6 @@
   "misc.debugHasPermission": "Has permission: {{value}}",
   "misc.debugAuthenticated": "Authenticated: {{value}}",
   "misc.debugLoading": "Loading: {{value}}",
-
   "instAssign.pendingReview": "Pending Review",
   "instAssign.underReview": "Under Review",
   "instAssign.approvedByReviewer": "Approved by Reviewer",
@@ -416,7 +370,6 @@
   "instAssign.rawContext": "Raw Context Data",
   "instAssign.notAssigned": "Not assigned",
   "instAssign.noNotes": "No notes",
-
   "dash.noPendingItems": "No pending items!",
   "dash.topWorkflows": "Top Workflows",
   "dash.tooltipInstances": "Instances: {{value}}",
@@ -469,5 +422,39 @@
   "analytics.status.completed": "Completed",
   "analytics.status.failed": "Failed",
   "analytics.status.cancelled": "Cancelled",
-  "analytics.status.abandoned": "Abandoned"
+  "analytics.status.abandoned": "Abandoned",
+  "instDetail.back": "Back",
+  "instDetail.close": "Close",
+  "instDetail.refresh": "Refresh",
+  "instDetail.loadError": "The dossier could not be loaded.",
+  "instDetail.citizenUnknown": "Unidentified citizen",
+  "instDetail.citizenInferred": "Inferred identity",
+  "instDetail.citizenInferredHelp": "The name does not come from the citizen record, but from the instance context or from its parent instance.",
+  "instDetail.wallet": "Entity wallet",
+  "instDetail.walletEmpty": "This citizen has no entities in their wallet.",
+  "instDetail.walletCount": "{{shown}} of {{total}} entities",
+  "instDetail.walletUsedHere": "In this instance",
+  "instDetail.viewEntity": "View entity {{name}}",
+  "instDetail.entityDrawerTitle": "Entity detail",
+  "instDetail.entityVerified": "Verified",
+  "instDetail.tabAction": "Action",
+  "instDetail.tabDossier": "Dossier",
+  "instDetail.tabAttachments": "Attachments",
+  "instDetail.tabTimeline": "Timeline",
+  "instDetail.contextEmpty": "No context data.",
+  "instDetail.contextGeneral": "General data",
+  "instDetail.contextRedacted": "Protected value",
+  "instDetail.contextTruncated": "{{size}} KB of content",
+  "instDetail.attachmentsEmpty": "This instance has no attachments.",
+  "instDetail.attachmentDownload": "Download",
+  "instDetail.attachmentPreview": "Preview",
+  "instDetail.attachmentUnavailable": "No copy available",
+  "instDetail.attachmentNoPreview": "This file type cannot be previewed. Use the download option.",
+  "instDetail.noPendingAction": "This instance is not waiting for any reviewer action.",
+  "instDetail.submitOk": "Submitted successfully.",
+  "instDetail.catalogTitle": "Select from catalog",
+  "instDetail.catalogDesc": "Select the required catalog items to continue.",
+  "instDetail.assertionTitle": "Data verification",
+  "instDetail.assertionDesc": "Review and confirm the verification results.",
+  "instDetail.headerLabel": "Dossier header"
 }

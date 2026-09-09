@@ -551,7 +551,7 @@ export const DigitalSignatureForm: React.FC<DigitalSignatureFormProps> = ({
       console.log('✅ Client-side signing completed');
       console.log('🔐 Digital signature data to send:', digitalSignature);
 
-      // Always use the callback - AdminWorkflowExecution handles the actual submission
+      // Always use the callback - InstanceActionPanel handles the actual submission
       console.log('🔐 Sending signature data via onSubmitSignature callback');
       onSubmitSignature(digitalSignature);
 

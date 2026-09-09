@@ -20,18 +20,15 @@
   "status": "Estado",
   "refresh": "Actualizar",
   "all": "Todos",
-
   "dashboard": "Panel",
   "workflows": "Flujos de trabajo",
   "instances": "Instancias",
   "citizenTracking": "Seguimiento ciudadano",
-  "citizenValidation": "Validación ciudadana",
   "adminInbox": "Bandeja de administración",
   "documents": "Documentos",
   "analytics": "Analíticas",
   "categories": "Categorías",
   "instanceAssignments": "Asignaciones de instancias",
-
   "searchInstanceId": "Buscar por ID de instancia",
   "instanceIdPlaceholder": "bc616c73 o ID completo",
   "workflow": "Flujo de trabajo",
@@ -48,7 +45,6 @@
   "page": "Página",
   "of": "de",
   "total": "total",
-
   "statusPending": "Pendiente",
   "statusRunning": "Ejecutándose",
   "statusAwaitingInput": "Esperando información",
@@ -57,7 +53,6 @@
   "statusFailed": "Fallido",
   "statusCancelled": "Cancelado",
   "statusPaused": "Pausado",
-
   "filterByWorkflow": "Filtrar por flujo",
   "filterByUser": "Usuario / Ciudadano",
   "filterByStatus": "Filtrar por estado",
@@ -65,11 +60,9 @@
   "createdTo": "Creado hasta",
   "dateFilters": "Filtros de fecha",
   "filterTip": "Consejo: utilice filtros específicos para búsquedas más rápidas",
-
   "noRequestsFound": "No se encontraron solicitudes con los filtros aplicados",
   "noRequestsAvailable": "No hay solicitudes disponibles",
   "loadingRequests": "Cargando solicitudes...",
-
   "categoryManagement": "Gestión de categorías",
   "createCategory": "Crear categoría",
   "editCategory": "Editar categoría",
@@ -78,7 +71,6 @@
   "categoryColor": "Color",
   "categoryIcon": "Icono",
   "assignedWorkflows": "Flujos asignados",
-
   "instance_assignments": "Asignaciones de instancias",
   "my_assignments": "Mis asignaciones",
   "team_assignments": "Asignaciones de equipo",
@@ -108,14 +100,12 @@
   "citizen": "Ciudadano",
   "team": "Equipo",
   "members": "miembros",
-
   "userIdPlaceholder": "ID del usuario",
   "requiresCitizenInfo": "Requiere información del ciudadano",
   "critical": "Crítico",
   "override": "Sobrescribir",
   "validationComments": "Comentarios de validación",
   "privateKeyPassword": "Contraseña de la llave privada",
-
   "team_administration": "Administración de equipos",
   "create_team": "Crear equipo",
   "edit_team": "Editar equipo",
@@ -139,7 +129,6 @@
   "approver": "Aprobador",
   "active": "Activo",
   "inactive": "Inactivo",
-
   "user_administration": "Administración de usuarios",
   "search_users": "Buscar usuarios",
   "all_roles": "Todos los roles",
@@ -153,7 +142,6 @@
   "username": "Nombre de usuario",
   "teams": "Equipos",
   "last_login": "Último inicio de sesión",
-
   "nav.appTitle": "Panel de administración MuniStream",
   "nav.profile": "Perfil",
   "nav.settings": "Configuración",
@@ -165,12 +153,10 @@
   "nav.configuration": "Configuración",
   "nav.templates": "Plantillas",
   "nav.deliveries": "Envíos",
-
   "login.securedByKeycloak": "Autenticación segura con Keycloak",
   "login.signInWithKeycloak": "Iniciar sesión con Keycloak",
   "login.redirectNotice": "Será redirigido al portal de autenticación segura",
   "login.footer": "MuniStream v2.0 · Portal administrativo",
-
   "dash.title": "Panel del sistema",
   "dash.errorLoading": "Error al cargar los datos del panel: {{message}}",
   "dash.retry": "Reintentar",
@@ -190,27 +176,6 @@
   "dash.weeklyActivity": "Actividad semanal",
   "dash.instancesCreated": "Instancias creadas",
   "dash.noActivityData": "No hay datos de actividad disponibles",
-
-  "cval.title": "Validación ciudadana",
-  "cval.subtitle": "Revise y valide la información enviada por los ciudadanos",
-  "cval.awaitingValidation": "Esperando validación",
-  "cval.totalPending": "Total pendientes",
-  "cval.pendingValidations": "Validaciones pendientes ({{count}})",
-  "cval.instanceDetails": "Detalles de la instancia",
-  "cval.citizenId": "ID del ciudadano",
-  "cval.currentStep": "Paso actual",
-  "cval.submitted": "Enviado",
-  "cval.approve": "Aprobar",
-  "cval.reject": "Rechazar",
-  "cval.noSubmissions": "No hay envíos",
-  "cval.instanceOverview": "Resumen de la instancia",
-  "cval.citizenSubmittedData": "Datos enviados por el ciudadano",
-  "cval.step": "Paso {{step}}",
-  "cval.noDataSubmitted": "No se enviaron datos",
-  "cval.notProvided": "No proporcionado",
-  "cval.failedValidate": "No se pudieron validar los datos del ciudadano",
-  "cval.dataValidatedSuccess": "Datos del ciudadano validados correctamente",
-
   "wfDetail.loadingDetails": "Cargando detalles del flujo...",
   "wfDetail.notFound": "Flujo de trabajo no encontrado",
   "wfDetail.backToWorkflows": "Volver a flujos de trabajo",
@@ -238,10 +203,8 @@
   "wfDetail.avgWaitTime": "Tiempo prom. de espera: {{seconds}} s",
   "wfDetail.recommendations": "Recomendaciones",
   "wfDetail.noBottleneck": "No se detectaron cuellos de botella",
-
   "wfDiagram.noData": "No hay datos del diagrama disponibles",
   "wfDiagram.renderError": "Error al renderizar el diagrama del flujo",
-
   "wfExec.title": "Ejecución de flujo (administrador)",
   "wfExec.instanceDetails": "Detalles de la instancia",
   "wfExec.workflowStatus": "Estado del flujo",
@@ -288,7 +251,6 @@
   "wfExec.errSubmitData": "No se pudieron enviar los datos del flujo",
   "wfExec.errSubmitDataGeneric": "No se pudieron enviar los datos",
   "wfExec.errStart": "No se pudo iniciar el flujo",
-
   "entViz.structuredData": "Datos estructurados",
   "entViz.copy": "Copiar",
   "entViz.copied": "¡Copiado!",
@@ -329,7 +291,6 @@
   "entViz.analyzingField": "Analizando...",
   "entViz.analyzeFailed": "No se pudo analizar el campo",
   "entViz.noData": "Sin datos",
-
   "verifyDialog.title": "Verificación del documento: {{filename}}",
   "verifyDialog.aiAnalysis": "Análisis con IA",
   "verifyDialog.aiRecommendations": "Recomendaciones de la IA",
@@ -360,11 +321,9 @@
   "verifyDialog.recommendation": "Recomendación: {{value}}",
   "verifyDialog.securityFeatures": "Elementos de seguridad",
   "verifyDialog.submit": "Enviar verificación",
-
   "catalog.filePlaceholder": "https://ejemplo.com/datos.csv o /ruta/archivo.xlsx",
   "catalog.errorLoadSchema": "No se pudo cargar el esquema del catálogo",
   "catalog.errorLoadData": "No se pudieron cargar los datos del catálogo",
-
   "dataForm.required": "{{label}} es obligatorio",
   "dataForm.formatInvalid": "El formato de {{label}} no es válido",
   "dataForm.minLength": "{{label}} debe tener al menos {{count}} caracteres",
@@ -384,17 +343,13 @@
   "dataForm.submitting": "Enviando...",
   "dataForm.submitInfo": "Enviar información",
   "dataForm.unlimited": "sin límite",
-
   "ctxval.unknown": "Desconocido",
-
   "sign.missingMaterials": "Faltan materiales de firma requeridos",
-
   "themeEngine.loadFailed": "Error al cargar la plantilla: {{error}}",
   "themeEngine.unknownError": "Error desconocido",
   "themeEngine.noTemplateOrTheme": "No se proporcionó el nombre de la plantilla o el tema",
   "themeEngine.loadFailedShort": "No se pudo cargar la plantilla",
   "themeEngine.errorLabel": "Error:",
-
   "misc.accessDenied": "Acceso denegado",
   "misc.adminRequired": "Se requieren privilegios de administrador",
   "misc.requiresRole": "Requiere el rol: {{role}}",
@@ -403,7 +358,6 @@
   "misc.debugHasPermission": "Tiene permiso: {{value}}",
   "misc.debugAuthenticated": "Autenticado: {{value}}",
   "misc.debugLoading": "Cargando: {{value}}",
-
   "instAssign.pendingReview": "Pendiente de revisión",
   "instAssign.underReview": "En revisión",
   "instAssign.approvedByReviewer": "Aprobado por revisor",
@@ -416,7 +370,6 @@
   "instAssign.rawContext": "Datos de contexto sin procesar",
   "instAssign.notAssigned": "Sin asignar",
   "instAssign.noNotes": "Sin notas",
-
   "dash.noPendingItems": "¡No hay elementos pendientes!",
   "dash.topWorkflows": "Flujos principales",
   "dash.tooltipInstances": "Instancias: {{value}}",
@@ -469,5 +422,39 @@
   "analytics.status.completed": "Completado",
   "analytics.status.failed": "Fallido",
   "analytics.status.cancelled": "Cancelado",
-  "analytics.status.abandoned": "Abandonado"
+  "analytics.status.abandoned": "Abandonado",
+  "instDetail.back": "Volver",
+  "instDetail.close": "Cerrar",
+  "instDetail.refresh": "Actualizar",
+  "instDetail.loadError": "No se pudo cargar el expediente.",
+  "instDetail.citizenUnknown": "Ciudadano sin identificar",
+  "instDetail.citizenInferred": "Identidad inferida",
+  "instDetail.citizenInferredHelp": "El nombre no proviene del registro del ciudadano, sino del contexto del trámite o del trámite del que depende.",
+  "instDetail.wallet": "Cartera de entidades",
+  "instDetail.walletEmpty": "Este ciudadano no tiene entidades en su cartera.",
+  "instDetail.walletCount": "{{shown}} de {{total}} entidades",
+  "instDetail.walletUsedHere": "En este trámite",
+  "instDetail.viewEntity": "Ver la entidad {{name}}",
+  "instDetail.entityDrawerTitle": "Detalle de la entidad",
+  "instDetail.entityVerified": "Verificada",
+  "instDetail.tabAction": "Acción",
+  "instDetail.tabDossier": "Expediente",
+  "instDetail.tabAttachments": "Adjuntos",
+  "instDetail.tabTimeline": "Bitácora",
+  "instDetail.contextEmpty": "Sin datos de contexto.",
+  "instDetail.contextGeneral": "Datos generales",
+  "instDetail.contextRedacted": "Dato protegido",
+  "instDetail.contextTruncated": "Contenido de {{size}} KB",
+  "instDetail.attachmentsEmpty": "Este trámite no tiene archivos adjuntos.",
+  "instDetail.attachmentDownload": "Descargar",
+  "instDetail.attachmentPreview": "Previsualizar",
+  "instDetail.attachmentUnavailable": "Sin copia disponible",
+  "instDetail.attachmentNoPreview": "Este tipo de archivo no se puede previsualizar. Use la descarga.",
+  "instDetail.noPendingAction": "Este trámite no espera ninguna acción del revisor.",
+  "instDetail.submitOk": "Enviado correctamente.",
+  "instDetail.catalogTitle": "Seleccione del catálogo",
+  "instDetail.catalogDesc": "Seleccione los elementos necesarios del catálogo para continuar.",
+  "instDetail.assertionTitle": "Verificación de datos",
+  "instDetail.assertionDesc": "Revise y confirme los resultados de verificación.",
+  "instDetail.headerLabel": "Encabezado del expediente"
 }
