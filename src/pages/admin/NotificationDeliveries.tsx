@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
+import PageContainer from '@/components/ui/PageContainer';
 import {
   notificationsService,
   type DeliveryStatus,
@@ -51,10 +52,7 @@ export default function NotificationDeliveries() {
   });
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Envíos de notificaciones
-      </Typography>
+    <PageContainer title="Envíos de notificaciones">
 
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <TextField
@@ -141,6 +139,6 @@ export default function NotificationDeliveries() {
           </Table>
         </TableContainer>
       )}
-    </Box>
+    </PageContainer>
   );
 }

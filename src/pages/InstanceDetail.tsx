@@ -12,6 +12,7 @@ import InstanceContextPanel from '@/components/instance/InstanceContextPanel';
 import InstanceAttachmentsPanel from '@/components/instance/InstanceAttachmentsPanel';
 import InstanceTimeline from '@/components/instance/InstanceTimeline';
 import EntityDetailDrawer from '@/components/instance/EntityDetailDrawer';
+import PageContainer from '@/components/ui/PageContainer';
 
 /**
  * Expediente del trámite.
@@ -122,7 +123,12 @@ export default function InstanceDetail() {
   const resumenEntidad = entidades.find((e) => e.entity_id === entidadAbierta);
 
   return (
-    <Box>
+    <PageContainer
+      title={detail.data.instance.workflow_name}
+      subtitle={detail.data.citizen.full_name ?? undefined}
+      disableGutters
+      fullWidth
+    >
       <InstanceStickyHeader
         instance={detail.data.instance}
         progress={track.data}
@@ -174,6 +180,6 @@ export default function InstanceDetail() {
         summary={resumenEntidad}
         onClose={cerrarEntidad}
       />
-    </Box>
+    </PageContainer>
   );
 }

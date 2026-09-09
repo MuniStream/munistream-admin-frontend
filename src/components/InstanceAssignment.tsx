@@ -51,6 +51,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import AssignmentService from '../services/assignmentService';
+import PageContainer from '@/components/ui/PageContainer';
 
 // Types
 interface WorkflowInstance {
@@ -401,7 +402,7 @@ const InstanceAssignment: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: 3 }}>
+        <PageContainer title={t('instanceAssignments')}>
             <Typography variant="h4" sx={{ mb: 3 }}>
                 {t('instance_assignments')}
             </Typography>
@@ -858,7 +859,7 @@ const InstanceAssignment: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+        </PageContainer>
     );
 };
 

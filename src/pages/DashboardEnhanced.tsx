@@ -37,6 +37,7 @@ import {
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import PageContainer from '@/components/ui/PageContainer';
 import InboxSection from '@/components/dashboard/InboxSection';
 import {
   LineChart,
@@ -160,17 +161,16 @@ function DashboardEnhanced() {
   }));
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
-          {t('dash.title')}
-        </Typography>
-        {dashboardData && (
-          <Typography variant="body2" color="text.secondary">
+    <PageContainer
+      title={t('dash.title')}
+      actions={
+        dashboardData ? (
+          <Typography variant="caption" color="text.secondary" noWrap>
             {t('dash.lastUpdated', { time: new Date(dashboardData.last_updated).toLocaleTimeString() })}
           </Typography>
-        )}
-      </Box>
+        ) : undefined
+      }
+    >
 
       {/* Inbox Section - Most prominent part */}
       <InboxSection />
@@ -475,7 +475,7 @@ function DashboardEnhanced() {
           </Paper>
         </Grid>
       </Grid>
-    </Box>
+    </PageContainer>
   );
 }
 

@@ -21,6 +21,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import QrCode2 from '@mui/icons-material/QrCode2';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import PageContainer from '@/components/ui/PageContainer';
 import {
   notificationsService,
   type BaileysStatus,
@@ -432,10 +433,7 @@ function useQueryHydration<T>(data: T | null | undefined, fn: (data: T) => void)
 export default function NotificationIntegrations() {
   const [tab, setTab] = useState<NotificationChannel>('email');
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Notificaciones
-      </Typography>
+    <PageContainer title="Notificaciones">
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Configura los canales por los que los ciudadanos reciben avances de sus trámites.
       </Typography>
@@ -444,6 +442,6 @@ export default function NotificationIntegrations() {
         <Tab value="whatsapp" label="WhatsApp" />
       </Tabs>
       {tab === 'email' ? <EmailTab /> : <WhatsAppTab />}
-    </Box>
+    </PageContainer>
   );
 }

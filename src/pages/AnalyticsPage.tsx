@@ -49,6 +49,7 @@ import {
 } from 'recharts';
 import workflowService from '@/services/workflowService';
 import type { StepBottleneck } from '@/types/workflow';
+import PageContainer from '@/components/ui/PageContainer';
 
 const CHART_COLORS = ['#1976d2', '#2e7d32', '#ed6c02', '#9c27b0', '#d32f2f', '#0288d1', '#7b1fa2', '#f57c00'];
 
@@ -169,21 +170,15 @@ function AnalyticsPage() {
   const hasVolume = volume_over_time.some((v) => v.started > 0 || v.completed > 0);
 
   return (
-    <Box>
-      {/* Header */}
-      <Box display="flex" alignItems="center" gap={1} mb={3}>
+    <PageContainer
+      title={t('analytics.title')}
+      subtitle={workflowId}
+      actions={
         <IconButton onClick={() => navigate(`/workflows/${workflowId}`)} aria-label={t('analytics.back')}>
           <ArrowBackIcon />
         </IconButton>
-        <Box>
-          <Typography variant="h4" component="h1">
-            {t('analytics.title')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {workflowId}
-          </Typography>
-        </Box>
-      </Box>
+      }
+    >
 
       {/* KPIs */}
       <Grid container spacing={3} mb={1}>
@@ -393,7 +388,7 @@ function AnalyticsPage() {
           </Paper>
         </Grid>
       </Grid>
-    </Box>
+    </PageContainer>
   );
 }
 

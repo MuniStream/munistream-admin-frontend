@@ -1,14 +1,13 @@
 import React from 'react';
 import { Box, Container } from '@mui/material';
 import { CatalogManager } from '@/components/Catalogs/CatalogManager';
+import PageContainer from '@/components/ui/PageContainer';
 
 const CatalogsPage: React.FC = () => {
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ py: 3 }}>
-        <CatalogManager />
-      </Box>
-    </Container>
+    <PageContainer title="Catálogos" fullWidth>
+      <CatalogManager />
+    </PageContainer>
   );
 };
 

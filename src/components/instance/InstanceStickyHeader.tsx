@@ -83,7 +83,10 @@ export default function InstanceStickyHeader({
         aria-label={t('instDetail.headerLabel')}
         sx={{
           position: 'sticky',
-          top: { xs: '56px', sm: '64px' },
+          // Del token que publica el tema: si la barra cambia de alto, esta
+          // cabecera lo sigue sola. Antes eran dos valores escritos a mano que
+          // había que recordar mantener en sincronía.
+          top: { xs: 'var(--ms-appbar-h-xs)', sm: 'var(--ms-appbar-h)' },
           zIndex: (theme) => theme.zIndex.appBar - 1,
           bgcolor: 'background.paper',
           borderBottom: 1,
