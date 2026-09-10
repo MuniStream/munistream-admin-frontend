@@ -545,5 +545,6 @@
   "analytics.status.archived": "Archived",
   "analytics.status.inactive": "Inactive",
   "analytics.status.unassigned": "Unassigned",
-  "analytics.status.none": "No status"
+  "analytics.status.none": "No status",
+  "instDetail.procesandoPaso": "Processing this step; the next one is on its way"
 }

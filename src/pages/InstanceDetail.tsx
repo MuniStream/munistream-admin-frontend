@@ -46,13 +46,23 @@ export default function InstanceDetail() {
     enabled: !!instanceId,
     refetchInterval: (query) => {
       const estado = (query.state.data as any)?.status;
-      return estado === 'paused' || estado === 'running' ? 15_000 : false;
+      // `running` es el hueco entre dos pasos: dura segundos y al otro lado
+      // aparece el formulario siguiente. Esperar quince segundos a ver si ya
+      // está es lo que hace que el paso siguiente tarde en aparecer.
+      if (estado === 'running') return 3_000;
+      return estado === 'paused' ? 15_000 : false;
     },
   });
 
   const hayAccionPendiente = useMemo(() => {
     const p: any = track.data;
     return !!p?.input_form && WAITING_STATES.includes(p?.waiting_for);
+  }, [track.data]);
+
+  /** Un trámite terminado no admite ninguna acción; uno vivo puede pedirla en cualquier momento. */
+  const quedaTrabajo = useMemo(() => {
+    const estado = (track.data as any)?.status;
+    return !!estado && !['completed', 'failed', 'cancelled'].includes(estado);
   }, [track.data]);
 
   // Entidades emitidas por el trámite (documento oficial). El backend las
@@ -76,12 +86,19 @@ export default function InstanceDetail() {
       { value: 'attachments', label: t('instDetail.tabAttachments') },
       { value: 'timeline', label: t('instDetail.tabTimeline') },
     ];
-    // La acción del revisor va primero cuando existe: es la herramienta de
-    // trabajo, no un detalle más del expediente.
-    return hayAccionPendiente
+    // La acción del revisor va primero: es la herramienta de trabajo, no un
+    // detalle más del expediente.
+    //
+    // Está mientras el trámite siga vivo, y no sólo cuando hay un formulario
+    // esperando ahora mismo. Entre un paso y el siguiente el trámite pasa unos
+    // segundos por `running`, sin formulario: la pestaña desaparecía y volvía a
+    // aparecer sola, y a quien estaba trabajando en ella se le movía el sitio
+    // bajo los pies justo después de enviar. Sólo se retira cuando el trámite
+    // termina, que es cuando de verdad no queda nada que hacer.
+    return quedaTrabajo
       ? [{ value: 'action', label: t('instDetail.tabAction') }, ...items]
       : items;
-  }, [hayAccionPendiente, detail.data, emittedEntities.length, t]);
+  }, [quedaTrabajo, detail.data, emittedEntities.length, t]);
 
   // Mientras no se sepa si hay acción pendiente no se elige pestaña: si no,
   // el cuerpo pinta el expediente y salta a Acción un instante después.
