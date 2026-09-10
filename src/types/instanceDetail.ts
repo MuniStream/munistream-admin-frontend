@@ -71,11 +71,17 @@ export interface DossierAttachment {
 export interface DossierContext {
   by_task: Record<string, Record<string, unknown>>;
   general: Record<string, unknown>;
+  /** Qué operador produjo la salida de cada paso, para saber cómo presentarla. */
+  operators?: Record<string, { operator: string; name?: string | null; group?: string | null }>;
   /**
    * El contexto del trámite del que nace esta instancia, cuando es una
    * validación de otro. Es lo que de verdad se está validando.
    */
-  origin?: { by_task: Record<string, Record<string, unknown>>; general: Record<string, unknown> } | null;
+  origin?: {
+    by_task: Record<string, Record<string, unknown>>;
+    general: Record<string, unknown>;
+    operators?: Record<string, { operator: string; name?: string | null; group?: string | null }>;
+  } | null;
 }
 
 /** Trámite del que nace esta instancia, cuando es una validación de otro. */
@@ -92,6 +98,8 @@ export interface InstanceAdminDetail {
   origin: DossierOrigin | null;
   context: DossierContext;
   attachments: DossierAttachment[];
+  /** Los del trámite del que nace esta instancia; vacío si no es una validación. */
+  origin_attachments: DossierAttachment[];
   counts: { attachments: number };
 }
 

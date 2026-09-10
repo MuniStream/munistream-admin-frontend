@@ -1,95 +1,119 @@
+import { useMemo, useState } from 'react';
 import { Accordion, AccordionDetails, AccordionSummary, Box, Chip, Paper, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useTranslation } from 'react-i18next';
-import { isBlobDescriptor, isRedacted, isTruncated } from '@/types/instanceDetail';
-import type { DossierContext } from '@/types/instanceDetail';
+import { Campos, visualizadorDe } from './operadores';
+import { RecursosProvider } from './operadores/recursos';
+import AttachmentPreviewDialog from './AttachmentPreviewDialog';
+import type { DossierAttachment, DossierContext } from '@/types/instanceDetail';
 
 interface Props {
-  context: DossierContext;
+  context: Pick<DossierContext, 'by_task' | 'general' | 'operators'>;
+  /**
+   * La instancia a la que pertenece este expediente, y sus adjuntos.
+   *
+   * Van juntos y son opcionales por el mismo motivo: el expediente de origen es
+   * de *otra* instancia, y sus archivos y entidades no se pueden pedir a esta.
+   * Sin ellos los pasos siguen leyéndose; lo que no aparece es el documento.
+   */
+  instanceId?: string;
+  attachments?: DossierAttachment[];
 }
 
-function Valor({ value }: { value: unknown }) {
-  const { t } = useTranslation();
-
-  if (isRedacted(value)) {
-    return <Chip size="small" color="warning" variant="outlined" label={t('instDetail.contextRedacted')} />;
-  }
-  if (isBlobDescriptor(value) || isTruncated(value)) {
-    const size = (value as { size?: number }).size;
-    return (
-      <Chip size="small" variant="outlined"
-        label={t('instDetail.contextTruncated', { size: size ? Math.round(size / 1024) : '?' })} />
-    );
-  }
-  if (value === null || value === undefined || value === '') {
-    return <Typography variant="body2" color="text.disabled">—</Typography>;
-  }
-  if (typeof value === 'object') {
-    return (
-      <Box component="pre" sx={{
-        m: 0, fontSize: '0.75rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-        color: 'text.secondary', maxHeight: 260, overflow: 'auto',
-      }}>
-        {JSON.stringify(value, null, 2)}
-      </Box>
-    );
-  }
-  return <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>{String(value)}</Typography>;
-}
-
-function Campos({ data }: { data: Record<string, unknown> }) {
-  return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(140px, 30%) minmax(0, 1fr)', gap: 1 }}>
-      {Object.entries(data).map(([k, v]) => (
-        <Box key={k} sx={{ display: 'contents' }}>
-          <Typography variant="caption" color="text.secondary" sx={{ pt: 0.25, wordBreak: 'break-word' }}>
-            {k}
-          </Typography>
-          <Valor value={v} />
-        </Box>
-      ))}
-    </Box>
-  );
+/** «UserInputOperator» → «User input»: legible sin ser jerga interna. */
+function etiquetaDeOperador(operador: string): string {
+  return operador
+    .replace(/Operator$/, '')
+    .replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
 /**
- * Contexto del trámite, agrupado por paso.
+ * El expediente: qué ocurrió en cada paso del trámite.
  *
- * Se agrupa en vez de volcarse plano porque lo que el revisor necesita saber es
- * qué aportó el ciudadano en cada paso, no qué claves tiene un diccionario.
- * Los secretos llegan ya redactados del backend; aquí solo se señalan.
+ * Se agrupa por paso y cada grupo se presenta según el operador que lo produjo,
+ * porque un formulario, unos archivos y una firma no se leen igual. Antes todo
+ * caía en pares clave/valor y lo estructurado acababa como JSON en pantalla.
  */
-export default function InstanceContextPanel({ context }: Props) {
+export default function InstanceContextPanel({ context, instanceId, attachments }: Props) {
   const { t } = useTranslation();
+  const [previsualizando, setPrevisualizando] = useState<DossierAttachment | null>(null);
 
   const tareas = Object.entries(context.by_task || {});
   const generales = context.general || {};
+
+  const recursos = useMemo(
+    () =>
+      instanceId
+        ? { instanceId, attachments: attachments ?? [], previsualizar: setPrevisualizando }
+        : null,
+    [instanceId, attachments],
+  );
 
   if (tareas.length === 0 && Object.keys(generales).length === 0) {
     return <Typography variant="body2" color="text.secondary">{t('instDetail.contextEmpty')}</Typography>;
   }
 
-  return (
+  const cuerpo = (
     <Box>
-      {tareas.map(([task, data]) => (
-        <Accordion key={task} disableGutters defaultExpanded={tareas.length <= 3}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle2">{task}</Typography>
-            <Chip size="small" variant="outlined" sx={{ ml: 1, height: 20 }}
-              label={Object.keys(data).length} />
-          </AccordionSummary>
-          <AccordionDetails>
-            <Campos data={data} />
-          </AccordionDetails>
-        </Accordion>
-      ))}
+      {tareas.map(([task, data]) => {
+        const meta = context.operators?.[task];
+        const { nombre, Componente } = visualizadorDe(meta?.operator);
+
+        return (
+          <Accordion
+            key={task}
+            disableGutters
+            defaultExpanded={tareas.length <= 4}
+            data-task={task}
+            data-operador={meta?.operator || ''}
+            data-visualizador={nombre}
+            // Un paso plegado no monta su visualizador. Importa desde que el
+            // expediente ensena documentos y archivos: si no, abrir un tramite
+            // dispara la descarga de todo lo que contiene antes de que nadie
+            // haya pedido ver nada.
+            TransitionProps={{ unmountOnExit: true }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, width: '100%' }}>
+                <Typography variant="subtitle2" noWrap>
+                  {meta?.name || task}
+                </Typography>
+                {meta?.operator && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    sx={{ height: 20 }}
+                    label={etiquetaDeOperador(meta.operator)}
+                  />
+                )}
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Componente campos={data} task={task} />
+            </AccordionDetails>
+          </Accordion>
+        );
+      })}
 
       {Object.keys(generales).length > 0 && (
         <Paper variant="outlined" sx={{ mt: 2, p: 2 }}>
           <Typography variant="subtitle2" gutterBottom>{t('instDetail.contextGeneral')}</Typography>
-          <Campos data={generales} />
+          <Campos campos={generales} task="" />
         </Paper>
       )}
     </Box>
+  );
+
+  if (!recursos) return cuerpo;
+
+  return (
+    <RecursosProvider value={recursos}>
+      {cuerpo}
+      <AttachmentPreviewDialog
+        instanceId={recursos.instanceId}
+        attachment={previsualizando}
+        onClose={() => setPrevisualizando(null)}
+      />
+    </RecursosProvider>
   );
 }
