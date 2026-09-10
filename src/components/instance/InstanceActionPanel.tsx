@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Card, CardContent, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import api from '@/services/api';
 import { DigitalSignatureForm } from '@/components/DigitalSignatureForm';
@@ -45,7 +45,15 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
   const { t } = useTranslation();
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [exito, setExito] = useState<string | null>(null);
+  // El mensaje de éxito va atado al paso que lo produjo.
+  //
+  // Antes era una cadena suelta que no se limpiaba nunca: en cuanto se enviaba
+  // un paso, el panel se quedaba clavado en «datos enviados» y el formulario del
+  // paso siguiente no aparecía jamás. Había que recargar la página a mano.
+  //
+  // Guardando de qué paso es, deja de aplicarse solo en cuanto el trámite avanza,
+  // sin efectos ni limpieza que se pueda olvidar.
+  const [exito, setExito] = useState<{ paso?: string; mensaje: string } | null>(null);
 
   const form = progress?.input_form;
   const waitingFor = progress?.waiting_for;
@@ -59,7 +67,7 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
   const taskId = form?.current_step_id;
 
   const trasEnviar = (mensaje: string) => {
-    setExito(mensaje);
+    setExito({ paso: taskId, mensaje });
     // Se invalida la consulta en vez de reconsultar tras una espera fija: el
     // estado del trámite ya cambió y no hay razón para adivinar cuándo.
     onSubmitted();
@@ -134,16 +142,30 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
   };
 
   if (!form || !WAITING_STATES.includes(waitingFor)) {
+    // Entre dos pasos el trámite pasa unos segundos ejecutándose, sin formulario
+    // que pedir. Decir «no hay acción pendiente» justo después de enviar uno se
+    // lee como que el trabajo terminó; lo que pasa es que el siguiente paso
+    // viene de camino.
+    if (progress?.status === 'running') {
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, py: 3 }}>
+          <CircularProgress size={20} />
+          <Typography variant="body2" color="text.secondary">
+            {t('instDetail.procesandoPaso')}
+          </Typography>
+        </Box>
+      );
+    }
     return (
       <Alert severity="info">{t('instDetail.noPendingAction')}</Alert>
     );
   }
 
-  if (exito) {
+  if (exito && exito.paso === taskId) {
     return (
       <Alert severity="success">
         <Typography variant="subtitle1">{t('wfExec.dataSubmitted')}</Typography>
-        <Typography>{exito}</Typography>
+        <Typography>{exito.mensaje}</Typography>
       </Alert>
     );
   }
