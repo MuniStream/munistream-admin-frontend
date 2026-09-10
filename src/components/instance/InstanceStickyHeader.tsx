@@ -93,11 +93,17 @@ export default function InstanceStickyHeader({
           borderColor: 'divider',
           boxShadow: compact ? 2 : 0,
           px: { xs: 1.5, sm: 3 },
-          pt: compact ? 1 : 2,
+          pt: 2,
           pb: 0,
-          // Solo se animan opacidad y espaciado. Animar la altura provoca
-          // saltos y descoloca el anclaje del propio sticky.
-          transition: 'padding 150ms ease, box-shadow 150ms ease',
+          // El colapso solo cambia la sombra, nunca el alto.
+          //
+          // Antes tambien recortaba el relleno superior, y esos 8px bastaban para
+          // colgar la pagina al llegar al fondo: al encoger el encabezado encoge
+          // el documento, el anclaje de scroll del navegador te devuelve al fondo,
+          // el centinela vuelve a salir de vista y se colapsa otra vez. La pagina
+          // se quedaba temblando un pixel arriba y abajo sin parar. Ocho pixeles
+          // de un encabezado de ciento sesenta no valen esa clase de fallo.
+          transition: 'box-shadow 150ms ease',
           '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
         }}
       >
