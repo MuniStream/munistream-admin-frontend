@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  Box, Checkbox, IconButton, LinearProgress, Table, TableBody,
+  Alert, Box, Checkbox, CircularProgress, IconButton, LinearProgress, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, TablePagination, Tooltip, Typography,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -12,6 +12,7 @@ import { formatApiDate, timeAgo } from '@/utils/dates';
 import StatusChip from '@/components/ui/StatusChip';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingState from '@/components/ui/LoadingState';
+import { AssignmentService } from '@/services/assignmentService';
 
 /**
  * Forma común de una fila, la devuelvan las asignaciones o el listado general.
@@ -50,8 +51,16 @@ interface Props {
   /** Sin paginación ni selección: para el resumen del panel. */
   compact?: boolean;
   emptyMessage?: string;
+  /** Para recargar la lista cuando un trámite cambia de estado al arrancarlo. */
+  onRefresh?: () => void;
 }
 
+/**
+ * Estados en los que el trámite todavía no corre y hay que arrancarlo.
+ *
+ * Es la misma lista que acepta el backend en `/assignments/{id}/start`; si se
+ * separan, el botón ofrece arrancar algo que la API rechaza.
+ */
 const ESPERA_INICIO = ['waiting_for_start', 'pending_assignment'];
 
 /**
@@ -63,10 +72,36 @@ const ESPERA_INICIO = ['waiting_for_start', 'pending_assignment'];
  */
 export default function TramiteList({
   rows, total, loading, page, rowsPerPage, onPageChange, onRowsPerPageChange,
-  selected, onSelectedChange, compact = false, emptyMessage,
+  selected, onSelectedChange, compact = false, emptyMessage, onRefresh,
 }: Props) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [arrancando, setArrancando] = useState<string | null>(null);
+  const [errorInicio, setErrorInicio] = useState<string | null>(null);
+
+  /**
+   * Arranca el trámite y luego lo abre.
+   *
+   * El botón decía «Iniciar» y pintaba el play, pero solo navegaba: el trámite
+   * seguía sin arrancar y quien lo pulsaba acababa en el expediente de algo que
+   * no había empezado. Arrancar es una llamada aparte —`/assignments/id/start`—
+   * y hasta que responde no hay nada que abrir.
+   */
+  const iniciarYAbrir = async (instanceId: string) => {
+    setArrancando(instanceId);
+    setErrorInicio(null);
+    try {
+      await AssignmentService.startWorkflow(instanceId);
+      onRefresh?.();
+      navigate(`/instances/${instanceId}`);
+    } catch (err: any) {
+      // Se queda en la lista y lo dice. Navegar tras un fallo era justo lo que
+      // hacía parecer que el botón funcionaba.
+      setErrorInicio(err?.response?.data?.detail || t('tramites.startFailed'));
+    } finally {
+      setArrancando(null);
+    }
+  };
 
   const seleccionable = !!onSelectedChange && !compact;
   const idsPagina = useMemo(() => rows.map((r) => r.instance_id), [rows]);
@@ -91,6 +126,12 @@ export default function TramiteList({
 
   return (
     <>
+      {errorInicio && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setErrorInicio(null)}>
+          {errorInicio}
+        </Alert>
+      )}
+
       <TableContainer>
         <Table>
           <TableHead>
@@ -191,13 +232,27 @@ export default function TramiteList({
 
                   <TableCell align="center" onClick={(e) => e.stopPropagation()}>
                     <Tooltip title={necesitaInicio ? t('tramites.start') : t('tramites.open')}>
-                      <IconButton
-                        size="small"
-                        color={necesitaInicio ? 'success' : 'primary'}
-                        onClick={() => navigate(`/instances/${r.instance_id}`)}
-                      >
-                        {necesitaInicio ? <PlayArrowIcon /> : <VisibilityIcon />}
-                      </IconButton>
+                      <span>
+                        <IconButton
+                          size="small"
+                          color={necesitaInicio ? 'success' : 'primary'}
+                          disabled={arrancando === r.instance_id}
+                          aria-label={necesitaInicio ? t('tramites.start') : t('tramites.open')}
+                          onClick={() =>
+                            necesitaInicio
+                              ? iniciarYAbrir(r.instance_id)
+                              : navigate(`/instances/${r.instance_id}`)
+                          }
+                        >
+                          {arrancando === r.instance_id ? (
+                            <CircularProgress size={18} />
+                          ) : necesitaInicio ? (
+                            <PlayArrowIcon />
+                          ) : (
+                            <VisibilityIcon />
+                          )}
+                        </IconButton>
+                      </span>
                     </Tooltip>
                   </TableCell>
                 </TableRow>
