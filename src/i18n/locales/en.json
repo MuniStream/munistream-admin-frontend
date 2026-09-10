@@ -507,5 +507,6 @@
   "tramites.currentLoad": "{{count}} in progress",
   "dash.workflowPerformance": "Performance by workflow",
   "a11y.refresh": "Refresh",
-  "a11y.delete": "Delete"
+  "a11y.delete": "Delete",
+  "instDetail.tabOrigin": "Origin dossier"
 }

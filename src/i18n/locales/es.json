@@ -507,5 +507,6 @@
   "tramites.currentLoad": "{{count}} en curso",
   "dash.workflowPerformance": "Rendimiento por trámite",
   "a11y.refresh": "Actualizar",
-  "a11y.delete": "Eliminar"
+  "a11y.delete": "Eliminar",
+  "instDetail.tabOrigin": "Expediente de origen"
 }

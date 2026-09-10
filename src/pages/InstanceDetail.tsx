@@ -57,6 +57,11 @@ export default function InstanceDetail() {
   const tabs = useMemo(() => {
     const items = [
       { value: 'dossier', label: t('instDetail.tabDossier') },
+      // Solo aparece si hay trámite de origen: en una validación
+      // administrativa, lo que se revisa es lo que el ciudadano aportó allí.
+      ...(detail.data?.context?.origin
+        ? [{ value: 'origin', label: t('instDetail.tabOrigin') }]
+        : []),
       { value: 'attachments', label: t('instDetail.tabAttachments') },
       { value: 'timeline', label: t('instDetail.tabTimeline') },
     ];
@@ -65,7 +70,7 @@ export default function InstanceDetail() {
     return hayAccionPendiente
       ? [{ value: 'action', label: t('instDetail.tabAction') }, ...items]
       : items;
-  }, [hayAccionPendiente, t]);
+  }, [hayAccionPendiente, detail.data, t]);
 
   // Mientras no se sepa si hay acción pendiente no se elige pestaña: si no,
   // el cuerpo pinta el expediente y salta a Acción un instante después.
@@ -163,6 +168,10 @@ export default function InstanceDetail() {
         )}
 
         {!decidiendoTab && tabActiva === 'dossier' && <InstanceContextPanel context={detail.data.context} />}
+
+        {!decidiendoTab && tabActiva === 'origin' && detail.data.context.origin && (
+          <InstanceContextPanel context={detail.data.context.origin} />
+        )}
 
         {!decidiendoTab && tabActiva === 'attachments' && instanceId && (
           <InstanceAttachmentsPanel
