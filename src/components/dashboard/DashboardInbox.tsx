@@ -19,7 +19,7 @@ export default function DashboardInbox() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['mi-bandeja-resumen'],
     queryFn: async () => {
       const { data } = await api.get('/assignments/', { params: { skip: 0, limit: RESUMEN } });
@@ -49,6 +49,7 @@ export default function DashboardInbox() {
         onPageChange={() => {}}
         onRowsPerPageChange={() => {}}
         compact
+        onRefresh={refetch}
       />
     </Card>
   );

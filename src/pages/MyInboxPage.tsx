@@ -15,7 +15,7 @@ export default function MyInboxPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['mi-bandeja', page, rowsPerPage],
     queryFn: async () => {
       const { data } = await api.get('/assignments/', {
@@ -35,6 +35,7 @@ export default function MyInboxPage() {
           rowsPerPage={rowsPerPage}
           onPageChange={setPage}
           onRowsPerPageChange={(n) => { setRowsPerPage(n); setPage(0); }}
+          onRefresh={refetch}
         />
     </PageContainer>
   );

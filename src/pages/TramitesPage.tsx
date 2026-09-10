@@ -25,7 +25,7 @@ export default function TramitesPage() {
   const [seleccion, setSeleccion] = useState<string[]>([]);
   const [asignando, setAsignando] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['tramites', page, rowsPerPage, estado, busqueda],
     queryFn: async () => {
       const { data } = await api.get('/instances/', {
@@ -93,6 +93,7 @@ export default function TramitesPage() {
           selected={seleccion}
           onSelectedChange={setSeleccion}
           emptyMessage={t('tramites.empty')}
+          onRefresh={refetch}
         />
 
       <AssignDialog

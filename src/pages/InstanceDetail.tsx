@@ -12,6 +12,7 @@ import InstanceContextPanel from '@/components/instance/InstanceContextPanel';
 import InstanceAttachmentsPanel from '@/components/instance/InstanceAttachmentsPanel';
 import InstanceTimeline from '@/components/instance/InstanceTimeline';
 import EntityDetailDrawer from '@/components/instance/EntityDetailDrawer';
+import EntityDocumentView from '@/components/instance/EntityDocumentView';
 import PageContainer from '@/components/ui/PageContainer';
 
 /**
@@ -54,6 +55,12 @@ export default function InstanceDetail() {
     return !!p?.input_form && WAITING_STATES.includes(p?.waiting_for);
   }, [track.data]);
 
+  // Entidades emitidas por el trámite (documento oficial). El backend las
+  // resuelve del contexto en /track; la pestaña solo aparece cuando existe al
+  // menos una.
+  const emittedEntities: Array<{ entity_id: string; entity_type?: string }> =
+    (track.data as any)?.emitted_entities ?? [];
+
   const tabs = useMemo(() => {
     const items = [
       { value: 'dossier', label: t('instDetail.tabDossier') },
@@ -61,6 +68,10 @@ export default function InstanceDetail() {
       // administrativa, lo que se revisa es lo que el ciudadano aportó allí.
       ...(detail.data?.context?.origin
         ? [{ value: 'origin', label: t('instDetail.tabOrigin') }]
+        : []),
+      // Documento(s) que emitió el trámite: solo cuando ya se emitió alguno.
+      ...(emittedEntities.length > 0
+        ? [{ value: 'emitted', label: t('instDetail.tabEmitted') }]
         : []),
       { value: 'attachments', label: t('instDetail.tabAttachments') },
       { value: 'timeline', label: t('instDetail.tabTimeline') },
@@ -70,7 +81,7 @@ export default function InstanceDetail() {
     return hayAccionPendiente
       ? [{ value: 'action', label: t('instDetail.tabAction') }, ...items]
       : items;
-  }, [hayAccionPendiente, detail.data, t]);
+  }, [hayAccionPendiente, detail.data, emittedEntities.length, t]);
 
   // Mientras no se sepa si hay acción pendiente no se elige pestaña: si no,
   // el cuerpo pinta el expediente y salta a Acción un instante después.
@@ -167,10 +178,37 @@ export default function InstanceDetail() {
           />
         )}
 
-        {!decidiendoTab && tabActiva === 'dossier' && <InstanceContextPanel context={detail.data.context} />}
+        {!decidiendoTab && tabActiva === 'dossier' && (
+          <InstanceContextPanel
+            context={detail.data.context}
+            instanceId={instanceId}
+            attachments={detail.data.attachments}
+          />
+        )}
 
         {!decidiendoTab && tabActiva === 'origin' && detail.data.context.origin && (
-          <InstanceContextPanel context={detail.data.context.origin} />
+          // Los archivos del trámite padre viajan dentro de esta instancia, así
+          // que se sirven por ella: el revisor puede abrirlos sin salir de la
+          // validación, que es justo lo que está revisando.
+          <InstanceContextPanel
+            context={detail.data.context.origin}
+            instanceId={instanceId}
+            attachments={detail.data.origin_attachments}
+          />
+        )}
+
+        {!decidiendoTab && tabActiva === 'emitted' && instanceId && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {emittedEntities.map((e) => (
+              <EntityDocumentView
+                key={e.entity_id}
+                instanceId={instanceId}
+                entityId={e.entity_id}
+                entityName={e.entity_type || e.entity_id}
+                onExpand={() => abrirEntidad(e.entity_id)}
+              />
+            ))}
+          </Box>
         )}
 
         {!decidiendoTab && tabActiva === 'attachments' && instanceId && (
