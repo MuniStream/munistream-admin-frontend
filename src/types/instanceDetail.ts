@@ -71,6 +71,11 @@ export interface DossierAttachment {
 export interface DossierContext {
   by_task: Record<string, Record<string, unknown>>;
   general: Record<string, unknown>;
+  /**
+   * El contexto del trámite del que nace esta instancia, cuando es una
+   * validación de otro. Es lo que de verdad se está validando.
+   */
+  origin?: { by_task: Record<string, Record<string, unknown>>; general: Record<string, unknown> } | null;
 }
 
 /** Trámite del que nace esta instancia, cuando es una validación de otro. */
