@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +21,16 @@ export default function TramitesPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [estado, setEstado] = useState('');
+  const [texto, setTexto] = useState('');
   const [busqueda, setBusqueda] = useState('');
+
+  // Sin esperar, cada tecla dispara una consulta. Antes daba igual porque el
+  // buscador solo casaba el UUID exacto y nadie lo tecleaba; ahora que busca
+  // por nombre y correo, se escribe de verdad en él.
+  useEffect(() => {
+    const id = setTimeout(() => { setBusqueda(texto); setPage(0); }, 350);
+    return () => clearTimeout(id);
+  }, [texto]);
   const [seleccion, setSeleccion] = useState<string[]>([]);
   const [asignando, setAsignando] = useState(false);
 
@@ -33,7 +42,7 @@ export default function TramitesPage() {
           page: page + 1,
           page_size: rowsPerPage,
           ...(estado ? { status: estado } : {}),
-          ...(busqueda ? { instance_id: busqueda } : {}),
+          ...(busqueda ? { q: busqueda } : {}),
         },
       });
       return data as { instances: TramiteRow[]; total: number };
@@ -55,8 +64,8 @@ export default function TramitesPage() {
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
             <TextField
               placeholder={t('tramites.searchPlaceholder')}
-              value={busqueda}
-              onChange={(e) => { setBusqueda(e.target.value); setPage(0); }}
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
               sx={{ flexGrow: 1 }}
             />
             <TextField

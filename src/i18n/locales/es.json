@@ -486,7 +486,7 @@
   "tramites.selectAll": "Seleccionar todo",
   "tramites.selectedCount": "{{count}} seleccionados",
   "tramites.assignSelected": "Asignar {{count}}",
-  "tramites.searchPlaceholder": "Buscar por identificador",
+  "tramites.searchPlaceholder": "Buscar por nombre del ciudadano, correo o identificador",
   "tramites.empty": "No hay trámites que coincidan.",
   "tramites.open": "Abrir el expediente",
   "tramites.start": "Iniciar",
@@ -546,5 +546,18 @@
   "analytics.status.inactive": "Inactivo",
   "analytics.status.unassigned": "Sin asignar",
   "analytics.status.none": "Sin estado",
-  "instDetail.procesandoPaso": "Procesando el paso; el siguiente viene en camino"
+  "instDetail.procesandoPaso": "Procesando el paso; el siguiente viene en camino",
+  "nav.entities": "Entidades",
+  "entities.searchPlaceholder": "Buscar por nombre, identificador, RFC, CURP, RNPA, matrícula o folio",
+  "entities.filterByType": "Tipo de entidad",
+  "entities.allTypes": "Todos los tipos",
+  "entities.name": "Nombre",
+  "entities.type": "Tipo",
+  "entities.identifiers": "Identificadores",
+  "entities.status": "Estado",
+  "entities.createdAt": "Emitida",
+  "entities.verified": "Verificada",
+  "entities.empty": "No se encontraron entidades con esos criterios.",
+  "table.rowsPerPage": "Filas por página:",
+  "table.displayedRows": "{{from}}–{{to}} de {{count}}"
 }
