@@ -5,6 +5,7 @@ import WorkflowsDashboard from '@/pages/WorkflowsDashboard';
 import WorkflowDetail from '@/pages/WorkflowDetail';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import TramitesPage from '@/pages/TramitesPage';
+import EntitiesPage from '@/pages/EntitiesPage';
 import MyInboxPage from '@/pages/MyInboxPage';
 import InstanceDetail from '@/pages/InstanceDetail';
 import KeycloakStats from '@/pages/admin/KeycloakStats';
@@ -84,6 +85,15 @@ function AppRoutes() {
           }
         />
         
+        <Route
+          path="entities"
+          element={
+            <ProtectedRoute requiredPermission="view_instances">
+              <EntitiesPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="instances/:instanceId"
           element={

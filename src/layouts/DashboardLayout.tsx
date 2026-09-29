@@ -53,6 +53,7 @@ const menuItems = [
   { text: 'workflows', path: '/workflows', icon: <WorkflowIcon />, permission: 'view_workflows' },
   { text: 'nav.myInbox', path: '/my-inbox', icon: <AssignmentIcon />, permission: 'view_instances' },
   { text: 'nav.tramites', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
+  { text: 'nav.entities', path: '/entities', icon: <DocumentIcon />, permission: 'view_instances' },
   { text: 'nav.catalogs', path: '/catalogs', icon: <CatalogIcon />, permission: 'admin_system' },
   { text: 'nav.profileFields', path: '/profile-fields', icon: <PersonIcon />, permission: 'admin_system' },
   { text: 'divider' }, // Visual separator for admin section
