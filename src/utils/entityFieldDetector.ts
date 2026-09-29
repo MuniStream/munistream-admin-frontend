@@ -13,6 +13,8 @@ export const FieldType = {
   SIGNATURE: 'signature',
   QR_DATA: 'qr_data',
   ADDRESS: 'address',
+  GEO: 'geo',
+  ITEM_LIST: 'item_list',
   DATE: 'date',
   DATETIME: 'datetime',
   BOOLEAN: 'boolean',
@@ -49,6 +51,37 @@ const PATTERNS = {
   document_id: /^(doc_|document_|file_)/i,
   address: /\b\d+\s+[\w\s]+\s+(street|st|avenue|ave|road|rd|boulevard|blvd|lane|ln|drive|dr|court|ct|plaza|pl)\b/i,
 };
+
+/**
+ * Nombres de campo que denotan un domicilio o una ubicación.
+ *
+ * La detección anterior exigía que el campo se llamara `address` o que el texto
+ * casara un patrón de calles **en inglés** (`street|ave|blvd`). Los campos reales
+ * se llaman `domicilio_solicitante`, `ubicacion_predio`, `ubicacion_instalacion`:
+ * ninguno entraba, y el domicilio terminaba pintado como una rejilla de pares
+ * clave/valor en snake_case.
+ */
+const NOMBRES_DE_DOMICILIO = /(domicilio|direccion|dirección|ubicacion|ubicación|address)/i;
+
+/** Claves del domicilio estructurado que emite el portal (`AddressField`). */
+const CLAVES_DE_DOMICILIO = ['calle', 'no_ext', 'no_int', 'colonia', 'municipio', 'estado', 'cp'];
+
+/** Geometría GeoJSON tal como la emite `GeoField` del portal. */
+function esGeoJSON(v: any): boolean {
+  return (
+    !!v &&
+    typeof v === 'object' &&
+    !Array.isArray(v) &&
+    (v.type === 'Point' || v.type === 'Polygon' || v.type === 'MultiPolygon') &&
+    Array.isArray(v.coordinates)
+  );
+}
+
+function esDomicilioEstructurado(v: any): boolean {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+  // Dos claves bastan: hay domicilios sin número interior, sin colonia, etc.
+  return CLAVES_DE_DOMICILIO.filter((k) => k in v).length >= 2;
+}
 
 // File extensions mapped to types
 const FILE_EXTENSIONS: Record<string, FieldType> = {
@@ -87,8 +120,36 @@ export function detectFieldType(value: any, fieldName?: string): DetectedField {
     return { type: FieldType.NUMBER, value };
   }
 
-  // Object/Array - treat as JSON
+  // Objetos y listas. Esta rama devolvía JSON para **todo** valor que no fuera
+  // escalar, y estaba antes de cualquier otra comprobación: por eso un domicilio,
+  // un polígono o una lista de especies nunca llegaban a su rama y acababan como
+  // una rejilla recursiva de pares clave/valor cortada a 12 claves.
   if (typeof value === 'object') {
+    if (esGeoJSON(value)) {
+      return { type: FieldType.GEO, value, metadata: { confidence: 1 } };
+    }
+
+    if (esDomicilioEstructurado(value)) {
+      return { type: FieldType.ADDRESS, value, metadata: { confidence: 1 } };
+    }
+
+    // Lista de ítems: se pinta como tal, no con los índices numéricos del array
+    // (`0 / especie / Camarón…`, un renglón por índice).
+    if (Array.isArray(value) && value.length > 0) {
+      const homogenea = value.every(
+        (v) => typeof v === 'string' || typeof v === 'number' || (!!v && typeof v === 'object' && !Array.isArray(v))
+      );
+      if (homogenea) {
+        return { type: FieldType.ITEM_LIST, value, metadata: { confidence: 0.9 } };
+      }
+    }
+
+    // Un objeto bajo un nombre de domicilio, aunque no traiga las claves del
+    // portal (formas heredadas de trámites viejos).
+    if (!Array.isArray(value) && fieldName && NOMBRES_DE_DOMICILIO.test(fieldName)) {
+      return { type: FieldType.ADDRESS, value, metadata: { confidence: 0.6 } };
+    }
+
     return {
       type: FieldType.JSON,
       value,
@@ -103,6 +164,26 @@ export function detectFieldType(value: any, fieldName?: string): DetectedField {
     // Empty string
     if (!trimmedValue) {
       return { type: FieldType.TEXT, value: '' };
+    }
+
+    // Texto que en realidad es un objeto serializado, **antes que cualquier otra
+    // regla**: el envío del formulario va por `FormData`, que convierte a texto
+    // todo lo que no sea escalar, así que un polígono o un domicilio llegan como
+    // cadena JSON. Va primero porque el contenido manda sobre el nombre del campo:
+    // `ubicacion_predio_geo` casa el patrón de domicilio por el nombre, pero es un
+    // punto geográfico, y clasificarlo por el nombre lo dejaba pintado como el
+    // volcado crudo `{"type":"Point","coordinates":[-99.118…]}`.
+    if (trimmedValue[0] === '{' || trimmedValue[0] === '[') {
+      try {
+        const parsed = JSON.parse(trimmedValue);
+        if (parsed && typeof parsed === 'object') {
+          const reclasificado = detectFieldType(parsed, fieldName);
+          if (reclasificado.type !== FieldType.TEXT) return reclasificado;
+          return { type: FieldType.JSON, value: parsed, metadata: { confidence: 0.9 } };
+        }
+      } catch {
+        // No es JSON válido; sigue como texto.
+      }
     }
 
     // Check for URLs with file extensions
@@ -197,7 +278,7 @@ export function detectFieldType(value: any, fieldName?: string): DetectedField {
     }
 
     // Address
-    if (PATTERNS.address.test(trimmedValue) || fieldName?.includes('address')) {
+    if (PATTERNS.address.test(trimmedValue) || (fieldName && NOMBRES_DE_DOMICILIO.test(fieldName))) {
       return {
         type: FieldType.ADDRESS,
         value: trimmedValue,
@@ -214,19 +295,6 @@ export function detectFieldType(value: any, fieldName?: string): DetectedField {
       };
     }
 
-    // Try to parse as JSON
-    try {
-      const parsed = JSON.parse(trimmedValue);
-      if (parsed && typeof parsed === 'object') {
-        return {
-          type: FieldType.JSON,
-          value: parsed,
-          metadata: { confidence: 0.9 }
-        };
-      }
-    } catch {
-      // Not JSON, continue
-    }
   }
 
   // Default to text
