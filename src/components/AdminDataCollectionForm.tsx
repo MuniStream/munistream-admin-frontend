@@ -26,6 +26,7 @@ import {
   Delete as DeleteIcon,
   CheckCircle as CheckIcon
 } from '@mui/icons-material';
+import { getCustomFieldRenderer } from './customFieldRegistry';
 
 // Simple debounce function
 function debounce<T extends (...args: any[]) => any>(
@@ -38,6 +39,59 @@ function debounce<T extends (...args: any[]) => any>(
     timeoutId = setTimeout(() => func(...args), delay);
   };
 }
+
+// Tipos que el admin renderiza como campo editable. Cualquier otro (un widget
+// propio de un paso del ciudadano) se muestra en solo lectura.
+const EDITABLE_FIELD_TYPES = new Set<string>([
+  'text', 'email', 'phone', 'tel', 'url', 'password',
+  'date', 'time', 'datetime-local', 'number',
+  'select', 'textarea', 'file', 'entity_select', 'entity_multi_select',
+]);
+
+// Visor recursivo de solo lectura para datos estructurados (listas y objetos
+// anidados, p. ej. facturas con sus conceptos). No conoce ningún esquema de
+// trámite: aplana claves y valores de forma legible en vez de un volcado JSON.
+const ReadOnlyValue: React.FC<{ value: any; nivel?: number }> = ({ value, nivel = 0 }) => {
+  if (value === null || value === undefined || value === '') {
+    return <Typography variant="body2" color="text.secondary">—</Typography>;
+  }
+  if (typeof value !== 'object') {
+    return <Typography variant="body2">{String(value)}</Typography>;
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return <Typography variant="body2" color="text.secondary">—</Typography>;
+    }
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {value.map((item, i) => (
+          <Paper key={i} variant="outlined" sx={{ p: 1 }}>
+            <ReadOnlyValue value={item} nivel={nivel + 1} />
+          </Paper>
+        ))}
+      </Box>
+    );
+  }
+  // Objeto: par clave/valor, saltando internos y binarios ruidosos.
+  const entradas = Object.entries(value).filter(
+    ([k]) => !k.startsWith('_') && !['base64', 'content'].includes(k)
+  );
+  if (entradas.length === 0) {
+    return <Typography variant="body2" color="text.secondary">—</Typography>;
+  }
+  return (
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 12rem) 1fr', columnGap: 2, rowGap: 0.5 }}>
+      {entradas.map(([k, v]) => (
+        <React.Fragment key={k}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, alignSelf: 'start' }}>
+            {k}
+          </Typography>
+          <Box><ReadOnlyValue value={v} nivel={nivel + 1} /></Box>
+        </React.Fragment>
+      ))}
+    </Box>
+  );
+};
 
 export interface AdminFormField {
   id: string;
@@ -256,6 +310,43 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
 
   const renderField = (field: AdminFormField) => {
     const hasError = !!errors[field.id];
+
+    // Renderer propio del tenant para este tipo de campo (lo registra un override
+    // desde su carpeta al arrancar). Así un operador custom despliega su propia UI
+    // de administración sin que el admin base conozca el tipo. Por defecto en modo
+    // de revisión (readOnly): el personal valida lo capturado por el ciudadano.
+    const customRenderer = getCustomFieldRenderer(field.type as string);
+    if (customRenderer) {
+      const rendered = customRenderer({
+        field,
+        value: formData[field.id],
+        onChange: (v: any) => handleInputChange(field.id, v),
+        readOnly: true,
+        disabled: isSubmitting,
+      });
+      if (rendered !== undefined && rendered !== null) return rendered;
+    }
+
+    // Tipos de campo que el admin no sabe (ni debe) editar —los pasos de captura
+    // del ciudadano con widgets propios—. Antes caían al `default` y se pintaban
+    // como un <input> suelto con `type="<lo-que-sea>"`. Aquí se muestran en solo
+    // lectura, con su dato estructurado legible. Genérico: sin conocer trámites.
+    if (!EDITABLE_FIELD_TYPES.has(field.type as string)) {
+      const datosCampo = (field as any).facturas ?? formData[field.id] ?? (field as any).value;
+      return (
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>{field.label}</Typography>
+          {field.helpText && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+              {field.helpText}
+            </Typography>
+          )}
+          <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover' }}>
+            <ReadOnlyValue value={datosCampo} />
+          </Paper>
+        </Box>
+      );
+    }
 
     switch (field.type) {
       case 'entity_select':

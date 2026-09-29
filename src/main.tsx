@@ -9,6 +9,10 @@ import '@fontsource/noto-sans/latin-400.css'
 import '@fontsource/noto-sans/latin-500.css'
 import '@fontsource/noto-sans/latin-600.css'
 import './index.css'
+// Carga los overrides del tenant (glob eager). Su código de módulo registra los
+// renderers de campos propios (p. ej. la UI de admin de un operador custom) antes
+// de que se pinte cualquier formulario.
+import './overrides'
 import App from './App.tsx'
 
 // Set document title based on tenant

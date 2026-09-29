@@ -28,6 +28,7 @@ interface EntityRow {
   verified: boolean;
   owner_user_id: string;
   created_at: string;
+  valid_until: string | null;
   identificadores: Record<string, string>;
 }
 
@@ -123,6 +124,7 @@ export default function EntitiesPage() {
               </TableCell>
               <TableCell>{t('entities.status', { defaultValue: 'Estado' })}</TableCell>
               <TableCell>{t('entities.createdAt', { defaultValue: 'Emitida' })}</TableCell>
+              <TableCell>{t('entities.validity', { defaultValue: 'Validez' })}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -165,14 +167,40 @@ export default function EntitiesPage() {
                 <TableCell>
                   {e.created_at ? new Date(e.created_at).toLocaleDateString() : '—'}
                 </TableCell>
+                <TableCell>
+                  {e.valid_until ? (
+                    (() => {
+                      const vencida = new Date(e.valid_until) < new Date();
+                      return (
+                        <Chip
+                          size="small"
+                          variant={vencida ? 'filled' : 'outlined'}
+                          color={vencida ? 'error' : 'success'}
+                          label={
+                            vencida
+                              ? t('entities.expired', {
+                                  date: new Date(e.valid_until).toLocaleDateString(),
+                                  defaultValue: `Vencida ${new Date(e.valid_until).toLocaleDateString()}`,
+                                })
+                              : new Date(e.valid_until).toLocaleDateString()
+                          }
+                        />
+                      );
+                    })()
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      {t('entities.noExpiry', { defaultValue: 'Sin vigencia' })}
+                    </Typography>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
             {!isLoading && filas.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <Typography variant="body2" color="text.secondary" sx={{ py: 3 }} align="center">
                     {t('entities.empty', {
-                      defaultValue: 'No se encontraron entidades con esos criterios.',
+                      defaultValue: 'No se encontraron documentos con esos criterios.',
                     })}
                   </Typography>
                 </TableCell>
