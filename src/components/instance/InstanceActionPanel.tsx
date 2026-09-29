@@ -226,6 +226,10 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
             description={form.description || t('wfExec.provideInfoDesc')}
             sections={form.sections}
             fields={form.fields?.map((field: any) => ({
+              // Passthrough de toda la config del campo: un tipo custom del tenant
+              // (p. ej. la revisión CFDI) viaja con datos propios como `facturas`
+              // que su renderer necesita y que este mapper no debe conocer.
+              ...field,
               id: field.name,
               name: field.name,
               label: field.label || field.name.charAt(0).toUpperCase() + field.name.slice(1),
