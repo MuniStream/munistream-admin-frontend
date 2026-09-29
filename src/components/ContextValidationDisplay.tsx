@@ -32,6 +32,8 @@ import {
   Cancel as RejectIcon
 } from '@mui/icons-material';
 import { EntityViewer } from './EntityViewer';
+import { GeoField } from './GeoField';
+import { AddressField } from './AddressField';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { NEUTRAL } from '@/theme/tokens';
@@ -96,6 +98,21 @@ interface ContextValidationDisplayProps {
       }>;
       placeholder?: string;
     }>;
+    // Campos del contexto que el revisor puede corregir antes de aprobar.
+    editable_fields?: Array<{
+      name: string;
+      label?: string;
+      type?: string;
+      required?: boolean;
+      options?: Array<{ value: string; label: string }>;
+      helperText?: string;
+      value?: any;
+      // Config de tipos compuestos:
+      geo_mode?: 'point' | 'polygon';
+      with_contact?: boolean;
+      region_only?: boolean;
+      config?: any;
+    }>;
   };
   onSubmit: (data: Record<string, any>) => void;
   loading: boolean;
@@ -113,11 +130,41 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
   const [validationDecision, setValidationDecision] = useState<string>('');
   const [validationComments, setValidationComments] = useState<string>('');
 
+  // Campos editables: correcciones del revisor al expediente, precargadas con el
+  // valor actual del contexto. Viajan como campos planos en el envío (el backend
+  // los lee de `{task}_input` por su `name`, que puede ser una ruta con puntos).
+  const editableFields = formConfig.editable_fields || [];
+  const [editedValues, setEditedValues] = useState<Record<string, any>>(() => {
+    const init: Record<string, any> = {};
+    for (const f of formConfig.editable_fields || []) init[f.name] = f.value ?? '';
+    return init;
+  });
+  const [editError, setEditError] = useState<string | null>(null);
+  const setEdited = (name: string, v: any) =>
+    setEditedValues((prev) => ({ ...prev, [name]: v }));
+
   const handleApprove = () => {
-    onSubmit({
+    const faltantes = editableFields.filter(
+      (f) => f.required && (editedValues[f.name] === '' || editedValues[f.name] == null)
+    );
+    if (faltantes.length) {
+      setEditError(
+        `Complete los campos obligatorios: ${faltantes.map((f) => f.label || f.name).join(', ')}`
+      );
+      return;
+    }
+    setEditError(null);
+    // El envío del admin es multipart y hace String(value); los tipos compuestos
+    // (geo/address = objetos) deben ir como JSON string para que el backend los
+    // recoercione a dict (igual que hace el portal ciudadano).
+    const payload: Record<string, any> = {
       validation_decision: 'approved',
-      validation_comments: validationComments
-    });
+      validation_comments: validationComments,
+    };
+    for (const [k, val] of Object.entries(editedValues)) {
+      payload[k] = val !== null && typeof val === 'object' ? JSON.stringify(val) : val;
+    }
+    onSubmit(payload);
   };
 
   const handleReject = () => {
@@ -575,6 +622,91 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
               {renderDataSection(section)}
             </div>
           ))}
+
+          {/* Correcciones del revisor al expediente (campos editables) */}
+          {editableFields.length > 0 && (
+            <Box mt={4} p={3} sx={{ border: '1px solid', borderColor: 'warning.main', borderRadius: 1 }}>
+              <Typography variant="h6" gutterBottom>
+                Correcciones al expediente
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Puede corregir estos datos antes de aprobar. Los cambios se aplicarán al trámite.
+              </Typography>
+              {editError && (
+                <Alert severity="warning" sx={{ mb: 2 }}>{editError}</Alert>
+              )}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                {editableFields.map((f) => {
+                  const tipo = f.type || 'text';
+                  const common = {
+                    fullWidth: true,
+                    label: f.label || f.name,
+                    required: !!f.required,
+                    helperText: f.helperText,
+                    value: editedValues[f.name] ?? '',
+                    onChange: (e: any) => setEdited(f.name, e.target.value),
+                  } as const;
+                  if (tipo === 'geo') {
+                    return (
+                      <Box key={f.name} sx={{ gridColumn: '1 / -1' }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                          {f.label || f.name}{f.required ? ' *' : ''}
+                        </Typography>
+                        {f.helperText && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>{f.helperText}</Typography>
+                        )}
+                        <GeoField
+                          mode={f.geo_mode || 'polygon'}
+                          value={editedValues[f.name] || null}
+                          onChange={(val: any) => setEdited(f.name, val)}
+                        />
+                      </Box>
+                    );
+                  }
+                  if (tipo === 'address') {
+                    return (
+                      <Box key={f.name} sx={{ gridColumn: '1 / -1' }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                          {f.label || f.name}{f.required ? ' *' : ''}
+                        </Typography>
+                        {f.helperText && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>{f.helperText}</Typography>
+                        )}
+                        <AddressField
+                          value={editedValues[f.name] || {}}
+                          onChange={(val: any) => setEdited(f.name, val)}
+                          config={f.config}
+                          withContact={f.with_contact}
+                          regionOnly={f.region_only}
+                        />
+                      </Box>
+                    );
+                  }
+                  if (tipo === 'select') {
+                    return (
+                      <TextField key={f.name} select SelectProps={{ native: true }} {...common}>
+                        <option value=""></option>
+                        {(f.options || []).map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </TextField>
+                    );
+                  }
+                  if (tipo === 'textarea') {
+                    return <TextField key={f.name} multiline rows={2} sx={{ gridColumn: '1 / -1' }} {...common} />;
+                  }
+                  return (
+                    <TextField
+                      key={f.name}
+                      type={tipo === 'number' ? 'number' : tipo === 'date' ? 'date' : 'text'}
+                      InputLabelProps={tipo === 'date' ? { shrink: true } : undefined}
+                      {...common}
+                    />
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
 
           {/* Comments Section */}
           <Box mt={4} p={3} sx={{ backgroundColor: 'grey.50', borderRadius: 1 }}>
