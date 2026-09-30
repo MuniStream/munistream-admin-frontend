@@ -562,5 +562,7 @@
   "entities.verified": "Verificada",
   "entities.empty": "No se encontraron documentos con esos criterios.",
   "table.rowsPerPage": "Filas por página:",
-  "table.displayedRows": "{{from}}–{{to}} de {{count}}"
+  "table.displayedRows": "{{from}}–{{to}} de {{count}}",
+  "instDetail.notStarted": "Este trámite aún no ha iniciado. Inícielo para poder validarlo.",
+  "instDetail.startFailed": "No se pudo iniciar el trámite."
 }
