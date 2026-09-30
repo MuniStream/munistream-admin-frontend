@@ -76,6 +76,21 @@ export const instanceDetailService = {
     );
     return data;
   },
+
+  /**
+   * Archiva un documento en el expediente.
+   *
+   * No entra al contexto del trámite: el backend lo guarda aparte, porque un
+   * oficio que archiva la dependencia no es una respuesta del ciudadano y no debe
+   * colarse en los documentos que el sistema emite.
+   */
+  async uploadAttachment(instanceId: string, file: File, description?: string) {
+    const form = new FormData();
+    form.append('file', file);
+    if (description) form.append('description', description);
+    const { data } = await api.post(`/instances/${instanceId}/attachments`, form);
+    return data;
+  },
 };
 
 export default instanceDetailService;
