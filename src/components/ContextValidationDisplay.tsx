@@ -37,8 +37,18 @@ import { AddressField } from './AddressField';
 import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { NEUTRAL } from '@/theme/tokens';
+import FieldValue from './instance/operadores/FieldValue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+/**
+ * Rótulo legible de una clave del contexto.
+ *
+ * `replace('_', ' ')` sustituye SOLO la primera ocurrencia, así que
+ * `domicilio_destino_final` se leía "DOMICILIO DESTINO_FINAL". Con la bandera
+ * global sale entero.
+ */
+const etiqueta = (clave: string) => clave.replace(/_/g, ' ').toUpperCase();
 
 /**
  * Descarga un archivo del contexto de la instancia.
@@ -186,7 +196,8 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                 <ListItem key={key}>
                   <ListItemText
                     primary={key}
-                    secondary={String(value)}
+                    secondary={<FieldValue name={key} value={value} />}
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                 </ListItem>
               ))}
@@ -199,7 +210,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
               {data && Object.entries(data).map(([entityGroup, entities]) => (
                 <Box key={entityGroup} mb={2}>
                   <Typography variant="subtitle2" gutterBottom>
-                    {entityGroup.replace('_', ' ').toUpperCase()}
+                    {etiqueta(entityGroup)}
                   </Typography>
                   {Array.isArray(entities) ? entities.map((entity: any, index: number) => (
                     <Card key={index} variant="outlined" sx={{ mb: 1 }}>
@@ -257,13 +268,11 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                           <TableRow key={field}>
                             <TableCell component="th" scope="row">
                               <Typography variant="body2" fontWeight="medium">
-                                {field.replace('_', ' ').toUpperCase()}
+                                {etiqueta(field)}
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Typography variant="body2">
-                                {String(value)}
-                              </Typography>
+                              <FieldValue name={field} value={value} />
                             </TableCell>
                           </TableRow>
                         ))}
@@ -282,7 +291,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
               {data && Object.entries(data).map(([uploadKey, files]) => (
                 <Box key={uploadKey} mb={2}>
                   <Typography variant="subtitle2" gutterBottom>
-                    {uploadKey.replace('upload_', '').replace('_s3_result', '').replace('_', ' ').toUpperCase()}
+                    {etiqueta(uploadKey.replace('upload_', '').replace('_s3_result', ''))}
                   </Typography>
                   {Array.isArray(files) ? files.map((file: any, index: number) => (
                     <Card key={index} variant="outlined" sx={{ mb: 1 }}>
@@ -428,7 +437,7 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
               {data && Object.entries(data).map(([selectionKey, selection]) => (
                 <Box key={selectionKey} mb={2}>
                   <Typography variant="subtitle2" gutterBottom>
-                    {(selection as any)?.catalog_name || selectionKey.replace('selected_', '').replace('_', ' ').toUpperCase()}
+                    {(selection as any)?.catalog_name || etiqueta(selectionKey.replace('selected_', ''))}
                   </Typography>
                   <Card variant="outlined">
                     <CardContent>
@@ -439,13 +448,11 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                               <TableRow key={field}>
                                 <TableCell component="th" scope="row">
                                   <Typography variant="body2" fontWeight="medium">
-                                    {field.replace('_', ' ').toUpperCase()}
+                                    {etiqueta(field)}
                                   </Typography>
                                 </TableCell>
                                 <TableCell>
-                                  <Typography variant="body2">
-                                    {String(value)}
-                                  </Typography>
+                                  <FieldValue name={field} value={value} />
                                 </TableCell>
                               </TableRow>
                             ))}
@@ -496,17 +503,11 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                                 <TableRow key={key}>
                                   <TableCell component="th" scope="row">
                                     <Typography variant="body2" fontWeight="medium">
-                                      {key.replace('_', ' ').toUpperCase()}
+                                      {etiqueta(key)}
                                     </Typography>
                                   </TableCell>
                                   <TableCell>
-                                    <Typography variant="body2">
-                                      {typeof value === 'boolean'
-                                        ? (value ? 'Sí' : 'No')
-                                        : typeof value === 'object' && value !== null
-                                        ? JSON.stringify(value, null, 2)
-                                        : String(value)}
-                                    </Typography>
+                                    <FieldValue name={key} value={value} />
                                   </TableCell>
                                 </TableRow>
                               ))}
@@ -531,17 +532,11 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                                 <TableRow key={key}>
                                   <TableCell component="th" scope="row">
                                     <Typography variant="body2" fontWeight="medium">
-                                      {key.replace('_', ' ').toUpperCase()}
+                                      {etiqueta(key)}
                                     </Typography>
                                   </TableCell>
                                   <TableCell>
-                                    <Typography variant="body2">
-                                      {typeof value === 'boolean'
-                                        ? (value ? 'Sí' : 'No')
-                                        : typeof value === 'object' && value !== null
-                                        ? JSON.stringify(value, null, 2)
-                                        : String(value)}
-                                    </Typography>
+                                    <FieldValue name={key} value={value} />
                                   </TableCell>
                                 </TableRow>
                               ))}
