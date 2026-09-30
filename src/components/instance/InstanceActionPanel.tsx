@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Alert, Box, Card, CardContent, CircularProgress, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, CircularProgress, Typography } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useTranslation } from 'react-i18next';
 import api from '@/services/api';
+import { AssignmentService } from '@/services/assignmentService';
 import { DigitalSignatureForm } from '@/components/DigitalSignatureForm';
 import { ContextValidationDisplay } from '@/components/ContextValidationDisplay';
 import { AdminCatalogSelector } from '@/components/AdminCatalogSelector';
@@ -9,6 +11,14 @@ import { AdminAssertionReview } from '@/components/AdminAssertionReview';
 import { AdminDataCollectionForm } from '@/components/AdminDataCollectionForm';
 
 /** Estados en los que el trámite espera una acción del revisor. */
+/**
+ * Estados en los que el trámite todavía no arrancó. La lista de trámites ya
+ * ofrece el botón de iniciar; el expediente no, así que un revisor que abría
+ * una validación recién creada leía «no espera ninguna acción del revisor» y se
+ * quedaba sin nada que pulsar. Iniciarla era posible solo por API.
+ */
+const ESPERA_INICIO = ['waiting_for_start', 'pending_assignment'];
+
 export const WAITING_STATES = [
   'user_input',
   'signature',
@@ -44,6 +54,7 @@ interface Props {
 export default function InstanceActionPanel({ instanceId, progress, onSubmitted }: Props) {
   const { t } = useTranslation();
   const [enviando, setEnviando] = useState(false);
+  const [arrancando, setArrancando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // El mensaje de éxito va atado al paso que lo produjo.
   //
@@ -141,6 +152,20 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
     }
   };
 
+  /** Arranca el trámite. Es una llamada aparte de la asignación. */
+  const iniciar = async () => {
+    setArrancando(true);
+    setError(null);
+    try {
+      await AssignmentService.startWorkflow(instanceId);
+      onSubmitted();
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || t('instDetail.startFailed'));
+    } finally {
+      setArrancando(false);
+    }
+  };
+
   if (!form || !WAITING_STATES.includes(waitingFor)) {
     // Entre dos pasos el trámite pasa unos segundos ejecutándose, sin formulario
     // que pedir. Decir «no hay acción pendiente» justo después de enviar uno se
@@ -153,6 +178,22 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
           <Typography variant="body2" color="text.secondary">
             {t('instDetail.procesandoPaso')}
           </Typography>
+        </Box>
+      );
+    }
+    if (ESPERA_INICIO.includes(progress?.status)) {
+      return (
+        <Box sx={{ py: 1 }}>
+          <Alert severity="info" sx={{ mb: 2 }}>{t('instDetail.notStarted')}</Alert>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          <Button
+            variant="contained"
+            startIcon={arrancando ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
+            disabled={arrancando}
+            onClick={iniciar}
+          >
+            {t('tramites.start')}
+          </Button>
         </Box>
       );
     }

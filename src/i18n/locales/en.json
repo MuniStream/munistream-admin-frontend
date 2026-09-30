@@ -546,5 +546,7 @@
   "analytics.status.inactive": "Inactive",
   "analytics.status.unassigned": "Unassigned",
   "analytics.status.none": "No status",
-  "instDetail.procesandoPaso": "Processing this step; the next one is on its way"
+  "instDetail.procesandoPaso": "Processing this step; the next one is on its way",
+  "instDetail.notStarted": "This case has not started yet. Start it to begin the review.",
+  "instDetail.startFailed": "Could not start the case."
 }
