@@ -232,6 +232,9 @@ export default function InstanceDetail() {
           <InstanceAttachmentsPanel
             instanceId={instanceId}
             attachments={detail.data.attachments}
+            // Sin esto, quien archiva un documento sube el archivo y no ve nada
+            // cambiar: la lista se quedaría como estaba hasta recargar la página.
+            onUploaded={() => detail.refetch()}
           />
         )}
 
