@@ -185,8 +185,8 @@ function nombreDeArchivo(v: unknown): string {
  *
  * Buscaba `numero`, pero el domicilio que emite el portal (`AddressField`) trae
  * `no_ext` y `no_int`: aunque la detección hubiera funcionado, el número no salía.
- * El orden es el del uso: calle y número, interior, colonia, municipio, estado y
- * código postal.
+ * El orden es el del uso: calle y número, interior, colonia, municipio, estado,
+ * código postal y país (este último solo en domicilios del extranjero).
  */
 function textoDireccion(v: unknown): string {
   if (typeof v === 'string') return v;
@@ -203,6 +203,7 @@ function textoDireccion(v: unknown): string {
     o.municipio ?? o.delegacion,
     o.estado,
     o.cp ?? o.codigo_postal,
+    o.pais,
   ].filter(Boolean);
 
   // Sin ninguna clave reconocible es mejor no inventar: que se vea el objeto.

@@ -10,12 +10,15 @@ import api from '../services/api';
  * colonias de ese CP en un menú; si la colonia no está en el catálogo, el usuario
  * la escribe con la opción "Otra".
  *
- * El valor es un objeto: { calle, no_ext, no_int, colonia, municipio, estado, cp }.
+ * El valor es un objeto: { calle, no_ext, no_int, colonia, municipio, estado, cp,
+ * pais }. `pais` lo capturan los trámites con domicilio en el extranjero; aquí se
+ * declara para que editar un domicilio desde el admin no lo descarte.
  */
 
 export interface AddressValue {
   calle?: string;
   no_ext?: string;
+  pais?: string;
   no_int?: string;
   colonia?: string;
   municipio?: string;
