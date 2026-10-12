@@ -38,6 +38,7 @@ import api from '../services/api';
 import { useTranslation } from 'react-i18next';
 import { NEUTRAL } from '@/theme/tokens';
 import FieldValue from './instance/operadores/FieldValue';
+import { getCustomFieldRenderer } from './customFieldRegistry';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -633,6 +634,29 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                 {editableFields.map((f) => {
                   const tipo = f.type || 'text';
+                  // Punto de extensión del tenant: si hay un renderer registrado
+                  // para este tipo de campo (p. ej. uno propio del tenant), se usa
+                  // en lugar del render nativo. Mismo mecanismo que DataCollection
+                  // Form/AdminDataCollectionForm; el shared no conoce el tipo.
+                  const customRenderer = getCustomFieldRenderer(tipo);
+                  if (customRenderer) {
+                    return (
+                      <Box key={f.name} sx={{ gridColumn: '1 / -1' }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                          {f.label || f.name}{f.required ? ' *' : ''}
+                        </Typography>
+                        {f.helperText && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>{f.helperText}</Typography>
+                        )}
+                        {customRenderer({
+                          field: f,
+                          value: editedValues[f.name],
+                          onChange: (v: any) => setEdited(f.name, v),
+                          readOnly: false,
+                        })}
+                      </Box>
+                    );
+                  }
                   const common = {
                     fullWidth: true,
                     label: f.label || f.name,
