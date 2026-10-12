@@ -92,6 +92,7 @@ function WorkflowDetail() {
       case 'completed':
         return <CheckCircleIcon color="success" />;
       case 'failed':
+      case 'rejected':
         return <ErrorIcon color="error" />;
       case 'in_progress':
         return <ScheduleIcon color="warning" />;
@@ -105,6 +106,7 @@ function WorkflowDetail() {
       case 'completed':
         return 'success';
       case 'failed':
+      case 'rejected':
         return 'error';
       case 'in_progress':
         return 'warning';

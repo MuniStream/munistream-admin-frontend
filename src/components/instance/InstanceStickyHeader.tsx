@@ -30,6 +30,9 @@ interface Props {
 
 const ESTADO_COLOR: Record<string, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   completed: 'success',
+  // Rechazado: completado con desenlace `rejected` (el backend ya manda el
+  // estado efectivo). Es un resultado del trámite, no un fallo técnico.
+  rejected: 'error',
   failed: 'error',
   cancelled: 'error',
   paused: 'warning',
@@ -155,7 +158,7 @@ export default function InstanceStickyHeader({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip
                 size="small"
-                label={instance.status}
+                label={t(`analytics.status.${instance.status}`, { defaultValue: instance.status })}
                 color={ESTADO_COLOR[instance.status] || 'default'}
               />
               {/* El avance va en el encabezado y no en una pestaña: es lo

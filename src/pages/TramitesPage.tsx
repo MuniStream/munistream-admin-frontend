@@ -7,7 +7,7 @@ import PageContainer from '@/components/ui/PageContainer';
 import TramiteList, { type TramiteRow } from '@/components/tramites/TramiteList';
 import AssignDialog from '@/components/tramites/AssignDialog';
 
-const ESTADOS = ['running', 'paused', 'completed', 'failed', 'cancelled'];
+const ESTADOS = ['running', 'paused', 'completed', 'rejected', 'failed', 'cancelled'];
 
 /**
  * Trámites: todos los del organismo, para consultar y asignar.

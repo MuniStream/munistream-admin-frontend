@@ -150,6 +150,7 @@ export const adminService = {
       active_instances: number;
       completed_instances: number;
       failed_instances: number;
+      rejected_instances?: number;
       average_processing_time_hours: number;
       success_rate: number;
       pending_approvals: number;

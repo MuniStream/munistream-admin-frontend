@@ -62,7 +62,7 @@ export default function InstanceDetail() {
   /** Un trámite terminado no admite ninguna acción; uno vivo puede pedirla en cualquier momento. */
   const quedaTrabajo = useMemo(() => {
     const estado = (track.data as any)?.status;
-    return !!estado && !['completed', 'failed', 'cancelled'].includes(estado);
+    return !!estado && !['completed', 'rejected', 'failed', 'cancelled'].includes(estado);
   }, [track.data]);
 
   // Entidades emitidas por el trámite (documento oficial). El backend las
