@@ -134,6 +134,7 @@ export const InboxSection: React.FC<InboxSectionProps> = ({
       case 'completed':
         return 'success';
       case 'failed':
+      case 'rejected':
         return 'error';
       default:
         return 'default';

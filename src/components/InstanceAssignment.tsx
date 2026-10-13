@@ -332,6 +332,7 @@ const InstanceAssignment: React.FC = () => {
             case 'running': return 'info';
             case 'completed': return 'success';
             case 'failed': return 'error';
+            case 'rejected': return 'error';
             case 'paused': return 'warning';
             case 'cancelled': return 'default';
             case 'awaiting_input': return 'warning';
@@ -383,6 +384,7 @@ const InstanceAssignment: React.FC = () => {
             'under_review': 5,
             'pending_review': 6,
             'completed': 7,
+            'rejected': 8,
             'failed': 8,
             'cancelled': 9
         };

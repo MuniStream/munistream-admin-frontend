@@ -192,7 +192,11 @@ function AnalyticsPage() {
             value={`${kpis.completion_rate.toFixed(1)}%`}
             icon={<CheckCircleIcon fontSize="large" />}
             tone="success"
-            sublabel={t('analytics.completedInstances', { count: kpis.completed_instances })}
+            sublabel={
+              kpis.rejected_instances
+                ? `${t('analytics.completedInstances', { count: kpis.completed_instances })} · ${t('analytics.rejectedInstances', { count: kpis.rejected_instances })}`
+                : t('analytics.completedInstances', { count: kpis.completed_instances })
+            }
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>

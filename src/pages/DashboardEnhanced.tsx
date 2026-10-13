@@ -364,6 +364,7 @@ function DashboardEnhanced() {
                     <TableCell align="center">{t('dash.colTotal')}</TableCell>
                     <TableCell align="center">{t('dash.colActive')}</TableCell>
                     <TableCell align="center">{t('dash.colCompleted')}</TableCell>
+                    <TableCell align="center">{t('dash.colRejected')}</TableCell>
                     <TableCell align="center">{t('dash.colFailed')}</TableCell>
                     <TableCell align="center">{t('dash.colSuccessRate')}</TableCell>
                     <TableCell align="center">{t('dash.colAvgTime')}</TableCell>
@@ -383,6 +384,7 @@ function DashboardEnhanced() {
                       <TableCell align="center">{workflow.total_instances}</TableCell>
                       <TableCell align="center">{workflow.active_instances}</TableCell>
                       <TableCell align="center">{workflow.completed_instances}</TableCell>
+                      <TableCell align="center">{workflow.rejected_instances ?? 0}</TableCell>
                       <TableCell align="center">{workflow.failed_instances}</TableCell>
                       <TableCell align="center">
                         <Box display="flex" alignItems="center" justifyContent="center" gap={1}>

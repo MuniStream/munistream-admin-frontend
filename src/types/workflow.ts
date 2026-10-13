@@ -91,6 +91,7 @@ export interface EfficiencyKPIs {
   active_instances: number;
   completed_instances: number;
   failed_instances: number;
+  rejected_instances?: number;
   completion_rate: number;
   avg_duration_seconds: number | null;
   median_duration_seconds: number | null;

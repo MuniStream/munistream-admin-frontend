@@ -103,6 +103,7 @@ const statusColors: Record<string, 'default' | 'primary' | 'secondary' | 'error'
   'pending_validation': 'info',
   'completed': 'success',
   'failed': 'error',
+  'rejected': 'error',
   'cancelled': 'default',
   'paused': 'secondary'
 };
@@ -114,6 +115,7 @@ const statusLabels: Record<string, string> = {
   'pending_validation': 'Pendiente Validación',
   'completed': 'Completado',
   'failed': 'Fallido',
+  'rejected': 'Rechazado',
   'cancelled': 'Cancelado',
   'paused': 'En Pausa',
   'in_progress': 'En Progreso'
@@ -127,6 +129,7 @@ const getStatusLabel = (status: string, t: any) => {
     'pending_validation': t('statusPendingValidation'),
     'completed': t('statusCompleted'),
     'failed': t('statusFailed'),
+    'rejected': t('statusRejected'),
     'cancelled': t('statusCancelled'),
     'paused': t('statusPaused')
   };
