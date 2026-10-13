@@ -144,6 +144,17 @@ export interface AdminDataCollectionFormProps {
   submitButtonText?: string;
 }
 
+// Ancho del campo en la rejilla de 12 columnas. Los tipos compuestos y los
+// marcados `fullWidth` cruzan el renglón; el resto va a media columna. Con
+// MUI v7 el `Grid` ya no acepta `item`/`xs`/`md`: con esa API los campos se
+// encogían a su contenido y un select quedaba en "Se…".
+const COMPUESTOS = new Set([
+  'textarea', 'file', 'camera', 'geo', 'address', 'array', 'daterange',
+  'entity_select', 'entity_multi_select', 'especies',
+]);
+const anchoDeCampo = (field: { type?: string; fullWidth?: boolean }): number =>
+  field.fullWidth || COMPUESTOS.has(field.type || '') ? 12 : 6;
+
 export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = ({
   title,
   description,
@@ -577,7 +588,7 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
 
                   <Grid container spacing={3}>
                     {section.fields.map(field => (
-                      <Grid item xs={12} md={field.type === 'textarea' ? 12 : 6} key={field.id}>
+                      <Grid size={{ xs: 12, md: anchoDeCampo(field) }} key={field.id}>
                         <Box>
                           <Typography variant="subtitle2" gutterBottom>
                             {field.label}
@@ -595,7 +606,7 @@ export const AdminDataCollectionForm: React.FC<AdminDataCollectionFormProps> = (
             // Fallback to flat fields rendering
             <Grid container spacing={3}>
               {allFields.map(field => (
-                <Grid item xs={12} md={field.type === 'textarea' ? 12 : 6} key={field.id}>
+                <Grid size={{ xs: 12, md: anchoDeCampo(field) }} key={field.id}>
                   <Box>
                     <Typography variant="subtitle2" gutterBottom>
                       {field.label}
