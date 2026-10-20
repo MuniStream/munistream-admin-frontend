@@ -19,6 +19,8 @@ import {
   Tabs,
   Tab,
   LinearProgress,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -33,6 +35,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import workflowService from '@/services/workflowService';
 import WorkflowDiagram from '@/components/WorkflowDiagram';
+import BpmnViewer from '@/components/BpmnViewer';
 import WorkflowNotificationsTab from '@/components/notifications/WorkflowNotificationsTab';
 import { useAuth } from '@/contexts/AuthContext';
 import PageContainer from '@/components/ui/PageContainer';
@@ -58,6 +61,7 @@ function WorkflowDetail() {
   const { hasPermission } = useAuth();
   const canManageIntegrations = hasPermission('manage_integrations');
   const [tabValue, setTabValue] = useState(0);
+  const [diagramView, setDiagramView] = useState<'mermaid' | 'bpmn'>('mermaid');
 
   const { data: workflowDetails, isLoading } = useQuery({
     queryKey: ['workflow-details', workflowId],
@@ -225,7 +229,22 @@ function WorkflowDetail() {
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
-          <WorkflowDiagram workflowData={workflowDetails} />
+          <Box display="flex" justifyContent="flex-end" mb={2} px={2}>
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={diagramView}
+              onChange={(_, v) => v && setDiagramView(v)}
+            >
+              <ToggleButton value="mermaid">{t('wfDetail.viewMermaid')}</ToggleButton>
+              <ToggleButton value="bpmn">{t('wfDetail.viewBpmn')}</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+          {diagramView === 'bpmn' ? (
+            <BpmnViewer workflowData={workflowDetails} />
+          ) : (
+            <WorkflowDiagram workflowData={workflowDetails} />
+          )}
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
