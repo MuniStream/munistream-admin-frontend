@@ -10,7 +10,8 @@ import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
 import { NEUTRAL } from '@/theme/tokens';
-import { downloadBlob, svgToPngBlob, workflowToBpmnXml } from '@/utils/bpmnExport';
+import workflowService from '@/services/workflowService';
+import { downloadBlob, resolveSubworkflows, svgToPngBlob, workflowToBpmnXml } from '@/utils/bpmnExport';
 
 interface BpmnViewerProps {
   workflowData: any;
@@ -32,9 +33,13 @@ function BpmnViewer({ workflowData }: BpmnViewerProps) {
       try {
         const { default: NavigatedViewer } = await import('bpmn-js/lib/NavigatedViewer');
         if (cancelled || !containerRef.current) return;
+        // Los sub-trámites que lanza se dibujan expandidos: hay que traer sus
+        // definiciones (y las de sus propios sub-trámites) antes de exportar.
+        const subworkflows = await resolveSubworkflows(workflowData, (id) => workflowService.getWorkflowDetails(id));
+        if (cancelled || !containerRef.current) return;
         viewer = new NavigatedViewer({ container: containerRef.current });
         viewerRef.current = viewer;
-        await viewer.importXML(workflowToBpmnXml(workflowData));
+        await viewer.importXML(workflowToBpmnXml(workflowData, (id) => subworkflows[id]));
         if (!cancelled) {
           viewer.get('canvas').zoom('fit-viewport');
           setError(null);
