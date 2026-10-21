@@ -44,6 +44,9 @@ import { useTranslation } from 'react-i18next';
 type SortField = 'name' | 'step_count' | 'status';
 type SortDir = 'asc' | 'desc';
 
+// The description is the first column dropped when width runs short.
+const descriptionDisplay = { xs: 'none', xl: 'table-cell' };
+
 function WorkflowsDashboard() {
   const { t } = useTranslation();
   const [sudoDialogOpen, setSudoDialogOpen] = useState(false);
@@ -185,13 +188,13 @@ function WorkflowsDashboard() {
     <PageContainer title={t('workflows')}>
 
       {/* Filters */}
-      <Box display="flex" gap={2} mb={2}>
+      <Box display="flex" flexWrap="wrap" gap={2} mb={2}>
         <TextField
           size="small"
           placeholder="Buscar por nombre o ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          sx={{ minWidth: 300 }}
+          sx={{ flex: '1 1 260px', maxWidth: 400 }}
           slotProps={{
             input: {
               startAdornment: (
@@ -218,8 +221,11 @@ function WorkflowsDashboard() {
         </FormControl>
       </Box>
 
+      {/* Fixed layout with per-column widths: name and description take the
+          remaining space and wrap, so the table never overflows the screen and
+          the actions stay visible. */}
       <TableContainer component={Paper}>
-        <Table>
+        <Table sx={{ tableLayout: 'fixed', width: '100%' }}>
           <TableHead>
             <TableRow>
               <TableCell>
@@ -231,8 +237,8 @@ function WorkflowsDashboard() {
                   Nombre
                 </TableSortLabel>
               </TableCell>
-              <TableCell>Descripción</TableCell>
-              <TableCell align="center">
+              <TableCell sx={{ width: '35%', display: descriptionDisplay }}>Descripción</TableCell>
+              <TableCell align="center" sx={{ width: 80 }}>
                 <TableSortLabel
                   active={sortField === 'step_count'}
                   direction={sortField === 'step_count' ? sortDir : 'asc'}
@@ -241,8 +247,8 @@ function WorkflowsDashboard() {
                   Pasos
                 </TableSortLabel>
               </TableCell>
-              <TableCell align="center">Instancias Activas</TableCell>
-              <TableCell align="center">
+              <TableCell align="center" sx={{ width: 100, whiteSpace: 'normal' }}>Instancias activas</TableCell>
+              <TableCell align="center" sx={{ width: 160 }}>
                 <TableSortLabel
                   active={sortField === 'status'}
                   direction={sortField === 'status' ? sortDir : 'asc'}
@@ -251,13 +257,12 @@ function WorkflowsDashboard() {
                   Estado
                 </TableSortLabel>
               </TableCell>
-              <TableCell align="center">Activo</TableCell>
-              <TableCell align="center">Acciones</TableCell>
+              <TableCell align="center" sx={{ width: canViewAnalytics ? 168 : 136 }}>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredWorkflows.map((workflow) => {
-              const stats = workflowStats?.by_workflow?.[workflow.workflow_id] || 0;
+              const activeInstances = workflowStats?.active_by_workflow?.[workflow.workflow_id] || 0;
               const status = workflow.status || 'active';
               const isActive = status === 'active';
 
@@ -268,31 +273,50 @@ function WorkflowsDashboard() {
                 >
                   <TableCell>
                     <Typography variant="subtitle2">{workflow.name}</Typography>
-                    <Typography variant="caption" color="text.secondary" fontFamily="monospace">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontFamily="monospace"
+                      sx={{ display: 'block', overflowWrap: 'anywhere' }}
+                    >
                       {workflow.workflow_id}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300 }} noWrap>
-                      {workflow.description}
-                    </Typography>
+                  <TableCell sx={{ display: descriptionDisplay }}>
+                    <Tooltip title={workflow.description || ''} placement="top-start">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {workflow.description}
+                      </Typography>
+                    </Tooltip>
                   </TableCell>
                   <TableCell align="center">{workflow.step_count || 0}</TableCell>
-                  <TableCell align="center">{stats}</TableCell>
+                  <TableCell align="center">{activeInstances}</TableCell>
                   <TableCell align="center">
-                    <Chip
-                      label={getStatusLabel(status)}
-                      size="small"
-                      color={getStatusChipColor(status) as any}
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <Switch
-                      checked={isActive}
-                      onChange={() => handleToggleStatus(workflow.workflow_id, status)}
-                      size="small"
-                      color="success"
-                    />
+                    <Box display="flex" alignItems="center" justifyContent="center" gap={0.5}>
+                      <Chip
+                        label={getStatusLabel(status)}
+                        size="small"
+                        color={getStatusChipColor(status) as any}
+                      />
+                      <Tooltip title={isActive ? 'Desactivar' : 'Activar'}>
+                        <Switch
+                          checked={isActive}
+                          onChange={() => handleToggleStatus(workflow.workflow_id, status)}
+                          size="small"
+                          color="success"
+                          slotProps={{ input: { 'aria-label': isActive ? 'Desactivar trámite' : 'Activar trámite' } }}
+                        />
+                      </Tooltip>
+                    </Box>
                   </TableCell>
                   <TableCell align="center">
                     <Box display="flex" justifyContent="center" gap={0.5}>
@@ -349,7 +373,7 @@ function WorkflowsDashboard() {
             })}
             {filteredWorkflows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">
                     {search || statusFilter !== 'all'
                       ? 'No se encontraron trámites con los filtros aplicados'

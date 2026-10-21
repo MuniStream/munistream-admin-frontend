@@ -28,17 +28,26 @@ export type {
 
 export const workflowService = {
   // Get all available workflows
+  // The endpoint paginates (20 by default, 100 max): walk every page so no
+  // workflow is left out.
   async getWorkflows(): Promise<{ workflows: Workflow[] }> {
-    const response = await fetch(`${API_BASE_URL}/workflows/`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
+    const pageSize = 100;
+    const workflows: Workflow[] = [];
+    for (let page = 1; ; page++) {
+      const response = await fetch(`${API_BASE_URL}/workflows/?page=${page}&page_size=${pageSize}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch workflows');
+      if (!response.ok) {
+        throw new Error('Failed to fetch workflows');
+      }
+
+      const data: { workflows: Workflow[]; total: number } = await response.json();
+      workflows.push(...data.workflows);
+      if (data.workflows.length === 0 || workflows.length >= data.total) break;
     }
-
-    return await response.json();
+    return { workflows };
   },
 
   // Get workflow details with steps
@@ -233,6 +242,7 @@ export const workflowService = {
     avg_completion_time_hours: number;
     success_rate: number;
     by_workflow: Record<string, number>;
+    active_by_workflow: Record<string, number>;
     by_status: Record<string, number>;
   }> {
     const response = await fetch(`${API_BASE_URL}/performance/stats`, {
