@@ -41,6 +41,8 @@ import {
 
 const EVENT_TYPES = [
   { value: 'started', label: 'Instancia iniciada' },
+  { value: 'step_advanced', label: 'Paso concluido' },
+  { value: 'modification_requested', label: 'Modificaciones solicitadas' },
   { value: 'completed', label: 'Instancia completada' },
   { value: 'failed', label: 'Instancia falló' },
   { value: 'paused', label: 'Instancia pausada' },
@@ -49,6 +51,9 @@ const EVENT_TYPES = [
   { value: 'approval_completed', label: 'Aprobación resuelta' },
   { value: 'entity_created', label: 'Entidad creada' },
 ];
+
+// Events that carry issued documents: the only ones where attaching applies.
+const DOCUMENT_EVENTS = new Set(['entity_created', 'completed']);
 
 interface WorkflowLike {
   steps?: Array<{ step_id?: string; id?: string; name?: string }>;
@@ -66,13 +71,14 @@ const defaultForm = (workflowId: string): NotificationTriggerInput => ({
   template_key: '',
   channels: ['email'],
   active: true,
+  attach_documents: false,
 });
 
 export default function WorkflowNotificationsTab({ workflowId, workflowData }: Props) {
   const queryClient = useQueryClient();
   const triggersQuery = useQuery({
     queryKey: ['notif', 'triggers', workflowId],
-    queryFn: () => notificationsService.listTriggers(workflowId),
+    queryFn: () => notificationsService.listTriggers(workflowId, true),
   });
   const templatesQuery = useQuery({
     queryKey: ['notif', 'templates'],
@@ -95,17 +101,20 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingSystem, setEditingSystem] = useState(false);
   const [form, setForm] = useState<NotificationTriggerInput>(() => defaultForm(workflowId));
   const [alert, setAlert] = useState<{ ok: boolean; text: string } | null>(null);
 
   const openCreate = (preselectedStepId?: string | null) => {
     setEditingId(null);
+    setEditingSystem(false);
     setForm({ ...defaultForm(workflowId), step_id: preselectedStepId ?? null });
     setDialogOpen(true);
   };
 
   const openEdit = (trg: NotificationTrigger) => {
     setEditingId(trg.id);
+    setEditingSystem(trg.is_system);
     setForm({
       workflow_id: trg.workflow_id,
       step_id: trg.step_id,
@@ -113,6 +122,7 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
       template_key: trg.template_key,
       channels: trg.channels,
       active: trg.active,
+      attach_documents: trg.attach_documents,
     });
     setDialogOpen(true);
   };
@@ -157,6 +167,8 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
           <Typography variant="h6">Triggers de notificación</Typography>
           <Typography variant="body2" color="text.secondary">
             Define qué eventos del flujo disparan una notificación al ciudadano y con qué plantilla.
+            Los avisos del sistema aplican a todos los trámites; aquí puede ajustar sus canales,
+            desactivarlos o decidir si adjuntan los documentos emitidos.
           </Typography>
         </Box>
         <Button startIcon={<AddIcon />} variant="contained" onClick={() => openCreate(null)}>
@@ -178,6 +190,7 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
               <TableCell>Paso</TableCell>
               <TableCell>Plantilla</TableCell>
               <TableCell>Canales</TableCell>
+              <TableCell align="center">Adjunta documentos</TableCell>
               <TableCell align="center">Activo</TableCell>
               <TableCell align="right">Acciones</TableCell>
             </TableRow>
@@ -185,12 +198,12 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
           <TableBody>
             {triggersQuery.isLoading && (
               <TableRow>
-                <TableCell colSpan={6}>Cargando…</TableCell>
+                <TableCell colSpan={7}>Cargando…</TableCell>
               </TableRow>
             )}
             {!triggersQuery.isLoading && (triggersQuery.data ?? []).length === 0 && (
               <TableRow>
-                <TableCell colSpan={6}>Sin triggers para este workflow.</TableCell>
+                <TableCell colSpan={7}>Sin triggers para este workflow.</TableCell>
               </TableRow>
             )}
             {triggersQuery.data?.map((trg) => (
@@ -199,13 +212,21 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
                   {EVENT_TYPES.find((e) => e.value === trg.event_type)?.label || trg.event_type}
                 </TableCell>
                 <TableCell>{trg.step_id || 'Cualquier paso'}</TableCell>
-                <TableCell>{trg.template_key}</TableCell>
+                <TableCell>
+                  {trg.template_key}
+                  {trg.is_system && (
+                    <Chip label="Sistema · todos los trámites" size="small" variant="outlined" sx={{ ml: 1 }} />
+                  )}
+                </TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={0.5}>
                     {trg.channels.map((c) => (
                       <Chip key={c} label={c} size="small" />
                     ))}
                   </Stack>
+                </TableCell>
+                <TableCell align="center">
+                  {DOCUMENT_EVENTS.has(trg.event_type) ? (trg.attach_documents ? 'Sí' : 'No') : '—'}
                 </TableCell>
                 <TableCell align="center">
                   <Chip
@@ -218,14 +239,16 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
                   <IconButton onClick={() => openEdit(trg)}>
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => {
-                      if (confirm('¿Eliminar este trigger?')) deleteMutation.mutate(trg.id);
-                    }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  {!trg.is_system && (
+                    <IconButton
+                      color="error"
+                      onClick={() => {
+                        if (confirm('¿Eliminar este trigger?')) deleteMutation.mutate(trg.id);
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -237,7 +260,13 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
         <DialogTitle>{editingId ? 'Editar trigger' : 'Nuevo trigger'}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ mt: 1 }}>
-            <FormControl fullWidth>
+            {editingSystem && (
+              <Alert severity="info">
+                Aviso del sistema: aplica a todos los trámites. Solo se ajustan canales, adjuntos y si
+                está activo.
+              </Alert>
+            )}
+            <FormControl fullWidth disabled={editingSystem}>
               <InputLabel>Evento</InputLabel>
               <Select
                 label="Evento"
@@ -253,7 +282,7 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
             </FormControl>
 
             {stepsOptions.length > 0 ? (
-              <FormControl fullWidth>
+              <FormControl fullWidth disabled={editingSystem}>
                 <InputLabel>Paso (opcional)</InputLabel>
                 <Select
                   label="Paso (opcional)"
@@ -279,7 +308,7 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
             )}
 
             {templateKeys.length > 0 ? (
-              <FormControl fullWidth>
+              <FormControl fullWidth disabled={editingSystem}>
                 <InputLabel>Plantilla (clave)</InputLabel>
                 <Select
                   label="Plantilla (clave)"
@@ -323,6 +352,18 @@ export default function WorkflowNotificationsTab({ workflowId, workflowData }: P
                 label="WhatsApp"
               />
             </FormGroup>
+
+            {DOCUMENT_EVENTS.has(form.event_type) && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.attach_documents}
+                    onChange={(e) => setForm({ ...form, attach_documents: e.target.checked })}
+                  />
+                }
+                label="Adjuntar en PDF los documentos emitidos"
+              />
+            )}
 
             <FormControlLabel
               control={

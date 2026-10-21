@@ -17,6 +17,8 @@ export interface ChannelConfig {
   credentials: Record<string, string | number | boolean>;
   from_address: string | null;
   test_recipient: string | null;
+  /** Non-secret channel settings, e.g. WhatsApp `default_country_code`. */
+  options?: Record<string, string | number | boolean>;
   updated_at: string | null;
   updated_by: string | null;
 }
@@ -26,6 +28,7 @@ export interface ChannelConfigInput {
   credentials: Record<string, string | number | boolean>;
   from_address?: string | null;
   test_recipient?: string | null;
+  options?: Record<string, string | number | boolean>;
 }
 
 export interface NotificationTemplate {
@@ -52,22 +55,27 @@ export interface NotificationTemplateInput {
 
 export interface NotificationTrigger {
   id: string;
-  workflow_id: string;
+  /** null: system trigger that applies to every workflow. */
+  workflow_id: string | null;
   step_id: string | null;
   event_type: string;
   template_key: string;
   channels: NotificationChannel[];
   active: boolean;
+  /** Attach the issued documents (entities) as PDF. */
+  attach_documents: boolean;
+  is_system: boolean;
   updated_at: string;
 }
 
 export interface NotificationTriggerInput {
-  workflow_id: string;
+  workflow_id: string | null;
   step_id?: string | null;
   event_type: string;
   template_key: string;
   channels: NotificationChannel[];
   active: boolean;
+  attach_documents: boolean;
 }
 
 export interface NotificationDelivery {
@@ -82,6 +90,7 @@ export interface NotificationDelivery {
   instance_id: string | null;
   rendered_preview: string | null;
   last_error: string | null;
+  attachments_sent?: string[];
   created_at: string;
   sent_at: string | null;
 }
@@ -144,10 +153,10 @@ export const notificationsService = {
       .post<{ subject: string | null; body: string }>('/notifications/templates/preview', payload)
       .then((r) => r.data),
 
-  listTriggers: (workflowId?: string) =>
+  listTriggers: (workflowId?: string, includeSystem = false) =>
     api
       .get<NotificationTrigger[]>('/notifications/triggers', {
-        params: workflowId ? { workflow_id: workflowId } : undefined,
+        params: workflowId ? { workflow_id: workflowId, include_system: includeSystem } : undefined,
       })
       .then((r) => r.data),
   createTrigger: (payload: NotificationTriggerInput) =>
