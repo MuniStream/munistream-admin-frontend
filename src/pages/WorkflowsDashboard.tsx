@@ -37,7 +37,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import workflowService from '@/services/workflowService';
-import WorkflowDiagram from '@/components/WorkflowDiagram';
 import { useAuth } from '@/contexts/AuthContext';
 import PageContainer from '@/components/ui/PageContainer';
 import { useTranslation } from 'react-i18next';
@@ -51,8 +50,6 @@ function WorkflowsDashboard() {
   const [sudoWorkflowId, setSudoWorkflowId] = useState<string | null>(null);
   const [sudoUserId, setSudoUserId] = useState('');
   const [sudoError, setSudoError] = useState<string | null>(null);
-  const [diagramDialogOpen, setDiagramDialogOpen] = useState(false);
-  const [diagramWorkflowId, setDiagramWorkflowId] = useState<string | null>(null);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -72,12 +69,6 @@ function WorkflowsDashboard() {
   const { data: workflowStats } = useQuery({
     queryKey: ['workflow-stats'],
     queryFn: workflowService.getWorkflowStats,
-  });
-
-  const { data: diagramWorkflowDetails } = useQuery({
-    queryKey: ['workflow-details', diagramWorkflowId],
-    queryFn: () => workflowService.getWorkflowDetails(diagramWorkflowId!),
-    enabled: !!diagramWorkflowId,
   });
 
   const toggleStatusMutation = useMutation({
@@ -160,11 +151,6 @@ function WorkflowsDashboard() {
   const handleSubmitSudo = () => {
     if (!sudoWorkflowId || !sudoUserId.trim()) return;
     sudoMutation.mutate({ workflowId: sudoWorkflowId, userId: sudoUserId.trim() });
-  };
-
-  const handleOpenDiagram = (workflowId: string) => {
-    setDiagramWorkflowId(workflowId);
-    setDiagramDialogOpen(true);
   };
 
   const getStatusChipColor = (status: string) => {
@@ -325,7 +311,7 @@ function WorkflowsDashboard() {
                         <span>
                           <IconButton
                             size="small"
-                            onClick={() => handleOpenDiagram(workflow.workflow_id)}
+                            onClick={() => navigate(`/workflows/${workflow.workflow_id}`)}
                             disabled={!isActive}
                           >
                             <DiagramIcon fontSize="small" />
@@ -408,31 +394,6 @@ function WorkflowsDashboard() {
           >
             {sudoMutation.isPending ? 'Iniciando...' : 'Ejecutar'}
           </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Diagram Dialog */}
-      <Dialog open={diagramDialogOpen} onClose={() => setDiagramDialogOpen(false)} maxWidth="lg" fullWidth>
-        <DialogTitle>Diagrama del Trámite</DialogTitle>
-        <DialogContent>
-          {diagramWorkflowDetails ? (
-            <WorkflowDiagram workflowData={diagramWorkflowDetails} />
-          ) : (
-            <Box textAlign="center" p={3}>
-              <Typography>Cargando diagrama...</Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDiagramDialogOpen(false)}>Cerrar</Button>
-          {diagramWorkflowId && (
-            <Button variant="outlined" onClick={() => {
-              setDiagramDialogOpen(false);
-              navigate(`/workflows/${diagramWorkflowId}`);
-            }}>
-              Ver Detalle Completo
-            </Button>
-          )}
         </DialogActions>
       </Dialog>
     </PageContainer>
