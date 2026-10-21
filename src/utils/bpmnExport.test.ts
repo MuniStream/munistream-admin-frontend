@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { BpmnModdle } from 'bpmn-moddle';
-import { workflowToBpmnXml } from './bpmnExport';
+import { resolveSubworkflows, workflowToBpmnXml } from './bpmnExport';
 
 // Parsea el XML con el mismo modelo que usa bpmn-js: si hay referencias rotas
 // o elementos fuera del esquema, aparecen como warnings.
-async function parse(workflow: any) {
-  const xml = workflowToBpmnXml(workflow);
+async function parse(workflow: any, subworkflows: Record<string, any> = {}) {
+  const xml = workflowToBpmnXml(workflow, (id) => subworkflows[id]);
   const { rootElement, warnings } = await new BpmnModdle().fromXML(xml);
   const process = rootElement.rootElements.find((e: any) => e.$type === 'bpmn:Process');
   const plane = rootElement.diagrams[0].plane;
@@ -15,7 +15,17 @@ async function parse(workflow: any) {
   const flowsFrom = (id: string) => flows.filter((f: any) => f.sourceRef.id === id);
   const laneOf = (id: string) =>
     process.laneSets[0].lanes.find((l: any) => (l.flowNodeRef || []).some((n: any) => n.id === id));
-  return { xml, warnings, process, plane, nodes, flows, byType, flowsFrom, laneOf };
+  // Todos los elementos, también los que viven dentro de sub-procesos.
+  const all: any[] = [];
+  const walk = (els: any[] = []) =>
+    els.forEach((e) => {
+      all.push(e);
+      walk(e.flowElements);
+    });
+  walk(process.flowElements);
+  const byId = (id: string) => all.find((e) => e.id === id);
+  const di = new Map<string, any>(plane.planeElement.map((e: any) => [e.bpmnElement.id, e]));
+  return { xml, warnings, process, plane, nodes, flows, byType, flowsFrom, laneOf, all, byId, di };
 }
 
 const step = (step_id: string, operator_class: string, next_steps: string[] = [], extra: any = {}) => ({
@@ -179,6 +189,211 @@ describe('workflowToBpmnXml', () => {
       expect(shape, n.id).toBeDefined();
       expect(shape.bounds.y).toBeGreaterThanOrEqual(lane.bounds.y);
       expect(shape.bounds.y + shape.bounds.height).toBeLessThanOrEqual(lane.bounds.y + lane.bounds.height);
+    });
+  });
+
+  describe('sub-trámites (WorkflowStartOperator)', () => {
+    const start = (id: string, child: string, extra: any = {}, next: string[] = []) =>
+      step(id, 'WorkflowStartOperator', next, {
+        operator_config: {
+          child_workflow_id: child,
+          child_workflow_type: 'admin',
+          wait_for_completion: true,
+          required_status: 'completed',
+          propagate_terminal: ['rejected'],
+          timeout_minutes: 7200,
+          ...extra,
+        },
+      });
+
+    const validacion = {
+      workflow_id: 'admin_validacion',
+      name: 'Validación administrativa',
+      steps: [
+        step('revision', 'UserInputOperator', ['es_rechazo']),
+        step('es_rechazo', 'ShortCircuitOperator', ['emitir_oficio']),
+        step('emitir_oficio', 'EntityCreationOperator', ['desenlace'], {
+          operator_config: { emits_entity: { entity_type: 'oficio_rechazo' } },
+        }),
+        step('desenlace', 'TerminateIfOperator', [], { operator_config: { terminal_status: 'rejected' } }),
+      ],
+    };
+
+    const tramite = {
+      workflow_id: 'tramite_sustitucion',
+      name: 'Sustitución de titular',
+      steps: [
+        step('captura', 'UserInputOperator', ['validacion']),
+        start('validacion', 'admin_validacion', {}, ['emitir_titulo']),
+        step('emitir_titulo', 'EntityCreationOperator', [], {
+          operator_config: { emits_entity: { entity_type: 'titulo_concesion' } },
+        }),
+      ],
+    };
+
+    it('expande el hijo como subProcess con sus pasos dentro', async () => {
+      const { warnings, byId, byType, di } = await parse(tramite, { admin_validacion: validacion });
+      expect(warnings).toEqual([]);
+      expect(byType('callActivity')).toHaveLength(0);
+      const sub = byId('validacion');
+      expect(sub.$type).toBe('bpmn:SubProcess');
+      const inner = sub.flowElements.map((e: any) => e.id);
+      expect(inner).toEqual(expect.arrayContaining(['validacion__revision', 'validacion__emitir_oficio', 'validacion__StartEvent_1']));
+      expect(di.get('validacion').isExpanded).toBe(true);
+      expect(sub.documentation[0].text).toContain('admin_validacion');
+      expect(sub.documentation[0].text).toContain('7200 min');
+    });
+
+    it('dibuja cada paso del hijo dentro de los límites del subProcess', async () => {
+      const { byId, di } = await parse(tramite, { admin_validacion: validacion });
+      const box = di.get('validacion').bounds;
+      byId('validacion').flowElements
+        .filter((e: any) => e.$type !== 'bpmn:SequenceFlow')
+        .forEach((e: any) => {
+          const b = di.get(e.id).bounds;
+          expect(b.x, e.id).toBeGreaterThanOrEqual(box.x);
+          expect(b.y, e.id).toBeGreaterThanOrEqual(box.y);
+          expect(b.x + b.width, e.id).toBeLessThanOrEqual(box.x + box.width);
+          expect(b.y + b.height, e.id).toBeLessThanOrEqual(box.y + box.height);
+        });
+    });
+
+    it('un rechazo del hijo se lanza como error y el padre lo atrapa y concluye', async () => {
+      const { byId, all, flowsFrom } = await parse(tramite, { admin_validacion: validacion });
+      const errorEnd = all.find(
+        (e: any) => e.$type === 'bpmn:EndEvent' && e.id.startsWith('validacion__') && e.eventDefinitions?.length,
+      );
+      expect(errorEnd.eventDefinitions[0].$type).toBe('bpmn:ErrorEventDefinition');
+      expect(errorEnd.eventDefinitions[0].errorRef.errorCode).toBe('rejected');
+      expect(byId('validacion__desenlace').$type).toBe('bpmn:ExclusiveGateway');
+
+      const boundary = all.find((e: any) => e.$type === 'bpmn:BoundaryEvent');
+      expect(boundary.attachedToRef.id).toBe('validacion');
+      expect(boundary.eventDefinitions[0].errorRef.errorCode).toBe('rejected');
+      const fin = flowsFrom(boundary.id)[0].targetRef;
+      expect(fin.name).toBe('Rechazado');
+      expect(fin.eventDefinitions[0].$type).toBe('bpmn:TerminateEventDefinition');
+      // Si se aprueba, el trámite sigue normalmente.
+      expect(flowsFrom('validacion').map((f: any) => f.targetRef.id)).toEqual(['emitir_titulo']);
+    });
+
+    it('sin propagate_terminal el rechazo del hijo no lanza error al padre', async () => {
+      const sinPropagar = { ...tramite, steps: [tramite.steps[0], start('validacion', 'admin_validacion', { propagate_terminal: [] })] };
+      const { all, warnings } = await parse(sinPropagar, { admin_validacion: validacion });
+      expect(warnings).toEqual([]);
+      expect(all.some((e: any) => e.$type === 'bpmn:BoundaryEvent')).toBe(false);
+      const fin = all.find((e: any) => e.id.startsWith('validacion__') && e.name === 'Rechazado');
+      expect(fin.eventDefinitions[0].$type).toBe('bpmn:TerminateEventDefinition');
+    });
+
+    it('expande recursivamente y propaga el rechazo nivel por nivel', async () => {
+      const opinion = {
+        workflow_id: 'opinion_imipas',
+        steps: [
+          step('dictamen', 'UserInputOperator', ['desenlace']),
+          step('desenlace', 'TerminateIfOperator', [], { operator_config: { terminal_status: 'rejected' } }),
+        ],
+      };
+      const validacionConOpinion = {
+        ...validacion,
+        steps: [start('opinion', 'opinion_imipas', {}, ['revision']), ...validacion.steps],
+      };
+      const { warnings, byId, all } = await parse(tramite, {
+        admin_validacion: validacionConOpinion,
+        opinion_imipas: opinion,
+      });
+      expect(warnings).toEqual([]);
+      const nieto = byId('validacion__opinion');
+      expect(nieto.$type).toBe('bpmn:SubProcess');
+      expect(nieto.flowElements.map((e: any) => e.id)).toContain('validacion__opinion__dictamen');
+
+      // El rechazo del nieto lo atrapa la validación, que a su vez lo relanza al trámite.
+      const fronteraMedia = all.find((e: any) => e.$type === 'bpmn:BoundaryEvent' && e.attachedToRef.id === 'validacion__opinion');
+      const relanzado = fronteraMedia.outgoing[0].targetRef;
+      expect(relanzado.eventDefinitions[0].$type).toBe('bpmn:ErrorEventDefinition');
+      expect(all.some((e: any) => e.$type === 'bpmn:BoundaryEvent' && e.attachedToRef.id === 'validacion')).toBe(true);
+    });
+
+    it('corta los ciclos dejando una callActivity que nombra el trámite', async () => {
+      const a = { workflow_id: 'a', steps: [step('captura', 'UserInputOperator', ['lanza_b']), start('lanza_b', 'b')] };
+      const b = { workflow_id: 'b', steps: [start('lanza_a', 'a')] };
+      const { warnings, byId } = await parse(a, { a, b });
+      expect(warnings).toEqual([]);
+      expect(byId('lanza_b').$type).toBe('bpmn:SubProcess');
+      const ciclo = byId('lanza_b__lanza_a');
+      expect(ciclo.$type).toBe('bpmn:CallActivity');
+      expect(ciclo.calledElement).toBe('a');
+    });
+
+    it('sin la definición del hijo queda como callActivity', async () => {
+      const { byId } = await parse(tramite);
+      expect(byId('validacion').$type).toBe('bpmn:CallActivity');
+      expect(byId('validacion').calledElement).toBe('admin_validacion');
+    });
+
+    it('un hijo que no se espera no se expande', async () => {
+      const sinEspera = { ...tramite, steps: [tramite.steps[0], start('validacion', 'admin_validacion', { wait_for_completion: false })] };
+      const { byId } = await parse(sinEspera, { admin_validacion: validacion });
+      expect(byId('validacion').$type).toBe('bpmn:CallActivity');
+      expect(byId('validacion').documentation[0].text).toContain('No espera');
+    });
+
+    it('resolveSubworkflows trae cada hijo una vez, recursivamente y sin ciclos', async () => {
+      const opinion = { workflow_id: 'opinion_imipas', steps: [start('vuelta', 'tramite_sustitucion')] };
+      const defs: Record<string, any> = {
+        admin_validacion: { ...validacion, steps: [start('opinion', 'opinion_imipas'), ...validacion.steps] },
+        opinion_imipas: opinion,
+        tramite_sustitucion: tramite,
+      };
+      const pedidos: string[] = [];
+      const found = await resolveSubworkflows(tramite, async (id) => {
+        pedidos.push(id);
+        return defs[id];
+      });
+      expect(Object.keys(found).sort()).toEqual(['admin_validacion', 'opinion_imipas']);
+      expect(pedidos.sort()).toEqual(['admin_validacion', 'opinion_imipas']);
+    });
+
+    it('un hijo que falla al cargar no rompe la resolución', async () => {
+      const found = await resolveSubworkflows(tramite, async () => {
+        throw new Error('404');
+      });
+      expect(found).toEqual({});
+    });
+  });
+
+  describe('emisión de entidades', () => {
+    it('cada EntityCreationOperator escribe en un data store con el tipo de entidad', async () => {
+      const { warnings, byId, di } = await parse({
+        workflow_id: 'emite',
+        steps: [
+          step('captura', 'UserInputOperator', ['emitir']),
+          step('emitir', 'EntityCreationOperator', [], {
+            operator_config: { emits_entity: { entity_type: 'permiso_pesca_comercial' } },
+          }),
+        ],
+      });
+      expect(warnings).toEqual([]);
+      const task = byId('emitir');
+      expect(task.dataOutputAssociations).toHaveLength(1);
+      const store = task.dataOutputAssociations[0].targetRef;
+      expect(store.$type).toBe('bpmn:DataStoreReference');
+      expect(store.name).toBe('Entidad: Permiso pesca comercial');
+      expect(di.get(store.id)).toBeDefined();
+      expect(di.get(task.dataOutputAssociations[0].id).waypoint).toHaveLength(2);
+    });
+
+    it('EntityUpdateOperator escribe en la entidad que actualiza', async () => {
+      const { byId } = await parse({
+        workflow_id: 'actualiza',
+        steps: [step('actualizar', 'EntityUpdateOperator', [], { operator_config: { updates_entity: { entity_id_source: 'x' } } })],
+      });
+      expect(byId('actualizar').dataOutputAssociations[0].targetRef.name).toBe('Entidad (actualización)');
+    });
+
+    it('los pasos sin entidad no llevan data store', async () => {
+      const { all } = await parse(linear);
+      expect(all.some((e: any) => e.$type === 'bpmn:DataStoreReference')).toBe(false);
     });
   });
 });
