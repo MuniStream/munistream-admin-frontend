@@ -123,6 +123,10 @@ export default function ProfileFieldsPage() {
           <Typography variant="body2" color="text.secondary">
             Configura los campos que los ciudadanos pueden llenar en su perfil. Estos valores pre-llenan los trámites automáticamente.
           </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Los campos de tipo Teléfono reciben los avisos por WhatsApp y los de tipo Correo los
+            reciben por correo, además del teléfono y correo de la cuenta (LlaveMX).
+          </Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Nuevo campo

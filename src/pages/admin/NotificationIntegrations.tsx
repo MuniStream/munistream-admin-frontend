@@ -7,10 +7,12 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  FormControlLabel,
   Grid,
   IconButton,
   InputAdornment,
   Stack,
+  Switch,
   Tab,
   Tabs,
   TextField,
@@ -247,10 +249,22 @@ function WhatsAppTab() {
   const queryClient = useQueryClient();
   const { data: config, isLoading: loadingConfig } = useChannel('whatsapp');
   const [testRecipient, setTestRecipient] = useState('');
+  const [enabled, setEnabled] = useState(false);
+  const [countryCode, setCountryCode] = useState('52');
   const [statusMessage, setStatusMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   useQueryHydration(config, (cfg) => {
     setTestRecipient(cfg.test_recipient ?? '');
+    setEnabled(cfg.enabled);
+    setCountryCode(String(cfg.options?.default_country_code ?? '52'));
+  });
+
+  const buildPayload = (): ChannelConfigInput => ({
+    enabled,
+    credentials: {},
+    from_address: config?.from_address,
+    test_recipient: testRecipient,
+    options: { ...(config?.options ?? {}), default_country_code: countryCode.replace(/\D/g, '') || '52' },
   });
 
   const { data: status } = useQuery<BaileysStatus>({
@@ -378,6 +392,37 @@ function WhatsAppTab() {
 
         <Box sx={{ mt: 4 }}>
           <Typography variant="subtitle1" gutterBottom>
+            Avisos a la ciudadanía
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Los avisos llegan al teléfono de la cuenta (LlaveMX) y a los campos de perfil de tipo
+            Teléfono que cada persona capture. Los números sin clave de país reciben la lada por
+            defecto.
+          </Typography>
+          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+            <FormControlLabel
+              control={<Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
+              label="Enviar avisos por WhatsApp"
+            />
+            <TextField
+              label="Lada por defecto"
+              value={countryCode}
+              onChange={(e) => setCountryCode(e.target.value)}
+              sx={{ width: 160 }}
+              inputProps={{ inputMode: 'numeric' }}
+            />
+            <Button
+              variant="contained"
+              onClick={() => saveConfig.mutate(buildPayload())}
+              disabled={saveConfig.isPending}
+            >
+              Guardar
+            </Button>
+          </Stack>
+        </Box>
+
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="subtitle1" gutterBottom>
             Prueba de envío
           </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
@@ -390,14 +435,7 @@ function WhatsAppTab() {
             />
             <Button
               variant="outlined"
-              onClick={() => {
-                saveConfig.mutate({
-                  enabled: config?.enabled ?? true,
-                  credentials: {},
-                  from_address: config?.from_address,
-                  test_recipient: testRecipient,
-                });
-              }}
+              onClick={() => saveConfig.mutate(buildPayload())}
               disabled={saveConfig.isPending}
             >
               Guardar número
