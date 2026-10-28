@@ -9,17 +9,25 @@ import api from '@/services/api';
 import LoadingState from '@/components/ui/LoadingState';
 
 /**
- * Se asigna a equipo, no a persona.
+ * Assign instances to a team and, optionally, to one of its members.
  *
- * El personal vive en Keycloak: la colección de usuarios de la base de datos
- * está vacía, así que un desplegable de personas no tendría a quién ofrecer. Los
- * equipos son lo que los trámites usan realmente.
+ * Teams and their members live in Keycloak (groups): the backend lists the teams
+ * the user may route to (admins: all; managers: their own) and the members of a
+ * team with their Keycloak id, which is what an assignee needs to see the
+ * instance afterwards.
  */
-interface EquipoAsignable {
+interface AssignableTeam {
   team_id: string;
   team_name: string;
   current_load: number;
   available: boolean;
+}
+
+interface TeamMember {
+  id: string;
+  name: string;
+  email?: string;
+  roles: string[];
 }
 
 interface Props {
@@ -30,42 +38,52 @@ interface Props {
 }
 
 /**
- * Asignar trámites a un revisor.
- *
- * Se asigna uno a uno porque el backend no tiene operación en bloque; el
- * diálogo espera a todos y reporta si alguno falló, en vez de dar por buena la
- * operación entera.
+ * The backend has no bulk operation, so instances are assigned one by one; the
+ * dialog waits for all of them and reports if any failed instead of treating the
+ * whole operation as done.
  */
 export default function AssignDialog({ open, instanceIds, onClose, onDone }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [equipo, setEquipo] = useState('');
+  const [team, setTeam] = useState('');
+  const [member, setMember] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const { data: equipos, isLoading } = useQuery({
-    queryKey: ['equipos-asignables'],
-    queryFn: async () => (await api.get('/assignments/teams')).data as EquipoAsignable[],
+  const { data: teams, isLoading } = useQuery({
+    queryKey: ['assignable-teams'],
+    queryFn: async () => (await api.get('/assignments/teams')).data as AssignableTeam[],
     enabled: open,
   });
 
-  const asignar = useMutation({
+  const { data: members, isLoading: loadingMembers } = useQuery({
+    queryKey: ['team-members', team],
+    queryFn: async () =>
+      (await api.get(`/assignments/teams/${encodeURIComponent(team)}/members`)).data as TeamMember[],
+    enabled: open && !!team,
+  });
+
+  const assign = useMutation({
     mutationFn: async () => {
-      const resultados = await Promise.allSettled(
-        instanceIds.map((id) =>
-          api.post(`/assignments/${id}/assign`, {
-            assign_to: { team_id: equipo },
-            assignment_type: 'manual',
-          }),
-        ),
+      const results = await Promise.allSettled(
+        instanceIds.map(async (id) => {
+          // Route to the team first: a member can only be chosen within the
+          // instance's team.
+          await api.post(`/assignments/${id}/assign`, { assign_to: { team } });
+          if (member) {
+            await api.post(`/assignments/${id}/assign`, { assign_to: { admin: member } });
+          }
+        }),
       );
-      const fallidos = resultados.filter((r) => r.status === 'rejected').length;
-      if (fallidos > 0) throw new Error(String(fallidos));
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      if (failed > 0) throw new Error(String(failed));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tramites'] });
       queryClient.invalidateQueries({ queryKey: ['mi-bandeja'] });
       queryClient.invalidateQueries({ queryKey: ['mi-bandeja-resumen'] });
       setError(null);
+      setTeam('');
+      setMember('');
       onDone();
     },
     onError: () => setError(t('tramites.assignError')),
@@ -86,14 +104,37 @@ export default function AssignDialog({ open, instanceIds, onClose, onDone }: Pro
             select
             fullWidth
             label={t('tramites.assignTo')}
-            value={equipo}
-            onChange={(e) => setEquipo(e.target.value)}
+            value={team}
+            onChange={(e) => { setTeam(e.target.value); setMember(''); }}
+            inputProps={{ 'data-testid': 'assign-team' }}
           >
-            {(equipos ?? []).map((eq) => (
+            {(teams ?? []).map((eq) => (
               <MenuItem key={eq.team_id} value={eq.team_id}>
                 {eq.team_name}
                 {' · '}
                 {t('tramites.currentLoad', { count: eq.current_load })}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
+
+        {team && (
+          <TextField
+            select
+            fullWidth
+            sx={{ mt: 2 }}
+            label={t('tramites.assignToMember')}
+            value={member}
+            onChange={(e) => setMember(e.target.value)}
+            disabled={loadingMembers}
+            helperText={t('tramites.assignToMemberHint')}
+            inputProps={{ 'data-testid': 'assign-member' }}
+          >
+            <MenuItem value="">{t('tramites.wholeTeam')}</MenuItem>
+            {(members ?? []).map((m) => (
+              <MenuItem key={m.id} value={m.id}>
+                {m.name}
+                {m.roles.length > 0 && ` · ${m.roles.map((r) => t(`roleLabels.${r}`, { defaultValue: r })).join(', ')}`}
               </MenuItem>
             ))}
           </TextField>
@@ -105,8 +146,8 @@ export default function AssignDialog({ open, instanceIds, onClose, onDone }: Pro
         <Button onClick={onClose}>{t('close')}</Button>
         <Button
           variant="contained"
-          disabled={!equipo || asignar.isPending}
-          onClick={() => asignar.mutate()}
+          disabled={!team || assign.isPending}
+          onClick={() => assign.mutate()}
         >
           {t('tramites.assignConfirm')}
         </Button>

@@ -13,6 +13,8 @@ import StatusChip from '@/components/ui/StatusChip';
 import EmptyState from '@/components/ui/EmptyState';
 import LoadingState from '@/components/ui/LoadingState';
 import { AssignmentService } from '@/services/assignmentService';
+import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/auth/permissions';
 
 /**
  * Forma común de una fila, la devuelvan las asignaciones o el listado general.
@@ -78,6 +80,9 @@ export default function TramiteList({
   const navigate = useNavigate();
   const [arrancando, setArrancando] = useState<string | null>(null);
   const [errorInicio, setErrorInicio] = useState<string | null>(null);
+  // Viewers can open an instance but not start it.
+  const { hasPermission } = useAuth();
+  const puedeIniciar = hasPermission(PERMISSIONS.START_INSTANCES);
 
   /**
    * Arranca el trámite y luego lo abre.
@@ -158,12 +163,14 @@ export default function TramiteList({
           <TableBody>
             {rows.map((r) => {
               const estado = estadoDe(r);
-              const necesitaInicio = ESPERA_INICIO.includes(estado);
+              const necesitaInicio = puedeIniciar && ESPERA_INICIO.includes(estado);
               const marcado = !!selected?.includes(r.instance_id);
 
               return (
                 <TableRow
                   key={r.instance_id}
+                  data-testid="tramite-row"
+                  data-instance-id={r.instance_id}
                   hover
                   selected={marcado}
                   sx={{ cursor: 'pointer' }}

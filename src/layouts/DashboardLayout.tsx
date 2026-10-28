@@ -45,29 +45,34 @@ import {
 import { useTranslation } from 'react-i18next';
 import { PageChromeProvider, usePageChrome } from './PageChromeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/auth/permissions';
 
 const drawerWidth = 240;
 
+// Every entry declares the permission it needs (see auth/permissions.ts); the
+// routes in AppRoutes require the same ones. "My inbox" comes first because it
+// is the landing page for every staff member.
 const menuItems = [
-  { text: 'dashboard', path: '/dashboard', icon: <DashboardIcon /> }, // Always show dashboard
-  { text: 'workflows', path: '/workflows', icon: <WorkflowIcon />, permission: 'view_workflows' },
-  { text: 'nav.myInbox', path: '/my-inbox', icon: <AssignmentIcon />, permission: 'view_instances' },
-  { text: 'nav.tramites', path: '/instances', icon: <InstanceIcon />, permission: 'view_instances' },
-  { text: 'nav.entities', path: '/entities', icon: <DocumentIcon />, permission: 'view_instances' },
-  { text: 'nav.catalogs', path: '/catalogs', icon: <CatalogIcon />, permission: 'admin_system' },
-  { text: 'nav.profileFields', path: '/profile-fields', icon: <PersonIcon />, permission: 'admin_system' },
-  { text: 'divider' }, // Visual separator for admin section
+  { text: 'nav.myInbox', path: '/my-inbox', icon: <AssignmentIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
+  { text: 'nav.tramites', path: '/instances', icon: <InstanceIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
+  { text: 'nav.entities', path: '/entities', icon: <DocumentIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
+  { text: 'dashboard', path: '/dashboard', icon: <DashboardIcon />, permission: PERMISSIONS.VIEW_ANALYTICS },
+  { text: 'workflows', path: '/workflows', icon: <WorkflowIcon />, permission: PERMISSIONS.MANAGE_WORKFLOWS },
+  { text: 'nav.catalogs', path: '/catalogs', icon: <CatalogIcon />, permission: PERMISSIONS.ADMIN_SYSTEM },
+  { text: 'nav.profileFields', path: '/profile-fields', icon: <PersonIcon />, permission: PERMISSIONS.ADMIN_SYSTEM },
+  // Separator before the administration section; hidden when nothing follows.
+  { text: 'divider', permission: PERMISSIONS.ADMIN_SYSTEM },
   {
     text: 'nav.notifications',
     icon: <NotificationIcon />,
-    permission: 'manage_integrations',
+    permission: PERMISSIONS.MANAGE_INTEGRATIONS,
     children: [
       { text: 'nav.configuration', path: '/admin/integrations/notifications', icon: <SettingsIcon /> },
       { text: 'nav.templates', path: '/admin/integrations/templates', icon: <DocumentIcon /> },
       { text: 'nav.deliveries', path: '/admin/notifications/deliveries', icon: <SendIcon /> },
     ],
   },
-  { text: 'nav.keycloakStats', path: '/admin/keycloak', icon: <SecurityIcon />, permission: 'admin_system' },
+  { text: 'nav.keycloakStats', path: '/admin/keycloak', icon: <SecurityIcon />, permission: PERMISSIONS.ADMIN_SYSTEM },
 ];
 
 function DashboardLayoutInner() {
@@ -77,7 +82,7 @@ function DashboardLayoutInner() {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, hasPermission, hasAnyRole } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
 
   const isGroupOpen = (item: any): boolean => {
     if (openGroups[item.text] !== undefined) return openGroups[item.text];
@@ -126,18 +131,13 @@ function DashboardLayoutInner() {
       <Divider />
       <List>
         {menuItems.map((item: any, index) => {
-          // Handle divider
-          if (item.text === 'divider') {
-            return <Divider key={`divider-${index}`} sx={{ my: 1 }} />;
+          // Only show entries the user is allowed to open
+          if (item.permission && !hasPermission(item.permission)) {
+            return null;
           }
 
-          // Check permissions and roles
-          const hasRequiredPermission = !item.permission || hasPermission(item.permission);
-          const hasRequiredRole = !item.roles || hasAnyRole(item.roles);
-
-          // Only show item if user has permission/role
-          if (!hasRequiredPermission || !hasRequiredRole) {
-            return null;
+          if (item.text === 'divider') {
+            return <Divider key={`divider-${index}`} sx={{ my: 1 }} />;
           }
 
           // Group with children
@@ -233,12 +233,6 @@ function DashboardLayoutInner() {
             </Box>
           )}
 
-          <IconButton color="inherit" aria-label={t('nav.notifications')} sx={{ mr: 1 }}>
-            <Badge badgeContent={3} color="error">
-              <NotificationIcon />
-            </Badge>
-          </IconButton>
-
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {user && (
               <>
@@ -246,7 +240,7 @@ function DashboardLayoutInner() {
                   {user.full_name}
                 </Typography>
                 <Chip
-                  label={user.role}
+                  label={user.role ? t(`roleLabels.${user.role}`) : ''}
                   size="small"
                   color="primary"
                   variant="outlined"
@@ -290,15 +284,6 @@ function DashboardLayoutInner() {
                   {user?.email}
                 </Typography>
               </Box>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={() => { navigate('/profile'); handleProfileMenuClose(); }}>
-              <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
-              {t('nav.profile')}
-            </MenuItem>
-            <MenuItem onClick={() => { navigate('/settings'); handleProfileMenuClose(); }}>
-              <ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon>
-              {t('nav.settings')}
             </MenuItem>
             <Divider />
             <MenuItem onClick={handleLogout}>

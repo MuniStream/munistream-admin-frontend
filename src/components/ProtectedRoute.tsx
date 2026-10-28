@@ -1,8 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useLocation } from 'react-router-dom';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { useAuth } from '@/contexts/AuthContext';
+import { HOME_PATH } from '@/auth/permissions';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,17 +12,40 @@ interface ProtectedRouteProps {
   requiredRoles?: string[];
 }
 
-function ProtectedRoute({ 
-  children, 
-  requiredPermission, 
-  requiredRole, 
-  requiredRoles 
+function Denied({ title, detail, action }: { title: string; detail: string; action?: React.ReactNode }) {
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      minHeight="60vh"
+      textAlign="center"
+      gap={1}
+      px={2}
+    >
+      <Typography variant="h5" color="error">
+        {title}
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 520 }}>
+        {detail}
+      </Typography>
+      {action}
+    </Box>
+  );
+}
+
+function ProtectedRoute({
+  children,
+  requiredPermission,
+  requiredRole,
+  requiredRoles
 }: ProtectedRouteProps) {
   const { t } = useTranslation();
   const location = useLocation();
-  const { isAuthenticated, loading, hasPermission, hasRole, hasAnyRole } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, loading, logout, hasPermission, hasRole, hasAnyRole } = useAuth();
 
-  // Show loading while checking auth
   if (loading) {
     return (
       <Box
@@ -39,85 +63,56 @@ function ProtectedRoute({
     );
   }
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check permission
-  console.log('ProtectedRoute Debug:', {
-    requiredPermission,
-    hasPermissionResult: hasPermission(requiredPermission),
-    isAuthenticated,
-    loading
-  });
+  // Signed in but without any staff role (e.g. a citizen account): nothing in
+  // the portal is available to them.
+  if (!user?.permissions?.length) {
+    return (
+      <Denied
+        title={t('misc.noPortalAccess')}
+        detail={t('misc.noPortalAccessHint')}
+        action={
+          <Button variant="outlined" sx={{ mt: 2 }} onClick={() => logout()}>
+            {t('nav.logout')}
+          </Button>
+        }
+      />
+    );
+  }
+
+  const goHome = (
+    <Button variant="outlined" sx={{ mt: 2 }} onClick={() => navigate(HOME_PATH)}>
+      {t('misc.goToInbox')}
+    </Button>
+  );
 
   if (requiredPermission && !hasPermission(requiredPermission)) {
-    return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h5" color="error" gutterBottom>
-          {t('misc.accessDenied')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t('misc.adminRequired')}
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-          {t('misc.debugPermissionNotFound', { permission: requiredPermission })}<br/>
-          {t('misc.debugHasPermission', { value: String(hasPermission(requiredPermission)) })}<br/>
-          {t('misc.debugAuthenticated', { value: String(isAuthenticated) })}<br/>
-          {t('misc.debugLoading', { value: String(loading) })}
-        </Typography>
-      </Box>
-    );
+    return <Denied title={t('misc.accessDenied')} detail={t('misc.permissionDenied')} action={goHome} />;
   }
 
-  // Check single role
   if (requiredRole && !hasRole(requiredRole)) {
     return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h5" color="error" gutterBottom>
-          {t('misc.accessDenied')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t('misc.requiresRole', { role: requiredRole })}
-        </Typography>
-      </Box>
+      <Denied
+        title={t('misc.accessDenied')}
+        detail={t('misc.requiresRole', { role: requiredRole })}
+        action={goHome}
+      />
     );
   }
 
-  // Check multiple roles
   if (requiredRoles && !hasAnyRole(requiredRoles)) {
     return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h5" color="error" gutterBottom>
-          {t('misc.accessDenied')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t('misc.requiresRoles', { roles: requiredRoles.join(', ') })}
-        </Typography>
-      </Box>
+      <Denied
+        title={t('misc.accessDenied')}
+        detail={t('misc.requiresRoles', { roles: requiredRoles.join(', ') })}
+        action={goHome}
+      />
     );
   }
 
-  // All checks passed
   return <>{children}</>;
 }
 
