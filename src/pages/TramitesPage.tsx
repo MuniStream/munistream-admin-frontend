@@ -6,6 +6,8 @@ import api from '@/services/api';
 import PageContainer from '@/components/ui/PageContainer';
 import TramiteList, { type TramiteRow } from '@/components/tramites/TramiteList';
 import AssignDialog from '@/components/tramites/AssignDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/auth/permissions';
 
 const ESTADOS = ['running', 'paused', 'completed', 'rejected', 'failed', 'cancelled'];
 
@@ -18,6 +20,10 @@ const ESTADOS = ['running', 'paused', 'completed', 'rejected', 'failed', 'cancel
  */
 export default function TramitesPage() {
   const { t } = useTranslation();
+  // Only managers and admins assign; the list itself is already scoped by the
+  // backend to what the user may see.
+  const { hasPermission } = useAuth();
+  const puedeAsignar = hasPermission(PERMISSIONS.ASSIGN_INSTANCES);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [estado, setEstado] = useState('');
@@ -100,7 +106,7 @@ export default function TramitesPage() {
           onPageChange={setPage}
           onRowsPerPageChange={(n) => { setRowsPerPage(n); setPage(0); }}
           selected={seleccion}
-          onSelectedChange={setSeleccion}
+          onSelectedChange={puedeAsignar ? setSeleccion : undefined}
           emptyMessage={t('tramites.empty')}
           onRefresh={refetch}
         />

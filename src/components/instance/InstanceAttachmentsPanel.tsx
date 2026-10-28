@@ -6,6 +6,8 @@ import AttachmentCard from './AttachmentCard';
 import AttachmentPreviewDialog from './AttachmentPreviewDialog';
 import instanceDetailService from '@/services/instanceDetailService';
 import type { DossierAttachment } from '@/types/instanceDetail';
+import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/auth/permissions';
 
 interface Props {
   instanceId: string;
@@ -20,6 +22,9 @@ export default function InstanceAttachmentsPanel({ instanceId, attachments, onUp
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
+  // Adding documents to the dossier is review work; viewers only read it.
+  const { hasPermission } = useAuth();
+  const canUpload = hasPermission(PERMISSIONS.REVIEW_INSTANCES);
 
   /**
    * Archivar un documento que llegó por fuera: un oficio de otra dependencia, el
@@ -42,7 +47,7 @@ export default function InstanceAttachmentsPanel({ instanceId, attachments, onUp
     }
   };
 
-  const zonaDeSubida = (
+  const zonaDeSubida = !canUpload ? null : (
     <Box sx={{ mb: attachments.length ? 2 : 0 }}>
       <input
         ref={input}

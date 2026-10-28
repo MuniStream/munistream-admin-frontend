@@ -16,6 +16,7 @@ import NotificationTemplates from '@/pages/admin/NotificationTemplates';
 import NotificationDeliveries from '@/pages/admin/NotificationDeliveries';
 import Login from '@/pages/Login';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { HOME_PATH, PERMISSIONS } from '@/auth/permissions';
 
 /** Redirige la ruta antigua del expediente a la nueva, conservando el id. */
 function RedirectToInstance() {
@@ -38,12 +39,13 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/dashboard" replace />} />
+        {/* "My inbox" is the landing page for every staff member. */}
+        <Route index element={<Navigate to={HOME_PATH} replace />} />
         
         <Route
           path="dashboard"
           element={
-            <ProtectedRoute requiredPermission="view_analytics">
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_ANALYTICS}>
               <DashboardEnhanced />
             </ProtectedRoute>
           }
@@ -52,7 +54,7 @@ function AppRoutes() {
         <Route
           path="workflows"
           element={
-            <ProtectedRoute requiredPermission="view_workflows">
+            <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_WORKFLOWS}>
               <WorkflowsDashboard />
             </ProtectedRoute>
           }
@@ -61,7 +63,7 @@ function AppRoutes() {
         <Route
           path="workflows/:workflowId"
           element={
-            <ProtectedRoute requiredPermission="view_workflows">
+            <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_WORKFLOWS}>
               <WorkflowDetail />
             </ProtectedRoute>
           }
@@ -70,7 +72,7 @@ function AppRoutes() {
         <Route
           path="analytics"
           element={
-            <ProtectedRoute requiredPermission="admin_system">
+            <ProtectedRoute requiredPermission={PERMISSIONS.ADMIN_SYSTEM}>
               <AnalyticsPage />
             </ProtectedRoute>
           }
@@ -79,7 +81,7 @@ function AppRoutes() {
         <Route
           path="instances"
           element={
-            <ProtectedRoute requiredPermission="view_instances">
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_INSTANCES}>
               <TramitesPage />
             </ProtectedRoute>
           }
@@ -88,7 +90,7 @@ function AppRoutes() {
         <Route
           path="entities"
           element={
-            <ProtectedRoute requiredPermission="view_instances">
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_INSTANCES}>
               <EntitiesPage />
             </ProtectedRoute>
           }
@@ -97,7 +99,7 @@ function AppRoutes() {
         <Route
           path="instances/:instanceId"
           element={
-            <ProtectedRoute requiredPermission="view_instances">
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_INSTANCES}>
               <InstanceDetail />
             </ProtectedRoute>
           }
@@ -106,7 +108,7 @@ function AppRoutes() {
         <Route
           path="my-inbox"
           element={
-            <ProtectedRoute requiredPermission="view_instances">
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_INSTANCES}>
               <MyInboxPage />
             </ProtectedRoute>
           }
@@ -122,7 +124,7 @@ function AppRoutes() {
         <Route
           path="catalogs"
           element={
-            <ProtectedRoute requiredPermission="admin_system">
+            <ProtectedRoute requiredPermission={PERMISSIONS.ADMIN_SYSTEM}>
               <CatalogsPage />
             </ProtectedRoute>
           }
@@ -131,7 +133,7 @@ function AppRoutes() {
         <Route
           path="profile-fields"
           element={
-            <ProtectedRoute requiredPermission="admin_system">
+            <ProtectedRoute requiredPermission={PERMISSIONS.ADMIN_SYSTEM}>
               <ProfileFieldsPage />
             </ProtectedRoute>
           }
@@ -140,7 +142,7 @@ function AppRoutes() {
         <Route
           path="admin/keycloak"
           element={
-            <ProtectedRoute requiredPermission="admin_system">
+            <ProtectedRoute requiredPermission={PERMISSIONS.ADMIN_SYSTEM}>
               <KeycloakStats />
             </ProtectedRoute>
           }
@@ -149,7 +151,7 @@ function AppRoutes() {
         <Route
           path="admin/integrations/notifications"
           element={
-            <ProtectedRoute requiredPermission="manage_integrations">
+            <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_INTEGRATIONS}>
               <NotificationIntegrations />
             </ProtectedRoute>
           }
@@ -158,7 +160,7 @@ function AppRoutes() {
         <Route
           path="admin/integrations/templates"
           element={
-            <ProtectedRoute requiredPermission="manage_integrations">
+            <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_INTEGRATIONS}>
               <NotificationTemplates />
             </ProtectedRoute>
           }
@@ -167,12 +169,14 @@ function AppRoutes() {
         <Route
           path="admin/notifications/deliveries"
           element={
-            <ProtectedRoute requiredPermission="manage_integrations">
+            <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_INTEGRATIONS}>
               <NotificationDeliveries />
             </ProtectedRoute>
           }
         />
 
+        {/* Unknown routes land on the inbox instead of a blank page. */}
+        <Route path="*" element={<Navigate to={HOME_PATH} replace />} />
       </Route>
     </Routes>
   );

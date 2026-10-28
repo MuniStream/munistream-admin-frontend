@@ -9,6 +9,8 @@ import { ContextValidationDisplay } from '@/components/ContextValidationDisplay'
 import { AdminCatalogSelector } from '@/components/AdminCatalogSelector';
 import { AdminAssertionReview } from '@/components/AdminAssertionReview';
 import { AdminDataCollectionForm } from '@/components/AdminDataCollectionForm';
+import { useAuth } from '@/contexts/AuthContext';
+import { PERMISSIONS } from '@/auth/permissions';
 
 /** Estados en los que el trámite espera una acción del revisor. */
 /**
@@ -76,6 +78,12 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
   const esSeleccionEntidad = form?.type === 'entity_selection';
 
   const taskId = form?.current_step_id;
+
+  // Same rules as the backend: signing is the final decision (approve), any
+  // other step is review work; viewers only read.
+  const { hasPermission } = useAuth();
+  const canStart = hasPermission(PERMISSIONS.START_INSTANCES);
+  const canAct = hasPermission(esFirma ? PERMISSIONS.APPROVE_INSTANCES : PERMISSIONS.REVIEW_INSTANCES);
 
   const trasEnviar = (mensaje: string) => {
     setExito({ paso: taskId, mensaje });
@@ -182,6 +190,9 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
       );
     }
     if (ESPERA_INICIO.includes(progress?.status)) {
+      if (!canStart) {
+        return <Alert severity="info">{t('instDetail.notStartedReadOnly')}</Alert>;
+      }
       return (
         <Box sx={{ py: 1 }}>
           <Alert severity="info" sx={{ mb: 2 }}>{t('instDetail.notStarted')}</Alert>
@@ -199,6 +210,14 @@ export default function InstanceActionPanel({ instanceId, progress, onSubmitted 
     }
     return (
       <Alert severity="info">{t('instDetail.noPendingAction')}</Alert>
+    );
+  }
+
+  if (!canAct) {
+    return (
+      <Alert severity="info" data-testid="action-read-only">
+        {esFirma ? t('instDetail.signatureNeedsApprover') : t('instDetail.readOnlyStep')}
+      </Alert>
     );
   }
 

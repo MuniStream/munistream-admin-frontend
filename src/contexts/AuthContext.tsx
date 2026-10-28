@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import keycloakService from '@/services/keycloak';
+import { highestRole, permissionsForRoles, SystemRole } from '@/auth/permissions';
 
 // User interface matching existing system
 export interface User {
@@ -7,7 +8,10 @@ export interface User {
   email: string;
   username: string;
   full_name: string;
-  role: 'admin' | 'manager' | 'reviewer' | 'approver' | 'viewer';
+  /** Highest system role, for display; null when the account has no staff role. */
+  role: SystemRole | null;
+  /** Every Keycloak role of the account (realm and client). */
+  roles: string[];
   status: 'active' | 'inactive' | 'suspended' | 'pending';
   permissions: string[];
   department?: string;
@@ -51,60 +55,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const initRef = useRef(false);
 
-  // Map roles to permissions
-  const getRolePermissions = (role: string): string[] => {
-    switch (role) {
-      case 'admin':
-        return [
-          'view_analytics',
-          'view_workflows',
-          'view_instances',
-          'view_documents',
-          'manage_instances',
-          'manage_workflows',
-          'manage_users',
-          'manage_settings',
-          'manage_integrations',
-          'approve_workflows',
-          'review_documents',
-          'create_workflows',
-          'delete_workflows',
-          'admin_system'
-        ];
-      case 'manager':
-        return [
-          'view_analytics',
-          'view_workflows',
-          'view_instances',
-          'view_documents',
-          'manage_instances',
-          'manage_workflows',
-          'approve_workflows',
-          'review_documents'
-        ];
-      case 'approver':
-        return [
-          'view_workflows',
-          'view_instances',
-          'view_documents',
-          'approve_workflows'
-        ];
-      case 'reviewer':
-        return [
-          'view_analytics',
-          'view_workflows',
-          'view_instances',
-          'view_documents',
-          'review_documents'
-        ];
-      case 'viewer':
-      default:
-        return [
-          'view_workflows'
-        ];
-    }
-  };
-
   // Initialize Keycloak and set user
   useEffect(() => {
     // Prevent double initialization in React StrictMode
@@ -119,23 +69,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userInfo = keycloakService.getUserInfo();
 
           if (userInfo && userInfo.id) {
-            // Map Keycloak roles to our User role
+            // Permissions are the union over every role the account holds; a
+            // user with no staff role gets none (see ProtectedRoute).
             const roles = userInfo.roles || [];
-            let primaryRole: User['role'] = 'viewer';
-
-            // Determine primary role (highest privilege)
-            if (roles.includes('admin')) {
-              primaryRole = 'admin';
-            } else if (roles.includes('manager')) {
-              primaryRole = 'manager';
-            } else if (roles.includes('approver')) {
-              primaryRole = 'approver';
-            } else if (roles.includes('reviewer')) {
-              primaryRole = 'reviewer';
-            }
-
-            // Get permissions based on role
-            const permissions = getRolePermissions(primaryRole);
+            const permissions = permissionsForRoles(roles);
 
             // Create user object
             const mappedUser: User = {
@@ -143,7 +80,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               email: userInfo.email || '',
               username: userInfo.username || userInfo.email || '',
               full_name: userInfo.name || userInfo.username || '',
-              role: primaryRole,
+              role: highestRole(roles),
+              roles,
               status: 'active',
               permissions,
               department: '',
@@ -188,21 +126,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Check if user has a specific permission
-  const hasPermission = (permission: string): boolean => {
-    const result = user?.permissions?.includes(permission) || false;
-    console.log('hasPermission Debug:', {
-      permission,
-      result,
-      userPermissions: user?.permissions,
-      userExists: !!user
-    });
-    return result;
-  };
+  const hasPermission = (permission: string): boolean =>
+    user?.permissions?.includes(permission) || false;
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
     if (!user) return false;
-    return user.role === role || keycloakService.hasRole(role);
+    return user.roles.includes(role);
   };
 
   // Check if user has any of the specified roles

@@ -390,9 +390,10 @@ class KeycloakService {
       roles.push(...tokenParsed.resource_access[KEYCLOAK_CONFIG.clientId].roles);
     }
 
-    // Filter out default roles
-    return roles.filter(role =>
-      !['offline_access', 'uma_authorization', 'default-roles-munistream'].includes(role)
+    // Filter out Keycloak's built-in roles; the default composite is named
+    // after the realm ("default-roles-<realm>").
+    return Array.from(new Set(roles)).filter(role =>
+      !['offline_access', 'uma_authorization'].includes(role) && !role.startsWith('default-roles-')
     );
   }
 
