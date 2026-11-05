@@ -40,7 +40,6 @@ import { NEUTRAL } from '@/theme/tokens';
 import FieldValue from './instance/operadores/FieldValue';
 import { getCustomFieldRenderer } from './customFieldRegistry';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
  * Rótulo legible de una clave del contexto.
@@ -237,9 +236,9 @@ export const ContextValidationDisplay: React.FC<ContextValidationDisplayProps> =
                             Vista previa del documento:
                           </Typography>
                           <EntityViewer
+                            instanceId={instanceId}
                             entityId={entity.entity_id}
                             entityName={entity.name}
-                            apiBaseUrl={`${API_URL}/api/v1`}
                           />
                         </Box>
                       </CardContent>

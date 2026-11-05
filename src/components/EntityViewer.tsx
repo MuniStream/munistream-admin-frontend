@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, CircularProgress, Alert, Button } from '@mui/material';
 import { Download, PictureAsPdf } from '@mui/icons-material';
+import axios from 'axios';
 import { NEUTRAL } from '@/theme/tokens';
+import instanceDetailService from '../services/instanceDetailService';
 
 interface EntityViewerProps {
+  /** Instance whose citizen owns the entity: the document hangs from it so the
+   *  request carries the session token and the access policy applies. */
+  instanceId: string;
   entityId: string;
   entityName?: string;
-  apiBaseUrl?: string;
 }
 
 export const EntityViewer: React.FC<EntityViewerProps> = ({
+  instanceId,
   entityId,
   entityName,
-  apiBaseUrl = '/api/v1'
 }) => {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -24,36 +28,24 @@ export const EntityViewer: React.FC<EntityViewerProps> = ({
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`${apiBaseUrl}/signatures/entities/${entityId}/html`);
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('No hay visualizador HTML disponible para esta entidad');
-            return;
-          }
-          throw new Error('Error al cargar el HTML del documento');
-        }
-
-        const htmlData = await response.text();
-        setHtmlContent(htmlData);
+        setHtmlContent(await instanceDetailService.getEntityDocumentHtml(instanceId, entityId));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        if (axios.isAxiosError(err) && err.response?.status === 404) {
+          setError('No hay visualizador HTML disponible para esta entidad');
+          return;
+        }
+        setError('Error al cargar el HTML del documento');
       } finally {
         setLoading(false);
       }
     };
 
     loadHtmlContent();
-  }, [entityId, apiBaseUrl]);
+  }, [instanceId, entityId]);
 
   const handleDownloadPdf = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/signatures/entities/${entityId}/pdf`);
-      if (!response.ok) {
-        throw new Error('Error al descargar PDF');
-      }
-
-      const blob = await response.blob();
+      const blob = await instanceDetailService.fetchEntityDocumentPdf(instanceId, entityId);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
