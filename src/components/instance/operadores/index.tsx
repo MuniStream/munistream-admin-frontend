@@ -108,7 +108,26 @@ function Vacio() {
   );
 }
 
-function Campos({ campos, task, presentacion = 'campos' }: DatosDePaso & { presentacion?: string }) {
+/** «primer_apellido» → «Primer apellido»: para un dato sin título, mejor que el nombre interno. */
+function legible(clave: string): string {
+  const texto = clave.replace(/_/g, ' ').trim();
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function Campos({
+  campos,
+  task,
+  presentacion = 'campos',
+  etiquetas,
+}: DatosDePaso & {
+  presentacion?: string;
+  /**
+   * El título de cada campo. Una lectura de documento los trae del tipo de
+   * documento; sin ellos el revisor leía `primer_apellido` en vez de «Primer
+   * apellido». Si se pasan, lo que no tenga título se muestra legible.
+   */
+  etiquetas?: Record<string, string>;
+}) {
   const entradas = Object.entries(valoresDe(campos, task));
 
   if (entradas.length === 0) {
@@ -126,7 +145,7 @@ function Campos({ campos, task, presentacion = 'campos' }: DatosDePaso & { prese
       {entradas.map(([clave, valor]) => (
         <Box key={clave} sx={{ display: 'contents' }}>
           <Typography variant="caption" color="text.secondary" sx={{ pt: 0.25, wordBreak: 'break-word' }}>
-            {clave}
+            {etiquetas ? etiquetas[clave] || legible(clave) : clave}
           </Typography>
           <FieldValue name={clave} value={valor} />
         </Box>
@@ -524,6 +543,10 @@ function Comprobaciones({ campos, task }: DatosDePaso) {
 /** Lo que guarda `_{task}_extraction` (ver `DocumentInterrogationOperator._extraction`). */
 interface LecturaGuardada {
   status?: 'read' | 'manual' | 'skipped';
+  /** Si el ciudadano vio y confirmó lo leído. Las lecturas anteriores no lo guardan. */
+  reviewed?: boolean;
+  /** Título de cada campo del tipo de documento (`domicilio.calle` para lo anidado). */
+  labels?: Record<string, string>;
   type?: string;
   extracted?: Record<string, unknown>;
   confirmed?: Record<string, unknown>;
@@ -552,7 +575,21 @@ function Lectura({ campos, task }: DatosDePaso) {
     ...(Array.isArray(lectura.unresolved) ? lectura.unresolved : []),
   ].filter((m, i, todos) => todos.indexOf(m) === i) as string[];
   const motivo = lectura.manual_reason || lectura.reason;
-  const estado = lectura.status === 'read' ? t('operador.lecturaLeida') : t('operador.lecturaManual');
+  const etiquetas = lectura.labels || {};
+  // Un paso sin revisión (review=False) nunca le enseña los datos al ciudadano:
+  // decir que los confirmó era falso. Las lecturas viejas no guardan si hubo
+  // revisión; si hay correcciones, la hubo, y si no, no se afirma nada.
+  const revisado = lectura.reviewed ?? (correcciones.length > 0 ? true : undefined);
+  const estado =
+    lectura.status === 'manual'
+      ? t('operador.lecturaManual')
+      : lectura.status === 'skipped'
+        ? t('operador.lecturaOmitida')
+        : revisado === true
+          ? t('operador.lecturaConfirmada')
+          : revisado === false
+            ? t('operador.lecturaSinRevision')
+            : t('operador.lecturaLeida');
 
   return (
     <Box data-presentacion="lectura" sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -572,11 +609,13 @@ function Lectura({ campos, task }: DatosDePaso) {
         )}
       </Box>
       {Object.keys(datos).length > 0
-        ? <Campos campos={{ [`${task}_data`]: datos }} task={task} presentacion="lectura-datos" />
+        ? <Campos campos={{ [`${task}_data`]: datos }} task={task} presentacion="lectura-datos" etiquetas={etiquetas} />
         : <Vacio />}
       {correcciones.length > 0 && (
         <Typography variant="body2" color="text.secondary">
-          {t('operador.lecturaCorregidos', { campos: correcciones.join(', ') })}
+          {t('operador.lecturaCorregidos', {
+            campos: correcciones.map((c) => etiquetas[c] || legible(c.split('.').pop() || c)).join(', '),
+          })}
         </Typography>
       )}
       {problemas.map((m) => (
