@@ -512,6 +512,84 @@ function Comprobaciones({ campos, task }: DatosDePaso) {
 }
 
 /**
+ * La lectura de un documento con DocumentIA.
+ *
+ * El paso guarda dos cosas bajo claves con guion bajo: `_{task}_doc`, su estado
+ * mientras trabaja (etapa, job, archivo de reemplazo), y `_{task}_extraction`, el
+ * resultado. Por campo, ambas se derramaban en el expediente como filas sueltas
+ * —`stage`, `job_id`, `extracted`, `confirmed`…—. Aquí se presenta lo que importa
+ * al revisor: los datos que el ciudadano confirmó, qué corrigió de lo leído y los
+ * problemas que se encontraron. El estado de trabajo no se enseña.
+ */
+/** Lo que guarda `_{task}_extraction` (ver `DocumentInterrogationOperator._extraction`). */
+interface LecturaGuardada {
+  status?: 'read' | 'manual' | 'skipped';
+  type?: string;
+  extracted?: Record<string, unknown>;
+  confirmed?: Record<string, unknown>;
+  corrections?: string[];
+  problems?: Array<string | { mensaje?: string }>;
+  unresolved?: string[];
+  manual_reason?: string;
+  reason?: string;
+}
+
+function Lectura({ campos, task }: DatosDePaso) {
+  const { t } = useTranslation();
+  const lectura = campos[`_${task}_extraction`] as LecturaGuardada | undefined;
+
+  if (!lectura || typeof lectura !== 'object') {
+    const visibles = Object.fromEntries(Object.entries(campos).filter(([k]) => k !== `_${task}_doc`));
+    return <Campos campos={visibles} task={task} />;
+  }
+
+  const datos = lectura.confirmed || lectura.extracted || {};
+  const correcciones = Array.isArray(lectura.corrections) ? lectura.corrections : [];
+  const problemas = [
+    ...(Array.isArray(lectura.problems) ? lectura.problems : [])
+      .map((p) => (typeof p === 'string' ? p : p?.mensaje))
+      .filter(Boolean),
+    ...(Array.isArray(lectura.unresolved) ? lectura.unresolved : []),
+  ].filter((m, i, todos) => todos.indexOf(m) === i) as string[];
+  const motivo = lectura.manual_reason || lectura.reason;
+  const estado = lectura.status === 'read' ? t('operador.lecturaLeida') : t('operador.lecturaManual');
+
+  return (
+    <Box data-presentacion="lectura" sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <Chip
+          size="small"
+          variant="outlined"
+          color={lectura.status === 'read' ? 'success' : 'warning'}
+          sx={{ height: 20 }}
+          label={estado}
+        />
+        {lectura.type && <Chip size="small" variant="outlined" sx={{ height: 20 }} label={lectura.type} />}
+        {motivo && (
+          <Typography variant="caption" color="text.secondary">
+            {t(`operador.lecturaMotivo.${motivo}`, { defaultValue: motivo })}
+          </Typography>
+        )}
+      </Box>
+      {Object.keys(datos).length > 0
+        ? <Campos campos={{ [`${task}_data`]: datos }} task={task} presentacion="lectura-datos" />
+        : <Vacio />}
+      {correcciones.length > 0 && (
+        <Typography variant="body2" color="text.secondary">
+          {t('operador.lecturaCorregidos', { campos: correcciones.join(', ') })}
+        </Typography>
+      )}
+      {problemas.map((m) => (
+        <Box key={m} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CancelIcon fontSize="small" color="warning" />
+          <Typography variant="body2">{m}</Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+/**
  * Un tramite hijo lanzado desde este paso.
  *
  * Es el caso donde el registro de pasos se nota mas: este operador escribe
@@ -694,6 +772,7 @@ const REGISTRO: Record<string, Visualizador> = {
   SignerOperator: { nombre: 'firma', Componente: Firma },
   AssertionOperator: { nombre: 'comprobaciones', Componente: Comprobaciones },
   ContextExplorerValidator: { nombre: 'validacion', Componente: Validacion },
+  DocumentInterrogationOperator: { nombre: 'lectura', Componente: Lectura },
   WorkflowStartOperator: { nombre: 'subtramite', Componente: SubTramite },
   ShortCircuitOperator: { nombre: 'decision', Componente: Decision },
   PythonOperator: generico('generico'),
