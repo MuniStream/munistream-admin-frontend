@@ -38,7 +38,9 @@ export default function FieldValue({ name, value }: Props) {
         label={t('instDetail.contextTruncated', { size: size ? Math.round(size / 1024) : '?' })} />
     );
   }
-  if (value === null || value === undefined || value === '') {
+  // Una lista vacía (p. ej. «A favor de» en un poder) es lo mismo que un dato
+  // ausente; antes se pintaba como una fila en blanco.
+  if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
     return <Typography variant="body2" color="text.disabled">—</Typography>;
   }
 
