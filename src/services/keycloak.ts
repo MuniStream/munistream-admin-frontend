@@ -146,6 +146,10 @@ class KeycloakService {
       // Build initialization config
       const config: any = {
         pkceMethod: 'S256',
+        // Inside the native app (Capacitor) keycloak-js would switch to its
+        // Cordova adapter and send redirect_uri=http://localhost, which the
+        // realm rejects. The app is the same web portal, so keep the web flow.
+        adapter: 'default',
         checkLoginIframe: false,
         enableLogging: true,
       };
