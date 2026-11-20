@@ -1,5 +1,6 @@
 import api from './api';
 import type { RespuestaSemaforo } from '@/types/semaforo';
+import type { BandejaAtencion, EstadoAtencion, Satisfaccion, SolicitudAtencion } from '@/types/atencion';
 
 export const adminService = {
   // Pending Documents
@@ -158,6 +159,28 @@ export const adminService = {
   async getSemaforo(params?: { workflow_id?: string; color?: string; asignado?: string }): Promise<RespuestaSemaforo> {
     const response = await api.get('/admin/semaforo', { params });
     return response.data;
+  },
+
+  // Citizen support requests (help desk)
+  async getBandejaAtencion(params?: { estado?: EstadoAtencion; categoria?: string }): Promise<BandejaAtencion> {
+    return (await api.get('/admin/atencion', { params })).data;
+  },
+
+  async getSolicitudAtencion(id: string): Promise<SolicitudAtencion> {
+    return (await api.get(`/admin/atencion/${id}`)).data;
+  },
+
+  async responderAtencion(id: string, texto: string): Promise<SolicitudAtencion> {
+    return (await api.post(`/admin/atencion/${id}/responder`, { texto })).data;
+  },
+
+  async actualizarAtencion(id: string, cambio: { estado?: EstadoAtencion; asignado_a?: string }): Promise<SolicitudAtencion> {
+    return (await api.patch(`/admin/atencion/${id}`, cambio)).data;
+  },
+
+  // Ratings left by applicants on resolved requests
+  async getSatisfaccion(workflowId?: string): Promise<Satisfaccion> {
+    return (await api.get('/admin/satisfaccion', { params: workflowId ? { workflow_id: workflowId } : {} })).data;
   }
 };
 

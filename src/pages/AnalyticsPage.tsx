@@ -48,6 +48,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import workflowService from '@/services/workflowService';
+import adminService from '@/services/adminService';
 import type { StepBottleneck } from '@/types/workflow';
 import PageContainer from '@/components/ui/PageContainer';
 import StatCard from '@/components/ui/StatCard';
@@ -111,6 +112,13 @@ function AnalyticsPage() {
   } = useQuery({
     queryKey: ['workflow-analytics', workflowId],
     queryFn: () => workflowService.getWorkflowAnalytics(workflowId),
+    enabled: !!workflowId,
+  });
+
+  // Ratings left by applicants once their request was resolved
+  const { data: satisfaccion } = useQuery({
+    queryKey: ['satisfaccion', workflowId],
+    queryFn: () => adminService.getSatisfaccion(workflowId!),
     enabled: !!workflowId,
   });
 
@@ -218,6 +226,51 @@ function AnalyticsPage() {
           />
         </Grid>
       </Grid>
+
+      {/* Applicant satisfaction */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>{t('analytics.satisfaccion.title')}</Typography>
+        {!satisfaccion || satisfaccion.total === 0 ? (
+          <Typography variant="body2" color="text.secondary">{t('analytics.satisfaccion.empty')}</Typography>
+        ) : (
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, md: 3 }}>
+              <Typography variant="h3" component="p" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                {satisfaccion.promedio?.toFixed(1)}<Typography component="span" variant="h6" color="text.secondary"> / 5</Typography>
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('analytics.satisfaccion.total', { count: satisfaccion.total })}
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              {[5, 4, 3, 2, 1].map((n) => {
+                const v = satisfaccion.distribucion[String(n)] ?? 0;
+                return (
+                  <Stack key={n} direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.5 }}>
+                    <Typography variant="caption" sx={{ width: 16 }}>{n}</Typography>
+                    <Box sx={{ flex: 1, height: 8, bgcolor: 'action.hover', borderRadius: 4, overflow: 'hidden' }}>
+                      <Box sx={{ width: `${(v / satisfaccion.total) * 100}%`, height: '100%', bgcolor: CHART_COLORS[0] }} />
+                    </Box>
+                    <Typography variant="caption" sx={{ width: 24, textAlign: 'right' }}>{v}</Typography>
+                  </Stack>
+                );
+              })}
+            </Grid>
+            <Grid size={{ xs: 12, md: 5 }}>
+              <Typography variant="subtitle2" gutterBottom>{t('analytics.satisfaccion.comments')}</Typography>
+              {satisfaccion.comentarios.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">{t('analytics.satisfaccion.noComments')}</Typography>
+              ) : (
+                satisfaccion.comentarios.slice(0, 5).map((c, i) => (
+                  <Typography key={i} variant="body2" sx={{ mb: 1 }}>
+                    <strong>{c.calificacion}/5</strong> · “{c.comentario}”
+                  </Typography>
+                ))
+              )}
+            </Grid>
+          </Grid>
+        )}
+      </Paper>
 
       <Grid container spacing={3}>
         {/* Bottlenecks bar chart */}

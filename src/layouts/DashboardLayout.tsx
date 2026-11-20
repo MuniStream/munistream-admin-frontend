@@ -42,6 +42,7 @@ import {
   Send as SendIcon,
   AccountBalance as AccountBalanceIcon,
   Traffic as TrafficIcon,
+  SupportAgent as SupportIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { PageChromeProvider, usePageChrome } from './PageChromeContext';
@@ -57,6 +58,7 @@ const menuItems = [
   { text: 'nav.myInbox', path: '/my-inbox', icon: <AssignmentIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
   { text: 'nav.tramites', path: '/instances', icon: <InstanceIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
   { text: 'nav.entities', path: '/entities', icon: <DocumentIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
+  { text: 'nav.atencion', path: '/atencion', icon: <SupportIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
   { text: 'dashboard', path: '/dashboard', icon: <DashboardIcon />, permission: PERMISSIONS.VIEW_ANALYTICS },
   { text: 'nav.semaforo', path: '/semaforo', icon: <TrafficIcon />, permission: PERMISSIONS.VIEW_ANALYTICS },
   { text: 'workflows', path: '/workflows', icon: <WorkflowIcon />, permission: PERMISSIONS.MANAGE_WORKFLOWS },
