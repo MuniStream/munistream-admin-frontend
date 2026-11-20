@@ -381,7 +381,7 @@
   "dash.systemHealth": "Salud del sistema",
   "dash.systemStatus": "Estado del sistema",
   "dash.unknown": "Desconocido",
-  "dash.responseTime": "Tiempo de respuesta",
+  "dash.dbLatency": "Latencia de la base de datos",
   "dash.highPriorityItems": "Elementos de prioridad alta",
   "dash.performanceScore": "Puntuación de rendimiento",
   "analytics.title": "Analíticas del flujo de trabajo",

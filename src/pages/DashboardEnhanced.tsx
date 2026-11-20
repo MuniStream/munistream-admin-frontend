@@ -309,8 +309,8 @@ function DashboardEnhanced() {
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
-                  primary={t('dash.responseTime')}
-                  secondary={`${systemHealth?.average_response_time_ms || 0}ms`}
+                  primary={t('dash.dbLatency')}
+                  secondary={systemHealth?.db_latency_ms != null ? `${systemHealth.db_latency_ms} ms` : t('dash.unknown')}
                 />
               </ListItem>
               <Divider variant="inset" component="li" />

@@ -108,9 +108,9 @@ export const workflowService = {
     return await response.json();
   },
 
-  // Get performance metrics for a workflow
+  // Per-step performance metrics for a workflow (from /performance/workflows/{id}/performance)
   async getWorkflowMetrics(workflowId: string): Promise<PerformanceMetrics[]> {
-    const response = await fetch(`${API_BASE_URL}/performance/workflows/${workflowId}/metrics`, {
+    const response = await fetch(`${API_BASE_URL}/performance/workflows/${workflowId}/performance`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -120,7 +120,24 @@ export const workflowService = {
     }
 
     const data = await response.json();
-    return data.metrics;
+    const steps: any[] = data.step_metrics || [];
+    return steps.map((m) => ({
+      step_id: m.step_id,
+      workflow_id: workflowId,
+      avg_execution_time_ms: m.average_duration_ms,
+      median_execution_time_ms: m.average_duration_ms,
+      p95_execution_time_ms: m.max_duration_ms,
+      p99_execution_time_ms: m.max_duration_ms,
+      total_executions: m.total_executions,
+      // backend reports a percentage; the table renders a 0-1 ratio
+      success_rate: (m.success_rate ?? 0) / 100,
+      avg_queue_time_ms: m.average_queue_time_ms,
+      avg_memory_usage_mb: 0,
+      last_24h_executions: 0,
+      bottleneck_score: m.total_executions
+        ? (m.bottleneck_indicators?.slow_executions ?? 0) / m.total_executions
+        : 0,
+    }));
   },
 
   // Get consolidated per-workflow analytics (KPIs, bottlenecks, status, volume)
@@ -203,35 +220,6 @@ export const workflowService = {
     }
 
     return await response.json();
-  },
-
-  // Get workflow execution history
-  async getWorkflowHistory(params?: {
-    workflow_id?: string;
-    start_date?: string;
-    end_date?: string;
-    limit?: number;
-  }): Promise<any[]> {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          searchParams.append(key, value.toString());
-        }
-      });
-    }
-
-    const response = await fetch(`${API_BASE_URL}/performance/history?${searchParams}`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch workflow history');
-    }
-
-    const data = await response.json();
-    return data.history;
   },
 
   // Get real-time workflow stats

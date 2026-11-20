@@ -1,12 +1,6 @@
 import api from './api';
 
 export const adminService = {
-  // Pending Approvals
-  async getPendingApprovals(): Promise<any[]> {
-    const response = await api.get('/admin/pending-approvals');
-    return response.data || [];
-  },
-
   // Pending Documents
   async getPendingDocuments(): Promise<any[]> {
     const response = await api.get('/admin/pending-documents');
@@ -23,20 +17,6 @@ export const adminService = {
   async getManualReviews(): Promise<any[]> {
     const response = await api.get('/admin/manual-reviews');
     return response.data || [];
-  },
-
-  // Process Approval
-  async processApproval(data: {
-    instance_id: string;
-    decision: string;
-    comments: string;
-  }): Promise<void> {
-    await api.post(`/admin/instances/${data.instance_id}/approve`, {
-      decision: data.decision,
-      comments: data.comments,
-      approved_by: 'current_admin',
-      approved_at: new Date().toISOString()
-    });
   },
 
   // Process Document Verification
@@ -61,22 +41,6 @@ export const adminService = {
       signature_method: data.signature_method,
       signature_data: 'admin_digital_signature',
       comments: data.comments
-    });
-  },
-
-  // Process Manual Review
-  async processManualReview(data: {
-    review_id: string;
-    resolution: string;
-    comments: string;
-    priority: string;
-  }): Promise<void> {
-    await api.post(`/admin/manual-reviews/${data.review_id}/resolve`, {
-      resolution: data.resolution,
-      resolution_notes: data.comments,
-      priority: data.priority,
-      resolved_by: 'current_admin',
-      resolved_at: new Date().toISOString()
     });
   },
 
@@ -180,7 +144,7 @@ export const adminService = {
       database: string;
       pending_items_backlog: boolean;
       high_priority_items: number;
-      average_response_time_ms: number;
+      db_latency_ms: number | null;
       last_check: string;
     };
     last_updated: string;

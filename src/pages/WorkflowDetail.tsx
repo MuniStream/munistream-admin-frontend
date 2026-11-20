@@ -81,6 +81,14 @@ function WorkflowDetail() {
     enabled: !!workflowId,
   });
 
+  // Summary cards use the whole history, not the 10-instance sample below
+  const { data: analytics } = useQuery({
+    queryKey: ['workflow-analytics-kpis', workflowId],
+    queryFn: () => workflowService.getWorkflowAnalytics(workflowId!),
+    enabled: !!workflowId,
+  });
+  const kpis = analytics?.kpis;
+
   const { data: instances } = useQuery({
     queryKey: ['workflow-instances', workflowId],
     queryFn: () => workflowService.getWorkflowInstances({ workflow_id: workflowId, limit: 10 }),
@@ -184,7 +192,7 @@ function WorkflowDetail() {
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="success.main">
-                {instances?.instances?.filter(i => i.status === 'completed').length || 0}
+                {kpis?.completed_instances ?? '—'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t('wfDetail.completed')}
@@ -196,7 +204,7 @@ function WorkflowDetail() {
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="warning.main">
-                {instances?.instances?.filter(i => i.status === 'running').length || 0}
+                {kpis?.active_instances ?? '—'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t('wfDetail.activeNow')}
@@ -208,7 +216,7 @@ function WorkflowDetail() {
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="info.main">
-                {bottlenecks?.overall_efficiency ? `${(bottlenecks.overall_efficiency * 100).toFixed(1)}%` : 'N/A'}
+                {kpis ? `${kpis.overall_efficiency.toFixed(1)}%` : '—'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t('wfDetail.efficiency')}

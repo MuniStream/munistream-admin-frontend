@@ -381,7 +381,7 @@
   "dash.systemHealth": "System Health",
   "dash.systemStatus": "System Status",
   "dash.unknown": "Unknown",
-  "dash.responseTime": "Response Time",
+  "dash.dbLatency": "Database latency",
   "dash.highPriorityItems": "High Priority Items",
   "dash.performanceScore": "Performance Score",
   "analytics.title": "Workflow Analytics",
