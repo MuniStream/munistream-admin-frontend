@@ -1,5 +1,6 @@
 import api from './api';
 import type { RespuestaSemaforo } from '@/types/semaforo';
+import type { ConfiguracionReportes, Reporte } from '@/types/reportes';
 import type { BandejaAtencion, EstadoAtencion, Satisfaccion, SolicitudAtencion } from '@/types/atencion';
 
 export const adminService = {
@@ -175,12 +176,44 @@ export const adminService = {
   },
 
   async actualizarAtencion(id: string, cambio: { estado?: EstadoAtencion; asignado_a?: string }): Promise<SolicitudAtencion> {
-    return (await api.patch(`/admin/atencion/${id}`, cambio)).data;
+    return (await api.post(`/admin/atencion/${id}/estado`, cambio)).data;
   },
 
   // Ratings left by applicants on resolved requests
   async getSatisfaccion(workflowId?: string): Promise<Satisfaccion> {
     return (await api.get('/admin/satisfaccion', { params: workflowId ? { workflow_id: workflowId } : {} })).data;
+  },
+
+  // Performance reports
+  async getReportes(): Promise<Reporte[]> {
+    return (await api.get('/admin/reportes')).data.reportes;
+  },
+
+  async generarReporte(body: { periodo: 'semanal' | 'mensual' | 'a_demanda'; desde?: string; hasta?: string; enviar?: boolean }): Promise<Reporte> {
+    return (await api.post('/admin/reportes', body)).data;
+  },
+
+  // The file name is built here: cross-origin, nginx does not expose
+  // Content-Disposition to the browser.
+  async descargarReporte(reporte: Reporte, formato: 'pdf' | 'xlsx'): Promise<{ blob: Blob; nombre: string }> {
+    const r = await api.get(`/admin/reportes/${reporte.reporte_id}/${formato}`, { responseType: 'blob' });
+    const dia = (d: Date) =>
+      new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Mexico_City', year: 'numeric', month: '2-digit', day: '2-digit' })
+        .format(d).replace(/-/g, '');
+    const fin = new Date(new Date(reporte.hasta).getTime() - 1000);
+    return { blob: r.data, nombre: `reporte-desempeno-${dia(new Date(reporte.desde))}-${dia(fin)}.${formato}` };
+  },
+
+  async getConfiguracionReportes(): Promise<ConfiguracionReportes> {
+    return (await api.get('/admin/reportes/configuracion')).data;
+  },
+
+  async guardarConfiguracionReportes(cfg: ConfiguracionReportes): Promise<ConfiguracionReportes> {
+    return (await api.put('/admin/reportes/configuracion', cfg)).data;
+  },
+
+  async evaluarAlertas(): Promise<{ nuevas: number; envios: { destinatario: string; enviado: boolean }[] }> {
+    return (await api.post('/admin/reportes/alertas/evaluar')).data;
   }
 };
 
