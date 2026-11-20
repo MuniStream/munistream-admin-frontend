@@ -4,6 +4,7 @@ import DashboardEnhanced from '@/pages/DashboardEnhanced';
 import WorkflowsDashboard from '@/pages/WorkflowsDashboard';
 import WorkflowDetail from '@/pages/WorkflowDetail';
 import AnalyticsPage from '@/pages/AnalyticsPage';
+import SemaforoPage from '@/pages/SemaforoPage';
 import TramitesPage from '@/pages/TramitesPage';
 import EntitiesPage from '@/pages/EntitiesPage';
 import MyInboxPage from '@/pages/MyInboxPage';
@@ -51,6 +52,15 @@ function AppRoutes() {
           }
         />
         
+        <Route
+          path="semaforo"
+          element={
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_ANALYTICS}>
+              <SemaforoPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="workflows"
           element={

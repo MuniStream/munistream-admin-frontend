@@ -1,4 +1,5 @@
 import api from './api';
+import type { RespuestaSemaforo } from '@/types/semaforo';
 
 export const adminService = {
   // Pending Documents
@@ -150,6 +151,12 @@ export const adminService = {
     last_updated: string;
   }> {
     const response = await api.get('/admin/dashboard');
+    return response.data;
+  },
+
+  // Hybrid traffic light of open procedures (legal term + dwell in current step)
+  async getSemaforo(params?: { workflow_id?: string; color?: string; asignado?: string }): Promise<RespuestaSemaforo> {
+    const response = await api.get('/admin/semaforo', { params });
     return response.data;
   }
 };
