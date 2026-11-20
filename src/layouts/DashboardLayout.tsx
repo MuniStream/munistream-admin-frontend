@@ -41,6 +41,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   Send as SendIcon,
   AccountBalance as AccountBalanceIcon,
+  Traffic as TrafficIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { PageChromeProvider, usePageChrome } from './PageChromeContext';
@@ -57,6 +58,7 @@ const menuItems = [
   { text: 'nav.tramites', path: '/instances', icon: <InstanceIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
   { text: 'nav.entities', path: '/entities', icon: <DocumentIcon />, permission: PERMISSIONS.VIEW_INSTANCES },
   { text: 'dashboard', path: '/dashboard', icon: <DashboardIcon />, permission: PERMISSIONS.VIEW_ANALYTICS },
+  { text: 'nav.semaforo', path: '/semaforo', icon: <TrafficIcon />, permission: PERMISSIONS.VIEW_ANALYTICS },
   { text: 'workflows', path: '/workflows', icon: <WorkflowIcon />, permission: PERMISSIONS.MANAGE_WORKFLOWS },
   { text: 'nav.catalogs', path: '/catalogs', icon: <CatalogIcon />, permission: PERMISSIONS.ADMIN_SYSTEM },
   { text: 'nav.profileFields', path: '/profile-fields', icon: <PersonIcon />, permission: PERMISSIONS.ADMIN_SYSTEM },
