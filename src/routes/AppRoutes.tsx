@@ -5,6 +5,7 @@ import WorkflowsDashboard from '@/pages/WorkflowsDashboard';
 import WorkflowDetail from '@/pages/WorkflowDetail';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import SemaforoPage from '@/pages/SemaforoPage';
+import AtencionCiudadanaPage from '@/pages/AtencionCiudadanaPage';
 import TramitesPage from '@/pages/TramitesPage';
 import EntitiesPage from '@/pages/EntitiesPage';
 import MyInboxPage from '@/pages/MyInboxPage';
@@ -52,6 +53,15 @@ function AppRoutes() {
           }
         />
         
+        <Route
+          path="atencion"
+          element={
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_INSTANCES}>
+              <AtencionCiudadanaPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="semaforo"
           element={
