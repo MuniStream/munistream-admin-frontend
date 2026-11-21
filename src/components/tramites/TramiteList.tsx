@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Alert, Box, Checkbox, CircularProgress, IconButton, LinearProgress, Table, TableBody,
+  Alert, Box, Checkbox, Chip, CircularProgress, IconButton, LinearProgress, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, TablePagination, Tooltip, Typography,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -37,6 +37,8 @@ export interface TramiteRow {
   assigned_to_name?: string | null;
   created_at?: string | null;
   completion_percentage?: number;
+  /** Veces que la revisión se escaló por pasar de su plazo (0: en plazo). */
+  escalation_level?: number;
 }
 
 interface Props {
@@ -215,6 +217,17 @@ export default function TramiteList({
 
                   <TableCell align="center">
                     <StatusChip status={estado} />
+                    {!!r.escalation_level && (
+                      <Tooltip title={t('tramites.escalatedHint', { count: r.escalation_level })}>
+                        <Chip
+                          size="small"
+                          color="error"
+                          variant="outlined"
+                          label={t('tramites.escalated')}
+                          sx={{ display: 'flex', mx: 'auto', mt: 0.5, width: 'fit-content' }}
+                        />
+                      </Tooltip>
+                    )}
                   </TableCell>
 
                   <TableCell align="center">
