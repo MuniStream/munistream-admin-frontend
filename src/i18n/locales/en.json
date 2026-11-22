@@ -504,6 +504,8 @@
   "empty.clearFilters": "Clear filters",
   "tramites.colAssignee": "Assigned to",
   "tramites.unassigned": "Unassigned",
+  "tramites.escalated": "Escalated",
+  "tramites.escalatedHint": "Past its deadline. Notices sent to the team and supervisors: {{count}}",
   "tramites.assignTitle": "Assign instances",
   "tramites.assignTo": "Assign to team",
   "tramites.assignConfirm": "Assign",

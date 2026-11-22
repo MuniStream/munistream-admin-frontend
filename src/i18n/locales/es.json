@@ -504,6 +504,8 @@
   "empty.clearFilters": "Limpiar los filtros",
   "tramites.colAssignee": "Asignado a",
   "tramites.unassigned": "Sin asignar",
+  "tramites.escalated": "Escalado",
+  "tramites.escalatedHint": "Pasó de su plazo. Avisos enviados al equipo y a los supervisores: {{count}}",
   "tramites.assignTitle": "Asignar trámites",
   "tramites.assignTo": "Asignar al equipo",
   "tramites.assignConfirm": "Asignar",
